@@ -86,11 +86,11 @@
     async lbSubmit(board, v, mode = 'max') {
       try { await this.ready(); const u = auth.currentUser; if (!u || u.isAnonymous || !this.profile.name || !isFinite(v) || v <= 0) return false;
         const ref = db.ref('lb/' + this.weekKey() + '/' + board + '/' + u.uid); const n = this.profile.name; let better = false;
-        await ref.transaction(cur => { if (mode === 'max' && cur && cur.v >= v && cur.n === n) return; better = true; return { n, v: mode === 'max' && cur && cur.v > v ? cur.v : v, t: firebase.database.ServerValue.TIMESTAMP }; });
+        await ref.transaction(cur => { if (mode === 'max' && cur && cur.v >= v && cur.n === n) return; if (mode === 'min' && cur && cur.v <= v && cur.n === n) return; better = !cur || (mode === 'max' ? v > cur.v : mode === 'min' ? v < cur.v : true); const nv = mode === 'max' && cur && cur.v > v ? cur.v : mode === 'min' && cur && cur.v < v ? cur.v : v; return { n, v: nv, t: firebase.database.ServerValue.TIMESTAMP }; });
         return better; } catch (e) { console.warn('lb', e); return false; }
     },
     async lbTop(week, board, lim = 50) {
-      await this.ready(); const s = await db.ref('lb/' + week + '/' + board).orderByChild('v').limitToLast(lim).get(); const out = []; s.forEach(c => { const v = c.val(); if (v) out.push({ uid: c.key, n: v.n, v: v.v }); }); return out.reverse();
+      await this.ready(); const asc = board.startsWith('ta_'); const q = db.ref('lb/' + week + '/' + board).orderByChild('v'); const s = await (asc ? q.limitToFirst(lim) : q.limitToLast(lim)).get(); const out = []; s.forEach(c => { const v = c.val(); if (v) out.push({ uid: c.key, n: v.n, v: v.v }); }); return asc ? out : out.reverse();
     },
     async lbMine(week, board) { await this.ready(); const u = auth.currentUser; if (!u || u.isAnonymous) return null; const s = await db.ref('lb/' + week + '/' + board + '/' + u.uid).get(); return s.val(); }
   };
@@ -512,6 +512,14 @@ button,[data-a],[data-m]{touch-action:manipulation;-webkit-tap-highlight-color:r
 .lb-row .rk{width:34px;text-align:center;font-family:Orbitron;font-weight:900;color:#aaa;font-size:13px}.lb-row .nm{flex:1;font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-row .nm em{font-style:normal;font-size:10px;background:var(--red);color:#fff;padding:1px 6px;border-radius:10px;margin-left:4px}.lb-row .vl{font-family:Orbitron;font-weight:900;color:#ffcf3d;font-size:13px}
 .lb-row.top1{border-color:#ffd700;background:rgba(255,215,0,.1)}.lb-row.top2{border-color:#c8ccd4}.lb-row.top3{border-color:#cd7f32}.lb-row.me{box-shadow:0 0 0 2px var(--red) inset}
+
+/* ---- パーツショップ・バックパック ---- */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-bottom:6px}
+.pcard{display:flex;align-items:center;gap:9px;text-align:left;color:#fff;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:'Noto Sans JP'}
+.pcard.on{border-color:var(--red);background:rgba(225,6,0,.18)}.pc-ic{flex:0 0 auto;display:flex}.pc-tx{flex:1;min-width:0}.pc-tx b{display:block;font-size:13px}.pc-tx small{display:block;font-size:10px;color:#aaa;line-height:1.35}
+.pc-pr{flex:0 0 auto;font-family:Orbitron;font-size:11px;font-weight:900;color:#ffcf3d;text-align:right}
+.medals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 8px}.medal{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.medal b{font-family:Orbitron;font-size:26px}.medal small{font-size:11px;color:#aaa}.medal.g{border-color:#ffd700}.medal.s{border-color:#c8ccd4}.medal.b{border-color:#cd7f32}
 </style>
 </head>
 <body>
@@ -752,7 +760,7 @@ vec3 sky(vec3 d){ float t=clamp(d.y,0.0,1.0); vec3 c=mix(uHorizon,uZenith,pow(t,
 void main(){
   vec3 N=normalize(vN); vec3 V=normalize(uCam-vW); if(dot(N,V)<0.0) N=-N;
   vec3 base=vC*uTint; float em=vE.x*uEmis; vec3 add=vec3(0.0);
-  if(uTexMode>0.5){ vec4 t=texture2D(uTex,vUV); if(uTexMode<1.5){ base=t.rgb*uTint; } else { base*=t.rgb; add+=vec3(1.0,0.82,0.5)*(1.0-t.a)*2.0*uNight; } }
+  if(uTexMode>0.5){ vec4 t=texture2D(uTex,vUV); if(uTexMode>2.5){ if(t.a<0.5) discard; base=t.rgb*uTint; } else if(uTexMode<1.5){ base=t.rgb*uTint; } else { base*=t.rgb; add+=vec3(1.0,0.82,0.5)*(1.0-t.a)*2.0*uNight; } }
   float sv=vE.y*uSunScale;
   vec3 L=mix(uGroundCol,uSkyCol,N.y*0.5+0.5)*(0.35+0.65*vE.y) + uSunCol*max(dot(N,uSunDir),0.0)*sv;
   for(int i=0;i<8;i++){ vec3 d=uPL[i].xyz-vW; float dist=length(d)+0.001; float att=clamp(1.0-dist/uPL[i].w,0.0,1.0); att*=att; L+=uPLC[i]*att*(max(dot(N,d/dist),0.0)*0.75+0.25); }
@@ -1137,7 +1145,7 @@ const MAP_BY_ID = Object.fromEntries(MAPS.map(m => [m.id, m]));
 const PARTS = {
   engine: { label: 'エンジン形式', cat: 'engine', opts: [
     { id: 'stock', name: '純正エンジン', price: 0 }, { id: 'turbo', name: 'ターボキット / スポーツタービン', price: 680000 },
-    { id: 'bigturbo', name: '大型ターボ', price: 1200000 }, { id: 'super', name: 'スーパーチャージャー', price: 850000 }, { id: 'swap', name: 'エンジン載せ替え (V8)', price: 2400000 }] },
+    { id: 'bigturbo', name: '大型ターボ', price: 1200000 }, { id: 'super', name: 'スーパーチャージャー', price: 850000 }, { id: 'super2', name: '大型スーパーチャージャー（ツインスクリュー）', price: 1500000 }, { id: 'twin', name: 'ツインチャージャー（ターボ＋SC）', price: 2200000 }, { id: 'swap', name: 'エンジン載せ替え (V8)', price: 2400000 }] },
   ecu: { label: 'ECU', cat: 'engine', lv: [0, 120000, 250000, 450000], names: ['純正', 'ROM チューン', 'サブコン', 'フルコン'] },
   intercooler: { label: 'インタークーラー', cat: 'engine', lv: [0, 150000, 320000], names: ['純正', '前置き', '大容量'] },
   intake: { label: '吸排気系', cat: 'engine', lv: [0, 60000, 140000, 260000], names: ['純正', 'エアクリーナー', 'インテーク+EXマニ', 'フル吸排気'] },
@@ -1164,25 +1172,33 @@ const PARTS = {
     { id: 'high', name: 'ハイグリップタイヤ', price: 140000, mu: 1.12, slide: 0.7, wet: 0.74, snow: 0.52 },
     { id: 'drift', name: 'ドリフトタイヤ', price: 95000, mu: 0.98, slide: 0.86, wet: 0.76, snow: 0.6 },
     { id: 'racing', name: 'レーシングタイヤ', price: 220000, mu: 1.22, slide: 0.66, wet: 0.66, snow: 0.45 },
-    { id: 'wet', name: 'ウェットタイヤ', price: 110000, mu: 0.98, slide: 0.74, wet: 0.95, snow: 0.8 }] }
+    { id: 'wet', name: 'ウェットタイヤ', price: 110000, mu: 0.98, slide: 0.74, wet: 0.95, snow: 0.8 },
+    { id: 'slick', name: 'スリックタイヤ', price: 320000, mu: 1.32, slide: 0.62, wet: 0.45, snow: 0.35 },
+    { id: 'rally', name: 'ラリータイヤ', price: 120000, mu: 0.95, slide: 0.8, wet: 0.86, snow: 0.86 },
+    { id: 'studless', name: 'スタッドレスタイヤ', price: 100000, mu: 0.9, slide: 0.76, wet: 0.9, snow: 1.05 },
+    { id: 'semi', name: 'セミスリック（ドリフト用）', price: 180000, mu: 1.08, slide: 0.84, wet: 0.7, snow: 0.5 }] }
 };
 const WHEEL_STYLES = [
   { id: 'stock', name: '純正スチール', price: 0, spokes: 0 }, { id: 'five', name: '5本スポーク', price: 120000, spokes: 5 },
   { id: 'six', name: '6本スポーク', price: 140000, spokes: 6 }, { id: 'mesh', name: 'メッシュ', price: 180000, spokes: 12 },
   { id: 'deep', name: '深リム', price: 160000, spokes: 8, deep: 1 }, { id: 'turbo', name: 'ターボファン', price: 150000, spokes: 10 },
   { id: 'blade', name: '10本ブレード', price: 170000, spokes: 10 }, { id: 'y7', name: 'Y字7スポーク', price: 150000, spokes: 7 }, { id: 'rally', name: 'ラリー用ディッシュ', price: 90000, spokes: 4, deep: 1 },
+  { id: 'mesh16', name: 'クロスメッシュ16', price: 210000, spokes: 16 }, { id: 'spoke3', name: '3本スポーク', price: 130000, spokes: 3 },
+  { id: 'gold6', name: 'ゴールド6本', price: 240000, spokes: 6, rim: '#d4af37' }, { id: 'bronze10', name: 'ブロンズ10本', price: 220000, spokes: 10, rim: '#8c5a2b' },
+  { id: 'black8', name: 'マットブラック深リム', price: 230000, spokes: 8, deep: 1, rim: '#1a1a1a' }, { id: 'white7', name: 'ホワイト7本', price: 190000, spokes: 7, rim: '#f2f2f2' },
+  { id: 'chrome12', name: 'クローム深リムメッシュ', price: 280000, spokes: 12, deep: 1, rim: '#e0e4ea' }, { id: 'fine20', name: 'ファイン20本', price: 260000, spokes: 20 },
   { id: 'candy', name: 'キャンディケイン (限定)', price: 0, spokes: 6, xmas: 1 }, { id: 'star', name: 'スノースター (限定)', price: 0, spokes: 5, xmas: 2 }
 ];
 const AERO = {
-  front: { label: 'フロントバンパー', opts: [['純正', 0], ['リップスポイラー', 90000], ['エアロバンパー', 150000], ['カナード付き', 190000]] },
-  rear: { label: 'リアバンパー', opts: [['純正', 0], ['アンダーディフューザー', 80000], ['レーシングディフューザー', 140000]] },
-  side: { label: 'サイドスカート', opts: [['純正', 0], ['スポーツスカート', 70000], ['ワイドスカート', 110000]] },
-  wing: { label: 'リアウイング', opts: [['なし', 0], ['ダックテール', 60000], ['GTウイング', 180000], ['ハイマウントウイング', 260000], ['スワンネック大型ウイング', 340000]] },
-  hood: { label: 'ボンネット', opts: [['純正', 0], ['カーボン', 140000], ['ダクト付きカーボン', 160000]] },
+  front: { label: 'フロントバンパー', opts: [['純正', 0], ['リップスポイラー', 90000], ['エアロバンパー', 150000], ['カナード付き', 190000], ['フルエアロ（大型スプリッター）', 260000]] },
+  rear: { label: 'リアバンパー', opts: [['純正', 0], ['アンダーディフューザー', 80000], ['レーシングディフューザー', 140000], ['ビッグディフューザー', 210000]] },
+  side: { label: 'サイドスカート', opts: [['純正', 0], ['スポーツスカート', 70000], ['ワイドスカート', 110000], ['カーボンワイドスカート', 160000]] },
+  wing: { label: 'リアウイング', opts: [['なし', 0], ['ダックテール', 60000], ['GTウイング', 180000], ['ハイマウントウイング', 260000], ['スワンネック大型ウイング', 340000], ['ダブルデッキウイング', 380000], ['ワイドカーボンGTウイング', 420000]] },
+  hood: { label: 'ボンネット', opts: [['純正', 0], ['カーボン', 140000], ['ダクト付きカーボン', 160000], ['ベンテッドボンネット', 190000]] },
   exhaust: { label: 'マフラー形状', opts: [['純正', 0], ['デュアル', 50000], ['砲弾', 70000], ['クワッド', 90000]] },
   fender: { label: 'オーバーフェンダー', opts: [['純正', 0], ['ビス留めフェンダー', 220000], ['ワイドボディキット', 480000]] },
   mirror: { label: 'サイドミラー', opts: [['純正', 0], ['エアロミラー', 45000], ['カーボンミラー', 80000]] },
-  roof: { label: 'ルーフ', opts: [['純正', 0], ['ルーフベント', 60000], ['ルーフスポイラー', 75000]] },
+  roof: { label: 'ルーフ', opts: [['純正', 0], ['ルーフベント', 60000], ['ルーフスポイラー', 75000], ['ルーフスクープ', 90000]] },
   head: { label: 'ヘッドライト', opts: [['純正', 0], ['イエローバルブ', 30000], ['スモーク', 40000]] },
   tail: { label: 'テールランプ', opts: [['純正', 0], ['クリアテール', 50000], ['スモークテール', 50000]] }
 };
@@ -1264,7 +1280,10 @@ const TRACKS = [
   { id: 't7', name: "RIVAL'S SHADOW", bpm: 156, key: 59, minor: 1, seed: 71, prog: [0, 5, 3, 4], cat: 'story' },
   { id: 't8', name: 'SNOWFALL OVERDRIVE', bpm: 156, key: 55, minor: 0, seed: 83, prog: [0, 5, 3, 4], cat: 'xmas', bells: 1 },
   { id: 't9', name: 'JINGLE TURBO NIGHT', bpm: 160, key: 48, minor: 0, seed: 97, prog: [0, 3, 4, 0], cat: 'xmas', bells: 1 },
-  { id: 't10', name: 'JINGLE BELLS ROCK RUN（「ジングルベル」ロック編曲）', bpm: 168, key: 55, minor: 0, seed: 5, prog: [0, 0, 0, 0], cat: 'xmas', bells: 1, rock: 1 }
+  { id: 't10', name: 'JINGLE BELLS ROCK RUN（「ジングルベル」ロック編曲）', bpm: 168, key: 55, minor: 0, seed: 5, prog: [0, 0, 0, 0], cat: 'xmas', bells: 1, rock: 1 },
+  { id: 't11', name: 'AURORA DRIFT', bpm: 150, key: 53, minor: 1, seed: 113, prog: [0, 5, 3, 4], cat: 'race', soft: 1 },
+  { id: 't12', name: 'STARLIGHT HIGHWAY', bpm: 146, key: 58, minor: 1, seed: 127, prog: [5, 3, 0, 4], cat: 'menu', soft: 1 },
+  { id: 't13', name: 'MOONLIT APEX', bpm: 152, key: 51, minor: 1, seed: 139, prog: [0, 3, 6, 4], cat: 'race', soft: 1 }
 ];
 
 // クリスマスショップ（イベントで貯めたクリスマスポイントで購入）
@@ -1304,6 +1323,22 @@ const ACHIEVEMENTS = [
 // タイムアタックのコースレコード基準 (秒/km あたりの係数)。実際のレコードはコース長から算出
 const RECORD_PACE = { mountain: 44, highway: 22, city: 36, port: 34, industrial: 34, coast: 32, circuit: 32, lot: 40 };
 const DEV_NAMES = ['K.TAKAGI', 'R.AMAGI', 'S.KUROSAWA', 'M.SHIRAISHI', 'Y.KAGURA', 'K.TOJO', 'DEV TEAM', 'NIGHT GHOST'];
+
+// ---- エキストラパーツ（パーツショップ） ----
+// perf: true のものは性能に影響するため、装着中は週間ランキングに記録されない
+const EXTRAS = [
+  { id: 'jet', name: 'ジェットエンジン', price: 8000000, perf: 1, kind: 'thrust', F: 8000, drain: 0.18, rech: 0.07, col: [1, 0.55, 0.15], desc: 'ブーストボタンで噴射。長く押し続けられる強力な推進力' },
+  { id: 'twinjet', name: 'ツインジェット', price: 12000000, perf: 1, kind: 'thrust', F: 11000, drain: 0.22, rech: 0.06, col: [1, 0.5, 0.1], twin: 1, desc: 'ジェット2基。さらに強い推進力' },
+  { id: 'rocket', name: 'ロケットエンジン', price: 15000000, perf: 1, kind: 'thrust', F: 19000, drain: 0.45, rech: 0.05, col: [1, 0.3, 0.05], desc: '約2秒の爆発的な加速。チャージに時間がかかる' },
+  { id: 'plasma', name: 'プラズマブースター', price: 10000000, perf: 1, kind: 'thrust', F: 9500, drain: 0.16, rech: 0.09, col: [0.3, 0.6, 1], desc: '青い炎のブースター。回復が速い' },
+  { id: 'hop', name: 'ジャンプスラスター', price: 6000000, perf: 1, kind: 'hop', drain: 0.5, rech: 0.2, col: [0.6, 0.9, 1], desc: 'ブーストボタンでその場でジャンプ！' },
+  { id: 'chute', name: 'ドラッグシュート', price: 700000, perf: 0, kind: 'chute', drain: 0.3, rech: 0.15, col: [1, 1, 1], desc: 'ブーストボタンでパラシュートを開いて急減速' },
+  { id: 'fireworks', name: '花火ランチャー', price: 1200000, perf: 0, kind: 'fireworks', drain: 0.35, rech: 0.25, col: [1, 0.8, 0.2], desc: 'ブーストボタンで花火を打ち上げる（見た目だけ）' },
+  { id: 'backfire', name: 'バックファイアキット', price: 900000, perf: 0, kind: 'backfire', drain: 0.25, rech: 0.2, col: [1, 0.45, 0.1], desc: 'ブーストボタンでマフラーから炎（見た目だけ）' },
+  { id: 'horn', name: 'ミュージックホーン', price: 500000, perf: 0, kind: 'horn', drain: 0.5, rech: 0.3, col: [1, 1, 1], desc: 'ブーストボタンでメロディホーンを鳴らす' },
+  { id: 'smoke', name: 'レインボースモーク', price: 800000, perf: 0, kind: 'smoke', desc: 'ドリフトのタイヤスモークが虹色に（ブーストはニトロのまま）' }
+];
+const EXTRA_BY_ID = Object.fromEntries(EXTRAS.map(e => [e.id, e]));
 
 // =====================================================================
 // items.js — チェスト／日替わりショップのアイテム（114種）
@@ -1420,6 +1455,16 @@ addItem({ id: 'mt_holy', type: 'meter', name: 'メーター「ホーリーナイ
 BG_THEMES.holynight = { name: 'ホーリーナイト', floor: [0.06, 0.08, 0.12], wall: [0.04, 0.05, 0.1], strip: [[1, 0.15, 0.15], [0.15, 0.9, 0.35]], zen: [0.18, 0.22, 0.42], hor: [0.08, 0.1, 0.2], fog: [0.03, 0.04, 0.08], fx: 'snow', prop: 'trees', pine: 1 };
 addItem({ id: 'bg_holynight', type: 'bg', name: '背景「ホーリーナイト」', rarity: 'L', bg: 'holynight', lim: 'advent' });
 addItem({ id: 'car_lg_santa', type: 'car', name: 'SANTA EXPRESS（限定車）', rarity: 'L', car: 'lg_santa', lim: 'advent' });
+// ---- ランキング上位の限定報酬（チェスト・ショップには出ない） ----
+addItem({ id: 'dc_champ', type: 'decal', name: '「CHAMPION」ステッカー', rarity: 'L', kind: 'text', text: 'CHAMPION', bg: '#111', fg: '#ffd700', font: 'Arial', lim: 'rank' });
+addItem({ id: 'mt_champ', type: 'meter', name: 'メーター「チャンピオン」', rarity: 'L', meter: 'mt_champ', lim: 'rank' });
+addItem({ id: 'pl_champ', type: 'plate', name: '光るナンバー「チャンピオンゴールド」', rarity: 'L', rgb: [1, 0.84, 0.2], lim: 'rank' });
+addItem({ id: 'wh_champ', type: 'wheel', name: 'チャンピオンゴールド', rarity: 'L', spokes: 18, deep: 1, rim: '#ffd700', lim: 'rank' });
+addItem({ id: 'dc_rank2', type: 'decal', name: '「RUNNER-UP」ステッカー', rarity: 'E', kind: 'text', text: 'RUNNER-UP', bg: '#2a2c30', fg: '#e6e8ec', font: 'Arial', lim: 'rank' });
+addItem({ id: 'pt_rank2', type: 'paint', name: 'シルバーメダリスト', rarity: 'E', color: '#c8ccd4', paint: 'chrome', lim: 'rank' });
+addItem({ id: 'dc_rank3', type: 'decal', name: '「PODIUM」ステッカー', rarity: 'R', kind: 'text', text: 'PODIUM', bg: '#3a1e08', fg: '#e8a060', font: 'Arial', lim: 'rank' });
+addItem({ id: 'pt_rank3', type: 'paint', name: 'ブロンズメダリスト', rarity: 'R', color: '#b87333', paint: 'metallic', lim: 'rank' });
+const RANK_POOLS = { 1: ['dc_champ', 'mt_champ', 'pl_champ', 'wh_champ'], 2: ['dc_rank2', 'pt_rank2'], 3: ['dc_rank3', 'pt_rank3'] };
 const ITEM_BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 // チェスト限定ホイールを WHEEL_STYLES に登録
 for (const it of ITEMS.filter(i => i.type === 'wheel')) WHEEL_STYLES.push({ id: it.id, name: it.name, price: 0, spokes: it.spokes, deep: it.deep, rim: it.rim, chest: 1 });
@@ -1494,6 +1539,8 @@ function computeSpec(car, tune) {
   if (e === 'turbo') { pm *= forcedBase ? 1.15 : 1.32; lag = forcedBase ? 0.5 : 0.55; forced = true; }
   else if (e === 'bigturbo') { pm *= forcedBase ? 1.4 : 1.58; lag = 0.95; forced = true; }
   else if (e === 'super') { pm *= forcedBase ? 1.12 : 1.36; lag = 0.05; forced = true; }
+  else if (e === 'super2') { pm *= forcedBase ? 1.24 : 1.5; lag = 0.08; forced = true; }
+  else if (e === 'twin') { pm *= forcedBase ? 1.42 : 1.64; lag = 0.3; forced = true; }
   else if (e === 'swap') { hpBase = Math.max(car.hp * 1.25, 460); lag = 0; sound = 'v8'; }
   pm *= 1 + tune.ecu * (forced ? 0.05 : 0.03);
   if (forced) pm *= 1 + tune.intercooler * 0.035;
@@ -1534,10 +1581,10 @@ function computeSpec(car, tune) {
     P, Tpeak, redline, idle: 900, ratios, final, wheelR, drive: car.drive, dragK, roll: 12 + mass * 0.012,
     muF, muR, lon: mu * lonCam, B, C, slide, tire,
     brakeMax: mass * GRAV * 1.25 * (car.brake / 70) * (1 + tune.brake * 0.12),
-    lsd: diffLsd, lsd2way: tune.diff === '2way', turbo: forced && e !== 'swap' && e !== 'super' ? true : (e === 'super'), turboLag: lag, super: e === 'super',
+    lsd: diffLsd, lsd2way: tune.diff === '2way', turbo: forced && e !== 'swap', turboLag: lag, super: e === 'super' || e === 'super2' || e === 'twin',
     steerMax: 0.6 * (0.92 + car.handling / 100 * 0.14) * (1 - tune.toeF * 0.05) * (tune.knuckle ? 1.22 : 1), counterMax: tune.knuckle ? 0.9 : 0.7, transfer: 5 + susp * 2.5 + (tune.stab || 0) * 1.2, rollK: 1 / (1 + susp * 0.35 + (tune.stab || 0) * 0.25),
     shiftTime: 0.16 - (tune.clutch || 0) * 0.035, nosPow: 1.35 + (tune.nos || 0) * 0.1, nosCap: 1 + (tune.nos || 0) * 0.6,
-    downF: pick([0, 0.08, 0.14, 0.2], look.front) + ((look.side || 0) ? 0.03 : 0), downR: pick([0, 0.15, 0.42, 0.68, 0.85], look.wing) + pick([0, 0.04, 0.08], look.rear),
+    downF: pick([0, 0.08, 0.14, 0.2, 0.26], look.front) + ((look.side || 0) ? 0.03 : 0), downR: pick([0, 0.15, 0.42, 0.68, 0.85, 0.95, 1.02], look.wing) + pick([0, 0.04, 0.08], look.rear),
     sound, muffler: tune.muffler, rotary: sound === 'rotary', yawDamp: 0.1 + (tune.toeR > 0 ? tune.toeR * 0.4 : tune.toeR * 0.6)
   };
   // チェスト限定チューニングパーツの効果
@@ -2367,6 +2414,21 @@ const BODY_TYPES = {
   super: { nose: .32, hood: .450, deck: .650, ws: .72, rf: .58, rr: .37, rb: .2 }
 };
 
+function drawDecalShape(g, d, look) {
+    const it = typeof ITEM_BY_ID !== 'undefined' ? ITEM_BY_ID[d] : null;
+    if (it && it.kind === 'text') { g.font = `bold ${it.text.length > 6 ? 13 : it.text.length > 2 ? 18 : 24}px ${it.font === 'serif' ? 'serif' : 'Arial'}`; const w = Math.max(30, g.measureText(it.text).width + 14); g.fillStyle = it.bg; g.fillRect(-w / 2, -12, w, 24); g.fillStyle = it.fg; g.fillText(it.text, 0, 1); }
+    else if (it && it.kind === 'shape') drawShape(g, it.shape, it.color);
+    if (d === 'touge') { g.fillStyle = '#fff'; g.fillRect(-26, -16, 52, 32); g.fillStyle = '#111'; g.font = 'bold 26px serif'; g.fillText('峠', 0, 2); }
+    else if (d === 'legends') { g.fillStyle = '#e10600'; g.font = 'italic bold 16px Arial'; g.fillText('DRIFT LEGENDS', 0, 0); }
+    else if (d === 'doraku') { g.fillStyle = '#fff'; g.font = 'bold 15px serif'; g.fillText('峠道楽', 0, 0); }
+    else if (d === 'shoshin') { g.fillStyle = '#1bb34a'; g.beginPath(); g.moveTo(-12, -14); g.lineTo(0, -6); g.lineTo(0, 14); g.lineTo(-12, 6); g.fill(); g.fillStyle = '#ffd400'; g.beginPath(); g.moveTo(12, -14); g.lineTo(0, -6); g.lineTo(0, 14); g.lineTo(12, 6); g.fill(); }
+    else if (d === 'kaze') { g.fillStyle = 'rgba(0,0,0,0.75)'; g.font = 'bold 22px serif'; g.fillText('風神', 0, 0); }
+    else if (d === 'nightkids') { g.fillStyle = '#111'; g.fillRect(-40, -9, 80, 18); g.fillStyle = '#fff'; g.font = 'bold 11px Arial'; g.fillText('MIDNIGHT CLUB', 0, 1); }
+    else if (d === 'snowman') { g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 8, 12, 0, TAU); g.arc(0, -10, 8, 0, TAU); g.fill(); g.fillStyle = '#f80'; g.fillRect(0, -11, 8, 3); g.fillStyle = '#c00018'; g.fillRect(-9, -3, 18, 3); }
+    else if (d === 'sponsor') { g.fillStyle = '#111'; g.fillRect(-44, -10, 88, 20); g.fillStyle = '#ffd400'; g.font = 'italic bold 13px Arial'; g.fillText('KAZE OIL', 0, 1); }
+    else if (d === 'num') { g.fillStyle = '#fff'; g.fillRect(-22, -16, 44, 32); g.fillStyle = '#111'; g.font = 'bold 22px Arial'; g.fillText(String(look.number || 0), 0, 2); }
+    else if (d === 'xmas') { g.fillStyle = '#c00018'; g.fillRect(-48, -10, 96, 20); g.fillStyle = '#fff'; g.font = 'bold 11px Arial'; g.fillText('MERRY DRIFTMAS', 0, 1); }
+}
 function drawLivery(look, car, W = 512, H = 128) {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   const col = look.color, c2 = look.color2;
@@ -2386,28 +2448,6 @@ function drawLivery(look, car, W = 512, H = 128) {
   else if (lv === 'tiger') { g.fillStyle = c2; for (let i = 0; i < 14; i++) { const x = i * W / 14; g.beginPath(); g.moveTo(x, H * 0.3); g.quadraticCurveTo(x + 18, H * 0.5, x + 4, H * 0.78); g.lineTo(x + 14, H * 0.78); g.quadraticCurveTo(x + 28, H * 0.5, x + 12, H * 0.3); g.fill(); } }
   else if (lv === 'snow') { g.fillStyle = 'rgba(255,255,255,0.9)'; const r = mulberry32(5); for (let i = 0; i < 40; i++) { const x = r() * W, y = H * 0.25 + r() * H * 0.5, s = 3 + r() * 6; g.save(); g.translate(x, y); for (let k = 0; k < 6; k++) { g.rotate(PI / 3); g.fillRect(-0.7, 0, 1.4, s); } g.restore(); } }
   g.restore();
-  // デカール（ステッカー）
-  const dl = look.decals || []; const dpos = look.decalPos || {};
-  g.textBaseline = 'middle'; g.textAlign = 'center';
-  dl.forEach((d, di) => {
-    // 位置（前後・高さ）、大きさ、回転は自由に変更できる
-    const ps = Object.assign({ x: 0.2 + di * 0.18, y: 0.62, s: 1, r: 0 }, dpos[d] || {});
-    g.save(); g.translate(ps.x * W, (1 - ps.y) * H); g.rotate(ps.r * DEG); g.scale(ps.s, ps.s);
-    const it = typeof ITEM_BY_ID !== 'undefined' ? ITEM_BY_ID[d] : null;
-    if (it && it.kind === 'text') { g.font = `bold ${it.text.length > 6 ? 13 : it.text.length > 2 ? 18 : 24}px ${it.font === 'serif' ? 'serif' : 'Arial'}`; const w = Math.max(30, g.measureText(it.text).width + 14); g.fillStyle = it.bg; g.fillRect(-w / 2, -12, w, 24); g.fillStyle = it.fg; g.fillText(it.text, 0, 1); }
-    else if (it && it.kind === 'shape') drawShape(g, it.shape, it.color);
-    if (d === 'touge') { g.fillStyle = '#fff'; g.fillRect(-26, -16, 52, 32); g.fillStyle = '#111'; g.font = 'bold 26px serif'; g.fillText('峠', 0, 2); }
-    else if (d === 'legends') { g.fillStyle = '#e10600'; g.font = 'italic bold 16px Arial'; g.fillText('DRIFT LEGENDS', 0, 0); }
-    else if (d === 'doraku') { g.fillStyle = '#fff'; g.font = 'bold 15px serif'; g.fillText('峠道楽', 0, 0); }
-    else if (d === 'shoshin') { g.fillStyle = '#1bb34a'; g.beginPath(); g.moveTo(-12, -14); g.lineTo(0, -6); g.lineTo(0, 14); g.lineTo(-12, 6); g.fill(); g.fillStyle = '#ffd400'; g.beginPath(); g.moveTo(12, -14); g.lineTo(0, -6); g.lineTo(0, 14); g.lineTo(12, 6); g.fill(); }
-    else if (d === 'kaze') { g.fillStyle = 'rgba(0,0,0,0.75)'; g.font = 'bold 22px serif'; g.fillText('風神', 0, 0); }
-    else if (d === 'nightkids') { g.fillStyle = '#111'; g.fillRect(-40, -9, 80, 18); g.fillStyle = '#fff'; g.font = 'bold 11px Arial'; g.fillText('MIDNIGHT CLUB', 0, 1); }
-    else if (d === 'snowman') { g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 8, 12, 0, TAU); g.arc(0, -10, 8, 0, TAU); g.fill(); g.fillStyle = '#f80'; g.fillRect(0, -11, 8, 3); g.fillStyle = '#c00018'; g.fillRect(-9, -3, 18, 3); }
-    else if (d === 'sponsor') { g.fillStyle = '#111'; g.fillRect(-44, -10, 88, 20); g.fillStyle = '#ffd400'; g.font = 'italic bold 13px Arial'; g.fillText('KAZE OIL', 0, 1); }
-    else if (d === 'num') { g.fillStyle = '#fff'; g.fillRect(-22, -16, 44, 32); g.fillStyle = '#111'; g.font = 'bold 22px Arial'; g.fillText(String(look.number || 0), 0, 2); }
-    else if (d === 'xmas') { g.fillStyle = '#c00018'; g.fillRect(-48, -10, 96, 20); g.fillStyle = '#fff'; g.font = 'bold 11px Arial'; g.fillText('MERRY DRIFTMAS', 0, 1); }
-    g.restore();
-  });
   return c;
 }
 function drawShape(g, sh, col) {
@@ -2584,16 +2624,20 @@ function buildCarModel(R, car, look, opts = {}) {
   if (look.front >= 1) gbDark.box(0, botAt(0.99) + 0.01, Z(0.985), W - 0.2, 0.04, 0.16, dark);
   if (look.front >= 2) { gbBody.box(0, botAt(1) + 0.05, Z(0.995), W * 0.88, 0.1, 0.12, bodyCol); for (const s of [-1, 1]) gbDark.box(s * xN * 0.62, botAt(1) + 0.09, Z(1.0) + 0.01, 0.3, 0.07, 0.03, dark); }
   if (look.front >= 3) for (const s of [-1, 1]) gbCarbon.box(s * (xN + 0.01), botAt(0.97) + 0.12, Z(0.965), 0.18, 0.015, 0.16, carbon);
+  if (look.front >= 4) { gbCarbon.box(0, botAt(1) - 0.005, Z(1.0) + 0.06, W * 0.96, 0.02, 0.2, carbon); for (const s of [-1, 1]) gbCarbon.box(s * W * 0.47, botAt(1) + 0.03, Z(1.0) + 0.1, 0.02, 0.07, 0.12, carbon); }
   if (look.rear >= 1) for (let k = -2; k <= 2; k++) gbDark.box(k * 0.2, botAt(0.01) + 0.03, Z(0.02), 0.025, 0.08 + look.rear * 0.03, 0.3, dark);
   if (look.side >= 1) for (const s of [-1, 1]) gbBody.box(s * (hw0 + 0.01 * look.side), clr + 0.05, (zF + zR) / 2, 0.05 + 0.025 * look.side, 0.09, car.wb - 0.75, bodyCol);
   if (look.wing === 1) gbBody.hexa([[-hw0 + 0.12, deckY, Z(0.015)], [hw0 - 0.12, deckY, Z(0.015)], [hw0 - 0.12, deckY, Z(0.12)], [-hw0 + 0.12, deckY, Z(0.12)], [-hw0 + 0.12, deckY + 0.07, Z(0.0)], [hw0 - 0.12, deckY + 0.07, Z(0.0)], [hw0 - 0.12, deckY + 0.01, Z(0.12)], [-hw0 + 0.12, deckY + 0.01, Z(0.12)]], bodyCol);
   if (look.wing >= 2) {
-    const hgt = look.wing === 3 ? 0.42 : look.wing === 4 ? 0.5 : 0.26, wz = Z(0.06), wcol = look.wing >= 2 ? carbon : bodyCol, span = look.wing === 4 ? hw0 + 0.05 : hw0 - 0.06;
+    const hgt = pick([0, 0, 0.26, 0.42, 0.5, 0.36, 0.44], look.wing), wz = Z(0.06), wcol = look.wing >= 2 ? carbon : bodyCol, span = look.wing === 4 || look.wing === 6 ? hw0 + 0.08 : hw0 - 0.06;
+    if (look.wing === 5) gbCarbon.hexa([[-span, deckY + hgt + 0.13, wz - 0.12], [span, deckY + hgt + 0.13, wz - 0.12], [span, deckY + hgt + 0.15, wz + 0.1], [-span, deckY + hgt + 0.15, wz + 0.1], [-span, deckY + hgt + 0.18, wz - 0.12], [span, deckY + hgt + 0.18, wz - 0.12], [span, deckY + hgt + 0.17, wz + 0.1], [-span, deckY + hgt + 0.17, wz + 0.1]], carbon);
     for (const s of [-1, 1]) gbDark.box(s * (hw0 - 0.45), deckY + hgt / 2, wz, 0.035, hgt, 0.12, dark);
     gbCarbon.hexa([[-span, deckY + hgt, wz - 0.17], [span, deckY + hgt, wz - 0.17], [span, deckY + hgt + 0.02, wz + 0.17], [-span, deckY + hgt + 0.02, wz + 0.17], [-span, deckY + hgt + 0.06, wz - 0.17], [span, deckY + hgt + 0.06, wz - 0.17], [span, deckY + hgt + 0.04, wz + 0.17], [-span, deckY + hgt + 0.04, wz + 0.17]], wcol);
     if (look.wing >= 3) for (const s of [-1, 1]) gbDark.box(s * span, deckY + hgt + 0.02, wz, 0.015, 0.24, 0.42, dark);
   }
   if (look.hood === 2 || car.body === 'rally') { const hf = lerp(T.ws, 0.92, 0.45), hy = topAt(hf); gbDark.box(0, hy + 0.035, Z(hf), 0.5, 0.06, 0.36, look.hood === 2 ? carbon : bodyCol); gbDark.box(0, hy + 0.045, Z(hf) + 0.18, 0.42, 0.04, 0.015, [0.01, 0.01, 0.01]); }
+  if (look.hood === 3) { gbCarbon.box(0, topAt(lerp(T.ws, 0.92, 0.5)) + 0.004, Z(lerp(T.ws, 0.92, 0.5)), 0.9, 0.012, 0.6, carbon); for (const s of [-1, 1]) for (let k = 0; k < 4; k++) { const hf = lerp(T.ws, 0.92, 0.3 + k * 0.1); gbDark.box(s * 0.32, topAt(hf) + 0.012, Z(hf), 0.22, 0.018, 0.035, [0.02, 0.02, 0.02]); } }
+  if (look.roof === 3 && !T.open) { const rf = lerp(T.rr, T.rf, 0.75); gbBody.box(0, H + 0.05, Z(rf), 0.36, 0.1, 0.32, bodyCol); gbDark.box(0, H + 0.05, Z(rf) + 0.165, 0.3, 0.07, 0.01, [0.01, 0.01, 0.01]); }
   if (look.roof === 1 && !T.open) gbBody.box(0, H + 0.04, Z((T.rr + T.rf) / 2) + 0.15, 0.4, 0.06, 0.3, bodyCol);
   if (look.roof === 2 && !T.open) gbCarbon.hexa([[-hw0 * 0.6, H - 0.01, Z(T.rr) + 0.02], [hw0 * 0.6, H - 0.01, Z(T.rr) + 0.02], [hw0 * 0.6, H, Z(T.rr) + 0.2], [-hw0 * 0.6, H, Z(T.rr) + 0.2], [-hw0 * 0.6, H + 0.04, Z(T.rr) - 0.05], [hw0 * 0.6, H + 0.04, Z(T.rr) - 0.05], [hw0 * 0.6, H + 0.02, Z(T.rr) + 0.2], [-hw0 * 0.6, H + 0.02, Z(T.rr) + 0.2]], carbon);
   // ルーフアクセサリー（クリスマス限定）
@@ -2622,6 +2666,33 @@ function buildCarModel(R, car, look, opts = {}) {
     for (let i2 = 0; i2 < segs; i2++) { const x = -0.28 + (i2 + 0.5) * 0.56 / segs; gbGlow.box(x, py0 - 0.018, pz, 0.56 / segs, th, 0.012, cols[k++ % cols.length]); gbGlow.box(-x, py0 + 0.148, pz, 0.56 / segs, th, 0.012, cols[k++ % cols.length]); }
     for (const sx of [-1, 1]) for (let i2 = 0; i2 < 3; i2++) gbGlow.box(sx * 0.29, py0 - 0.01 + (i2 + 0.5) * 0.15 / 3, pz, th, 0.05, 0.012, cols[(k++) % cols.length]);
   }
+  // エキストラ（ジェット・ロケット等）
+  { const ex = look.extra; const zb = Z(0.03), yb = deckY + 0.16;
+    if (ex === 'jet' || ex === 'twinjet' || ex === 'plasma') { const xs = ex === 'twinjet' ? [-0.35, 0.35] : [0]; for (const x of xs) { gbChrome.box(x, yb, zb + 0.15, 0.3, 0.3, 0.75, ex === 'plasma' ? [0.5, 0.6, 0.8] : [0.62, 0.62, 0.66]); gbDark.box(x, yb, zb - 0.235, 0.24, 0.24, 0.02, [0.02, 0.02, 0.02]); gbGlow.box(x, yb, zb - 0.245, 0.16, 0.16, 0.01, ex === 'plasma' ? [0.3, 0.6, 1] : [1, 0.5, 0.15]); gbDark.box(x, deckY + 0.04, zb + 0.15, 0.08, 0.06, 0.4, dark); } }
+    if (ex === 'rocket') { gbBody.box(0, yb + 0.02, zb + 0.25, 0.34, 0.34, 0.95, [0.85, 0.85, 0.88]); gbBody.box(0, yb + 0.02, zb + 0.78, 0.22, 0.22, 0.14, [0.85, 0.1, 0.08]); for (const s of [-1, 1]) gbBody.box(s * 0.22, yb + 0.02, zb - 0.1, 0.12, 0.02, 0.24, [0.85, 0.1, 0.08]); gbGlow.box(0, yb + 0.02, zb - 0.23, 0.22, 0.22, 0.01, [1, 0.35, 0.05]); gbDark.box(0, deckY + 0.04, zb + 0.25, 0.1, 0.08, 0.5, dark); }
+    if (ex === 'hop') for (const s of [-1, 1]) for (const zz of [zF, zR]) gbChrome.box(s * (hw0 - 0.2), clr - 0.02, zz, 0.12, 0.06, 0.12, [0.55, 0.75, 0.95]);
+    if (ex === 'chute') gbBody.box(0, deckY + 0.06, Z(0.02) + 0.05, 0.3, 0.12, 0.2, [0.9, 0.1, 0.1]);
+    if (ex === 'fireworks') for (const s of [-1, 1]) for (let k = 0; k < 3; k++) gbBody.box(s * (0.2 + k * 0.12), deckY + 0.12, Z(0.07), 0.08, 0.2, 0.08, [[1, 0.2, 0.2], [0.2, 0.6, 1], [1, 0.85, 0.2]][k]);
+  }
+  // デカール（ステッカー）：側面・ボンネット・ルーフ・トランクの好きな場所に1枚ずつ
+  const decalGB = new GB(); let decalCanvas = null;
+  { const dl = (look.decals || []).slice(0, 8); if (dl.length) {
+      const CW = 256, CH = 128; decalCanvas = document.createElement('canvas'); decalCanvas.width = CW * 4; decalCanvas.height = CH * 2; const g = decalCanvas.getContext('2d');
+      dl.forEach((d, di) => {
+        const cx = (di % 4) * CW, cy = Math.floor(di / 4) * CH; g.save(); g.beginPath(); g.rect(cx, cy, CW, CH); g.clip(); g.translate(cx + CW / 2, cy + CH / 2); g.scale(2.3, 2.3); g.textBaseline = 'middle'; g.textAlign = 'center'; drawDecalShape(g, d, look); g.restore();
+        const ps = Object.assign({ f: 'L', x: 0.2 + di * 0.18, y: 0.55, s: 1, r: 0 }, (look.decalPos || {})[d] || {}); const face = ps.f || 'L';
+        const w = 0.5 * clamp(ps.s, 0.3, 3), h = w / 2, rr = (ps.r || 0) * DEG; let C, U, Vv, Nn;
+        if (face === 'L' || face === 'R') { const sg = face === 'R' ? 1 : -1, f = clamp(ps.x, 0.05, 0.95), yy = clamp(ps.y * H, botAt(f) + 0.06, beltAt(f) - 0.02); C = [sg * (widthAt(f) + 0.014), yy, Z(f)]; Nn = [sg, 0, 0]; U = [0, 0, -sg]; Vv = [0, 1, 0]; }
+        else { const rng = face === 'H' ? [T.ws + 0.02, 0.95] : face === 'T' ? [T.rr + 0.02, T.rf - 0.02] : [0.03, T.rb - 0.01]; const f = lerp(rng[0], rng[1], clamp(ps.x, 0, 1)); const lat = (clamp(ps.y, 0, 1) - 0.5) * 2 * widthAt(f) * 0.75;
+          const yy = (face === 'T' && !T.open ? H + 0.018 : topAt(f)) + 0.016, sl = face === 'T' ? 0 : (topAt(Math.min(1, f + 0.01)) - topAt(Math.max(0, f - 0.01))) / (0.02 * L); const nl = Math.hypot(1, sl);
+          C = [lat, yy, Z(f)]; Nn = [0, 1 / nl, -sl / nl]; Vv = [0, sl / nl, 1 / nl]; U = [-1, 0, 0]; }
+        const cr = Math.cos(rr), sr = Math.sin(rr); const u2 = U.map((v, k) => v * cr + Vv[k] * sr), v2 = Vv.map((v, k) => -U[k] * sr + v * cr);
+        const P4 = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => [C[0] + u2[0] * a * w / 2 + v2[0] * b * h / 2, C[1] + u2[1] * a * w / 2 + v2[1] * b * h / 2, C[2] + u2[2] * a * w / 2 + v2[2] * b * h / 2]);
+        const u0 = (di % 4) / 4, u1 = u0 + 0.25, w0 = 1 - Math.floor(di / 4) / 2, w1 = w0 - 0.5; const UV = [[u0, w1], [u1, w1], [u1, w0], [u0, w0]];
+        const vx = k => decalGB.v(P4[k][0], P4[k][1], P4[k][2], Nn[0], Nn[1], Nn[2], [1, 1, 1], UV[k][0], UV[k][1]);
+        vx(0); vx(1); vx(2); vx(0); vx(2); vx(3); vx(0); vx(2); vx(1); vx(0); vx(3); vx(2);
+      });
+  } }
   // アンダーネオン
   const GLOW = { red: [1, 0.08, 0.1], blue: [0.1, 0.4, 1], green: [0.1, 1, 0.35], purple: [0.7, 0.15, 1], white: [0.9, 0.95, 1], xmas: null };
   const glowCol = look.glow && look.glow !== 'none' ? (look.glow === 'xmas' ? [1, 0.2, 0.2] : (GLOW[look.glow] || (typeof ITEM_BY_ID !== 'undefined' && ITEM_BY_ID[look.glow] ? ITEM_BY_ID[look.glow].rgb : null) || [1, 1, 1])) : null;
@@ -2644,6 +2715,7 @@ function buildCarModel(R, car, look, opts = {}) {
   const ghost = opts.ghost;
   const A = ghost ? { blend: true, alpha: 0.35, depthWrite: false } : {};
   add(gbSide, Mat(Object.assign({ tex: livTex, texMode: 1, refl: pm.refl, spec: pm.spec, shin: pm.shin }, A)));
+  const decalTex = decalCanvas ? R.texFromCanvas(decalCanvas, null, true, true) : null; if (decalTex) add(decalGB, Mat(Object.assign({ tex: decalTex, texMode: 3, spec: 0.3, shin: 30, refl: pm.refl * 0.5 }, A)));
   add(gbBody, Mat(Object.assign({ refl: pm.refl, spec: pm.spec, shin: pm.shin }, A)));
   add(gbCarbon, Mat(Object.assign({ refl: 0.38, spec: 1.2, shin: 90 }, A)));
   const glassAlpha = ghost ? 0.35 : 0.7 + tint * 0.27; const glassMat = Mat({ refl: 0.6, spec: 1.4, shin: 140, blend: true, alpha: glassAlpha, depthWrite: !ghost }); add(gbGlass, glassMat);
@@ -2730,7 +2802,7 @@ function buildCarModel(R, car, look, opts = {}) {
       this.body.rot = [0, st.pitch || 0, st.roll || 0];
       this.body.pos = [0, (opts.height || 0) / 1000, 0];
     },
-    dispose() { for (const m of this.meshes) m.dispose(); R.gl.deleteTexture(livTex); R.gl.deleteTexture(plateTex); }
+    dispose() { for (const m of this.meshes) m.dispose(); R.gl.deleteTexture(livTex); R.gl.deleteTexture(plateTex); if (decalTex) R.gl.deleteTexture(decalTex); }
   };
   model.setLights(false); model.setBrake(false);
   return model;
@@ -2851,6 +2923,21 @@ function plateIcon(it, size) {
   const defs = it.rainbow ? `<defs><linearGradient id="${id}"><stop offset="0" stop-color="${it.aurora ? '#3bff9a' : '#f33'}"/><stop offset=".5" stop-color="${it.aurora ? '#3bc8ff' : '#3f9'}"/><stop offset="1" stop-color="${it.aurora ? '#b05bff' : '#39f'}"/></linearGradient></defs>` : '';
   return `<svg class="ico" viewBox="0 0 48 48" width="${size}" height="${size}">${defs}<rect x="5" y="14" width="38" height="20" rx="3" fill="none" stroke="${c}" stroke-width="3.5" style="filter:drop-shadow(0 0 3px ${it.rainbow ? '#fff' : c})"/><rect x="9" y="18" width="30" height="12" rx="1.5" fill="#f4f4ee"/><text x="24" y="27.5" font-size="8" font-family="Orbitron,Arial" font-weight="900" text-anchor="middle" fill="#123">86-86</text></svg>`;
 }
+function medalIcon(k, size) {
+  const c = { g: ['#fff3a0', '#ffd700', '#b8860b'], s: ['#ffffff', '#c8ccd4', '#7a7f88'], b: ['#ffd0a0', '#cd7f32', '#7a4a1a'] }[k] || ['#fff', '#aaa', '#555']; const id = 'md' + (++_icoN);
+  return `<svg class="ico" viewBox="0 0 48 48" width="${size}" height="${size}"><defs><radialGradient id="${id}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></radialGradient></defs><path d="M14 2h8l4 12h-8zM34 2h-8l-4 12h8z" fill="${k === 'g' ? '#c8102e' : k === 's' ? '#1e5aff' : '#2f8a55'}"/><circle cx="24" cy="30" r="15" fill="url(#${id})" stroke="${c[2]}" stroke-width="2"/><circle cx="24" cy="30" r="10.5" fill="none" stroke="${c[2]}" stroke-width="1.2" opacity=".6"/><text x="24" y="35" font-size="13" font-family="Orbitron,Arial" font-weight="900" text-anchor="middle" fill="${c[2]}">${{ g: 1, s: 2, b: 3 }[k] || ''}</text></svg>`;
+}
+function extraIcon(e, size) {
+  const c = e.col ? `rgb(${e.col.map(v => Math.round(v * 255)).join(',')})` : '#fff';
+  const body = { thrust: `<rect x="6" y="18" width="26" height="12" rx="4" fill="#aab"/><path d="M32 20l10-4v16l-10-4z" fill="${c}"/><path d="M42 18l5 6-5 6" fill="${c}" opacity=".6"/>${e.twin ? '<rect x="6" y="6" width="22" height="9" rx="3" fill="#aab"/><path d="M28 7l8-3v13l-8-3z" fill="' + c + '"/>' : ''}`,
+    hop: `<path d="M10 34l4-4h20l4 4z" fill="#aab"/><path d="M14 38l-4 8M34 38l4 8M24 38v8" stroke="${c}" stroke-width="3"/><path d="M24 4l8 10h-5v10h-6V14h-5z" fill="${c}"/>`,
+    chute: `<path d="M6 22a18 14 0 0136 0z" fill="#e10600"/><path d="M6 22l18 20 18-20M15 22l9 20M33 22l-9 20" stroke="#fff" stroke-width="1.5" fill="none"/>`,
+    fireworks: `<circle cx="24" cy="18" r="3" fill="${c}"/>${[0, 45, 90, 135, 180, 225, 270, 315].map(a => `<path d="M24 18l${(Math.cos(a * Math.PI / 180) * 14).toFixed(1)} ${(Math.sin(a * Math.PI / 180) * 14).toFixed(1)}" stroke="${['#ff4040', '#40a0ff', '#ffd040', '#40ff80'][a / 45 % 4]}" stroke-width="2.5" stroke-linecap="round"/>`).join('')}<path d="M24 46V30" stroke="#aaa" stroke-width="2"/>`,
+    backfire: `<rect x="4" y="20" width="18" height="8" rx="3" fill="#aab"/><path d="M22 18c8-6 12 0 22-4-4 6-4 8 0 12-10-2-14 4-22-2z" fill="${c}"/>`,
+    horn: `<path d="M6 20h8l14-10v28L14 28H6z" fill="#ffcf3d"/><path d="M34 16c4 4 4 12 0 16M39 11c7 7 7 19 0 26" stroke="#ffcf3d" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+    smoke: `<circle cx="16" cy="28" r="9" fill="#ff5a5a"/><circle cx="26" cy="22" r="10" fill="#5aff8a" opacity=".85"/><circle cx="34" cy="30" r="9" fill="#5ab0ff" opacity=".85"/>` }[e.kind] || '';
+  return `<svg class="ico" viewBox="0 0 48 48" width="${size}" height="${size}">${body}</svg>`;
+}
 // アイテム種類ごとのアイコン
 function itemIconSvg(it, size = 34) {
   switch (it.type) {
@@ -2886,6 +2973,7 @@ const METER_STYLES = {
   mt_minimal: { kind: 'digital', look: 'thin', bg: 'rgba(0,0,0,.35)', c1: '#ffffff', c2: '#ffffff', c3: '#ff3030', digit: '#fff', glow: 0 },
   candy: { name: 'キャンディケイン', kind: 'analog', face: '#fff8f0', faceText: '#b0001a', tick: '#b0001a', num: '#b0001a', needle: '#0f7a3a', arc: ['#0f7a3a', '#2fdc7a'], bezel: 'candy', red: '#e10600', sub: '#0f7a3a', pattern: 'snow' },
   mt_snow: { kind: 'digital', look: 'ring', bg: '#0a1530', c1: '#bfe6ff', c2: '#ffffff', c3: '#ff5a5a', digit: '#ffffff', glow: '#9ad0ff', pattern: 'snow' },
+  mt_champ: { kind: 'analog', face: '#0b0a05', tick: '#ffd700', num: '#fff', needle: '#ffd700', arc: 'rainbow', bezel: 'gold', red: '#ff3030', glow: '#ffd700', star: 1 },
   mt_holy: { kind: 'analog', face: '#08130e', tick: '#ffd76a', num: '#fff', needle: '#e10600', arc: ['#0f7a3a', '#e10600'], bezel: 'gold', red: '#e10600', glow: '#ffd76a', pattern: 'snow', star: 1 }
 };
 for (const id in METER_STYLES) { const it = (typeof ITEM_BY_ID !== 'undefined') && ITEM_BY_ID[id]; if (!METER_STYLES[id].name) METER_STYLES[id].name = it ? it.name.replace(/^メーター「|」$/g, '') : id; }
@@ -3199,6 +3287,17 @@ class AudioSys {
     const chordDeg = tr.prog[bar % 4], root = tr.key + S.scale[chordDeg % 7] - 12;
     const notes = S.chordNotes(chordDeg).map(n => tr.key + n);
     const bus = this.musicBus, chill = tr.chill, brk = sec === 5 && bar % 8 < 4;
+    // ソフト（ビート控えめのユーロビート）
+    if (tr.soft) {
+      if (!brk) { if (s16 === 0) this.kick(t, 0.45); if (s16 % 4 === 2 && sec >= 1) this.noiseBurstAt(t, 0.05, 9500, 0.5, 0.025, 'highpass'); }
+      if (s16 === 0 && sec !== 5) notes.forEach((n, i) => { this.synth(t, this.midi(n), st * 15.5, 'triangle', 0.045, 1600, i * 5 - 5); this.synth(t, this.midi(n + 12), st * 15.5, 'sawtooth', 0.016, 1100, i * 7 - 7); });
+      if (s16 % 2 === 0 && sec !== 5) this.synth(t, this.midi(root + (s16 % 4 === 2 ? 12 : 0)), st * 1.5, 'sawtooth', 0.1, 650 + (s16 % 4 === 2 ? 400 : 0));
+      if (sec >= 1 && sec !== 5 && [0, 3, 6, 10, 12, 14].includes(s16)) notes.forEach((n, i) => this.synth(t, this.midi(n + 12), st * 1.2, 'square', 0.022, 2400, i * 4 - 4));
+      if (sec >= 1) { const n = notes[S.arpPat[s16 % 8] % 3] + 24; this.synth(t, this.midi(n), st * 0.85, 'triangle', 0.035, 4200, 0, true); if (s16 % 4 === 0) this.bell(t, this.midi(n + 12), 0.025); }
+      if (sec >= 2 && sec !== 5 || (sec === 5 && bar % 8 >= 4)) { const ph = S.phr[Math.floor((bar % 8) / 2)]; const pos = (bar % 2) * 16 + s16;
+        for (const nt of ph) if (nt.s === pos) { const n = tr.key + 12 + S.scale[nt.deg % 7] + 12 * Math.floor(nt.deg / 7); const dur = st * (nt.len * 2.2); this.synth(t, this.midi(n), dur, 'sawtooth', 0.055, 3600, 6, true); this.synth(t, this.midi(n + 12), dur, 'triangle', 0.035, 5000, -6, true); this.bell(t, this.midi(n + 24), 0.03); } }
+      return;
+    }
     // ドラム
     if (!brk) {
       if (chill ? s16 % 8 === 0 : s16 % 4 === 0) this.kick(t);
@@ -3225,7 +3324,7 @@ class AudioSys {
       }
     }
   }
-  kick(t) { const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3); o.connect(g); g.connect(this.musicBus); o.start(t); o.stop(t + 0.32); }
+  kick(t, v = 1) { const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); g.gain.setValueAtTime(0.9 * v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3); o.connect(g); g.connect(this.musicBus); o.start(t); o.stop(t + 0.32); }
   clap(t, v) { this.noiseBurstAt(t, 0.14, 1600, 1.2, v, 'bandpass'); this.noiseBurstAt(t + 0.01, 0.1, 1200, 1, v * 0.6, 'bandpass'); }
   hat(t, v, d) { this.noiseBurstAt(t, d, 8000, 0.7, v, 'highpass'); }
   noiseBurstAt(t, dur, freq, q, vol, type) { const c = this.ctx; const s = c.createBufferSource(); s.buffer = this.noise; const f = c.createBiquadFilter(), g = c.createGain(); f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(this.musicBus); s.start(t, Math.random()); s.stop(t + dur + 0.02); }
@@ -3428,6 +3527,8 @@ class Game {
     Input.gasLatch = false; if (Input.refreshTouch) Input.refreshTouch();
     this.cleanup();
     this.cfg = cfg; const R = this.R; const set = SAVE.data.settings;
+    if (window.DL_FB && lbBlocked(cfg.carInst, null)) setTimeout(() => this.active && this.ui.toast('エキストラ装着中（またはテスト機能ON）のため、週間ランキングには記録されません'), 4200);
+    this.extra = (typeof EXTRA_BY_ID !== 'undefined' && cfg.carInst && cfg.carInst.look && EXTRA_BY_ID[cfg.carInst.look.extra]) || null; this.vert = !!(this.extra && this.extra.kind === 'hop'); this._exPrev = false; this.exActive = null; this._exWas = false; this._lbWarned = false;
     const def = MAP_BY_ID[cfg.mapId];
     this.track = new Track(def);
     this.env = makeEnv(cfg.time, cfg.weather); R.env = this.env;
@@ -3518,6 +3619,16 @@ class Game {
       if (this.countdown <= 0.6) { this.started = true; v.gear = 1; AUDIO.countdown(0); this.ui.countdown('GO!'); this.raceT = 0; this.lapStart = 0; }
       else { inp.brake = 1; inp.hand = 1; inp.steer = 0; v.gear = 0; }
     }
+    // エキストラ（ブーストボタンで作動）
+    const ex = this.extra;
+    if (ex && ex.kind !== 'smoke') {
+      const press = !!inp.nitro && this.started && !this.finished; inp.nitro = false; const edge = press && !this._exPrev; this._exPrev = press; let active = null;
+      if (ex.kind === 'thrust' || ex.kind === 'backfire' || ex.kind === 'chute') { if (press && v.nitro > 0.02) { active = ex; v.nitro -= ex.drain * dt; } else v.nitro += ex.rech * dt; }
+      else { if (edge && v.nitro >= ex.drain) { v.nitro -= ex.drain; this.extraFire(ex); } v.nitro += ex.rech * dt; }
+      v.nitro = clamp(v.nitro, 0, 1); this.exActive = active;
+      if (active && !this._exWas) { if (ex.kind === 'thrust') { AUDIO.nitroBurst(); if (ex.id === 'rocket') AUDIO.tone(45, 1.2, 'sawtooth', 0.25, 0, 0.6); } else if (ex.kind === 'backfire') AUDIO.pop && AUDIO.pop(); else if (ex.kind === 'chute') AUDIO.noiseBurst(0.5, 600, 0.6, 0.3, 0, 'bandpass'); }
+      this._exWas = !!active;
+    }
     // 操作アシスト（オートサイドブレーキ / オートニトロ）
     if (this.started && !this.finished && set && tr.K) {
       if (set.autoHand) { this._ahT = (this._ahT || 0) - dt; const k = Math.abs(tr.K[(this.loc.i + 6 + Math.floor(v.speed * 0.5)) % tr.n] || 0);
@@ -3543,6 +3654,7 @@ class Game {
       const p = this.track.pointAt(this.loc.prog, 0); v.reset(p.x, p.z, p.y, p.hd); v.gear = this.started ? 1 : 0;
     }
     if (DEV.owner && set.devNitro) v.nitro = 1;
+    if (this.exActive) { const e = this.exActive; if (e.kind === 'thrust') { const a = e.F / this.spec.mass * dt; v.vx += Math.sin(v.heading) * a; v.vz += Math.cos(v.heading) * a; } else if (e.kind === 'chute' && v.speed > 3) { const k = Math.min(0.5, 1.1 * dt); v.vx *= 1 - k; v.vz *= 1 - k; } }
     if (v.blowoff) { v.blowoff = 0; AUDIO.blowoff(); }
     if (this.started) this.raceT += dt;
     // 位置・壁
@@ -3551,9 +3663,9 @@ class Game {
     if (cfg.mode === 'online') this.updateNet(dt);
     this.collideRivals();
     const loc = this.loc = tr.locate(v.x, v.z, this.loc.i);
-    if (!tr.ramps) v.y = tr.env === 'lot' ? 0 : loc.y;
+    if (!tr.ramps && !this.vert) v.y = tr.env === 'lot' ? 0 : loc.y;
     else { // ジャンプ（空中の上下運動）
-      const gnd = loc.y + tr.rampH(loc.prog, loc.lat); this._gnd = gnd; if (!isFinite(v.y)) v.y = gnd; v.vy = v.vy || 0;
+      const gnd = (tr.env === 'lot' ? 0 : loc.y) + (tr.ramps ? tr.rampH(loc.prog, loc.lat) : 0); this._gnd = gnd; if (!isFinite(v.y)) v.y = gnd; v.vy = v.vy || 0;
       if (!v.air) {
         const pred = v.y + v.vy * dt - 4.9 * dt * dt;
         if (gnd < pred - 0.04 && v.speed > 6) { v.air = true; v.airT = 0; v.airX = v.x; v.airZ = v.z; v.y = pred; v.vy -= 9.81 * dt; }
@@ -3565,7 +3677,7 @@ class Game {
           if (imp > 1.5) { AUDIO.land(Math.min(1, imp / 9)); this.camShake = Math.min(1, this.camShake + imp / 14); }
           if (v.airT > 0.35 && this.started) { const dist = Math.hypot(v.x - v.airX, v.z - v.airZ); this.jumps = (this.jumps || 0) + 1; this.bestJump = Math.max(this.bestJump || 0, dist); this.ui.toast(`JUMP! ${dist.toFixed(1)}m（${v.airT.toFixed(2)}秒）`);
             if (this.drift && (cfg.mode === 'free' || cfg.mode === 'touge')) this.drift.total = (this.drift.total || 0) + Math.round(dist * 20);
-            if (window.DL_FB && cfg.mode !== 'online') window.DL_FB.lbSubmit('jump', Math.round(dist * 10) / 10).then(b => { if (b) this.ui.toast(`JUMP! ${dist.toFixed(1)}m ランキング自己ベスト更新！`); }); }
+            if (window.DL_FB && cfg.mode !== 'online' && !lbBlocked(this.carInst, this)) window.DL_FB.lbSubmit('jump', Math.round(dist * 10) / 10).then(b => { if (b) this.ui.toast(`JUMP! ${dist.toFixed(1)}m ランキング自己ベスト更新！`); }); }
         }
       }
     }
@@ -3586,7 +3698,7 @@ class Game {
     if (this.engine) {
       const slip = clamp(Math.max(Math.abs(v.slipR) * 2.2 - 0.25, v.spinR * 0.9, v.handOn ? 0.8 : 0, (Math.abs(v.slipF) * 2 - 0.35)) * clamp(v.speed / 6, 0, 1), 0, 1);
       if (v.nitroOn && !this._nitroWas) AUDIO.nitroBurst(); this._nitroWas = v.nitroOn;
-      AUDIO.updateEngine(this.engine, { nitro: v.nitroOn, rpm: v.rpm, thr: v.throttleOut, boost: v.boost, slip, speed: v.speed, redline: this.spec.redline, limiter: v.limiter > 0, snow: this.cfg.weather === 'snow' });
+      AUDIO.updateEngine(this.engine, { nitro: v.nitroOn || !!(this.exActive && this.exActive.kind === 'thrust'), rpm: v.rpm, thr: v.throttleOut, boost: v.boost, slip, speed: v.speed, redline: this.spec.redline, limiter: v.limiter > 0, snow: this.cfg.weather === 'snow' });
       if (v.lastShift) { v.lastShift = 0; AUDIO.shiftSfx(); }
     }
     this.rivals.forEach(r => { if (r.engine) { const dx = r.x - v.x, dz = r.z - v.z; const d = Math.hypot(dx, dz); const rx = -Math.cos(v.heading), rz = Math.sin(v.heading); AUDIO.updateEngine(r.engine, { rpm: r.rpm || 3000, thr: r.thr || 0.7, boost: 0.5, slip: r.drift > 0.15 ? r.drift * 1.5 : 0, speed: r.v, redline: r.spec.redline, dist: d, panX: (dx * rx + dz * rz) / Math.max(d, 1) }); } });
@@ -3709,7 +3821,7 @@ class Game {
     let dp = loc.prog - this.lastProg; if (dp < -L / 2) dp += L; if (dp > L / 2) dp -= L;
     this.lastProg = loc.prog;
     if (!this.started) return;
-    this.totalDist += dp; if (dp > 0 && dp < 50 && this.started && window.DL_FB) { const w = lbWeekDist(); if (w) w.m += dp; }
+    this.totalDist += dp; if (dp > 0 && dp < 50 && this.started && window.DL_FB && !lbBlocked(this.carInst, this)) { const w = lbWeekDist(); if (w) w.m += dp; }
     // 逆走判定
     const vt = v.vx * loc.tx + v.vz * loc.tz;
     this.wrongT = vt < -4 ? this.wrongT + dt : 0;
@@ -3794,6 +3906,15 @@ class Game {
     AUDIO.fanfare();
     setTimeout(() => { if (this.active) this.ui.showResults(res); }, 2200);
   }
+  extraFire(ex) {
+    const v = this.veh;
+    if (ex.kind === 'hop') { if (!v.air) { v.air = true; v.airT = 0; v.airX = v.x; v.airZ = v.z; v.vy = 7.5; AUDIO.noiseBurst(0.35, 300, 0.7, 0.4, 0, 'lowpass'); AUDIO.tone(220, 0.25, 'square', 0.12, 0, 2); } }
+    else if (ex.kind === 'fireworks') { const cols = [[1, 0.3, 0.3], [0.3, 0.7, 1], [1, 0.9, 0.3], [0.4, 1, 0.5], [1, 0.4, 1]];
+      for (let b = 0; b < 3; b++) setTimeout(() => { if (!this.active) return; const c = cols[(Math.random() * cols.length) | 0], cx = v.x + (Math.random() - .5) * 8, cy = v.y + 9 + Math.random() * 5, cz = v.z + (Math.random() - .5) * 8;
+        for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, e = Math.acos(2 * Math.random() - 1), sp = 5 + Math.random() * 3; this.sparks.spawn({ x: cx, y: cy, z: cz, vx: Math.sin(e) * Math.cos(a) * sp, vy: Math.cos(e) * sp, vz: Math.sin(e) * Math.sin(a) * sp, life: 0, max: 1.1 + Math.random() * 0.5, size: 0.35, grow: -0.1, r: c[0], g: c[1], b: c[2], a: 1, grav: 0.4, drag: 1 }); }
+        AUDIO.noiseBurst(0.5, 700, 0.6, 0.4, 0, 'lowpass'); AUDIO.noiseBurst(0.9, 4000, 0.8, 0.08, 0.05); }, b * 280); AUDIO.tone(500, 0.4, 'sine', 0.08, 0, 3); }
+    else if (ex.kind === 'horn') { [[659, 0], [784, 0.14], [880, 0.28], [784, 0.42], [988, 0.56], [880, 0.84]].forEach(([f, w]) => { AUDIO.tone(f, 0.13, 'square', 0.12, w); AUDIO.tone(f / 2, 0.13, 'sawtooth', 0.06, w); }); }
+  }
   // -------------------------------------------------------------
   effects(dt) {
     const v = this.veh, m = this.model, tr = this.track, wet = this.cfg.weather === 'rain', snow = this.cfg.weather === 'snow';
@@ -3804,9 +3925,11 @@ class Game {
     const frontSlip = clamp(Math.max(Math.abs(v.slipF) * 2.2 - 0.4, v.spinF), 0, 1.2) * clamp(v.speed / 5, 0, 1);
     const emit = (p, amt) => {
       if (amt < 0.08 || v.air) return; const cnt = amt * dt * (snow ? 70 : 55); let n = Math.floor(cnt) + (Math.random() < cnt % 1 ? 1 : 0);
-      for (let k = 0; k < n; k++) this.smoke.spawn({ x: p[0] + (Math.random() - .5) * 0.4, y: p[1] + 0.15, z: p[2] + (Math.random() - .5) * 0.4, vx: v.vx * 0.12 + (Math.random() - .5) * 1.2, vy: 0.4 + Math.random() * 0.8, vz: v.vz * 0.12 + (Math.random() - .5) * 1.2, life: 0, max: snow ? 1.1 : wet ? 0.8 : 1.8 + Math.random(), size: snow ? 1.4 : 1.0, grow: snow ? 2.4 : 3.2, r: snow ? 0.95 : 0.86, g: snow ? 0.96 : 0.86, b: snow ? 1 : 0.88, a: (snow ? 0.6 : wet ? 0.25 : 0.42) * Math.min(1, amt), drag: 1.4, fadeIn: true });
+      for (let k = 0; k < n; k++) this.smoke.spawn({ x: p[0] + (Math.random() - .5) * 0.4, y: p[1] + 0.15, z: p[2] + (Math.random() - .5) * 0.4, vx: v.vx * 0.12 + (Math.random() - .5) * 1.2, vy: 0.4 + Math.random() * 0.8, vz: v.vz * 0.12 + (Math.random() - .5) * 1.2, life: 0, max: snow ? 1.1 : wet ? 0.8 : 1.8 + Math.random(), size: snow ? 1.4 : 1.0, grow: snow ? 2.4 : 3.2, ...(this.extra && this.extra.kind === 'smoke' ? (() => { const h = (performance.now() / 600 + Math.random() * 0.3) % 1, q = k => 0.5 + 0.5 * Math.cos(TAU * (h + k)); return { r: q(0), g: q(0.33), b: q(0.66) }; })() : { r: snow ? 0.95 : 0.86, g: snow ? 0.96 : 0.86, b: snow ? 1 : 0.88 }), a: (snow ? 0.6 : wet ? 0.25 : 0.42) * Math.min(1, amt), drag: 1.4, fadeIn: true });
     };
     const rl = W(tx, d.zR), rr = W(-tx, d.zR), fl = W(tx, d.zF), fr = W(-tx, d.zF);
+    if (this.exActive && (this.exActive.kind === 'thrust' || this.exActive.kind === 'backfire')) { const e = this.exActive, c = e.col, n = e.kind === 'thrust' ? (e.id === 'rocket' ? 14 : 8) : 4, xs = e.twin ? [-0.35, 0.35] : e.kind === 'backfire' ? [0.45, -0.45] : [0];
+      for (const xo of xs) { const p = e.kind === 'thrust' ? W(xo, d.zR - 0.35, 0.68) : W(xo, d.zR - 0.15, 0.25); for (let k = 0; k < n; k++) this.sparks.spawn({ x: p[0] + (Math.random() - .5) * 0.15, y: p[1] + (Math.random() - .5) * 0.15, z: p[2], vx: v.vx * 0.5 - fx * (6 + Math.random() * 6), vy: (Math.random() - .5) * 1.5, vz: v.vz * 0.5 - fz * (6 + Math.random() * 6), life: 0, max: 0.18 + Math.random() * 0.15, size: e.kind === 'thrust' ? 0.5 : 0.3, grow: 1.5, r: c[0], g: c[1] * (0.7 + Math.random() * 0.4), b: c[2], a: 1, grav: 0, drag: 1 }); } }
     emit(rl, rearSlip); emit(rr, rearSlip); if (frontSlip > 0.2) { emit(fl, frontSlip * 0.6); emit(fr, frontSlip * 0.6); }
     if (wet && v.speed > 12) { emit(rl, 0.3); emit(rr, 0.3); }
     // スキッドマーク
@@ -3958,7 +4081,7 @@ const SAVE = {
   defaults() {
     const c = this.newCar('ak_kiri');
     return { v: 1, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0, playSec: 0 }, event: { done: {}, items: [], best: {} },
-      inv: {}, advent: { y: 0, open: [] }, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
+      inv: {}, extras: [], medals: { g: 0, s: 0, b: 0 }, medalLog: [], lbClaim: {}, advent: { y: 0, open: [] }, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
   },
   ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); return true; } catch (e) { if (v === undefined) return this.mem[k] ?? null; this.mem[k] = v; return false; } },
   load() {
@@ -3967,7 +4090,7 @@ const SAVE = {
     if (!d || !Array.isArray(d.cars) || !d.cars.length) d = def;
     // 欠損項目を補完
     for (const k in def) if (d[k] === undefined) d[k] = def[k];
-    const _old = d.settings || {}; d.settings = Object.assign(def.settings, _old); if (!('accelMode' in _old) && _old.autoAccel) d.settings.accelMode = 'auto'; d.inv = d.inv || {}; d.advent = Object.assign({ y: 0, open: [] }, d.advent); d.chest = Object.assign({ freeDate: '' }, d.chest); d.shopBuy = Object.assign({ date: '', ids: [] }, d.shopBuy); d.records = Object.assign({ ta: {}, touge: {} }, d.records); d.event = Object.assign({ done: {}, items: [], best: {} }, d.event); d.stats = Object.assign(def.stats, d.stats);
+    const _old = d.settings || {}; d.settings = Object.assign(def.settings, _old); if (!('accelMode' in _old) && _old.autoAccel) d.settings.accelMode = 'auto'; d.inv = d.inv || {}; d.extras = d.extras || []; d.medals = Object.assign({ g: 0, s: 0, b: 0 }, d.medals); d.medalLog = d.medalLog || []; d.lbClaim = d.lbClaim || {}; d.advent = Object.assign({ y: 0, open: [] }, d.advent); d.chest = Object.assign({ freeDate: '' }, d.chest); d.shopBuy = Object.assign({ date: '', ids: [] }, d.shopBuy); d.records = Object.assign({ ta: {}, touge: {} }, d.records); d.event = Object.assign({ done: {}, items: [], best: {} }, d.event); d.stats = Object.assign(def.stats, d.stats);
     d.cars = d.cars.filter(c => CAR_BY_ID[c.id]).map(c => { const car = CAR_BY_ID[c.id]; c.tune = Object.assign(defaultTune(car), c.tune || {}); c.tune.owned = Object.assign(defaultTune(car).owned, c.tune.owned || {}); c.look = Object.assign(defaultLook(car), c.look || {}); c.look.owned = Object.assign(defaultLook(car).owned, c.look.owned || {}); return c; });
     if (!d.cars.length) { const c = this.newCar('ak_kiri'); d.cars.push(c); d.current = c.uid; }
     if (!d.cars.find(c => c.uid === d.current)) d.current = d.cars[0].uid;
@@ -4115,6 +4238,10 @@ const LB_BOARDS = [
   { id: 'dist', name: '走行距離', desc: '今週走った距離の合計（どのモードでもOK）', fmt: v => (+v).toFixed(1) + ' km' }
 ];
 function lbWeekDist() { const F = window.DL_FB, d = SAVE.data; if (!F) return null; const k = F.weekKey(); if (!d.wk || d.wk.k !== k) d.wk = { k, m: 0 }; return d.wk; }
+function lbBlocked(inst, game) { const ex = inst && inst.look && EXTRA_BY_ID[inst.look.extra]; if (ex && ex.perf) return 'extra'; if (typeof DEV !== 'undefined' && DEV.owner && (SAVE.data.settings.devNitro || SAVE.data.settings.devGhostCar)) return 'dev'; return ''; }
+function lbBoardName(id) { if (id.startsWith('ta_')) { const m = MAP_BY_ID[id.slice(3)]; return 'タイムアタック ' + (m ? m.jp : id.slice(3)); } const b = LB_BOARDS.find(x => x.id === id); return b ? b.name : id; }
+function lbFmt(id, v) { if (id.startsWith('ta_')) return fmtLap(v); const b = LB_BOARDS.find(x => x.id === id); return b ? b.fmt(v) : String(v); }
+function fmtLap(t) { const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(3); }
 function lbSendDist() { const w = lbWeekDist(); if (w && w.m > 50) window.DL_FB.lbSubmit('dist', Math.round(w.m / 100) / 10, 'set'); }
 const CTRL_PRESETS = [
   { id: 'standard', name: '標準', desc: '初期設定。ボタンを押している間アクセル', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'A', mirror: false, trans: 'AT' } },
@@ -4205,8 +4332,9 @@ const UI = {
   a_clearErr() { SAVE.data.errLog = []; SAVE.save(); this.render(); },
   a_lookChestPaint(id) { const it = ITEM_BY_ID[id]; if (!it || !invHas(id)) return; const inst = this.tuneInst(); inst.look.color = it.color; inst.look.paint = it.paint; if (!inst.look.owned.paint.includes(it.paint)) inst.look.owned.paint.push(it.paint); this.afterTune(); },
   a_setSpecial(id) { const inst = this.tuneInst(); if (id && !invHas(id)) return; inst.tune.special = id; this.toast(id ? ITEM_BY_ID[id].name + ' を装着しました' : '限定チューンを外しました'); this.afterTune(); },
-  in_decalPos(val, el) { const inst = this.tuneInst(); const lk = inst.look; const id = el.dataset.id, k = el.dataset.k; lk.decalPos = lk.decalPos || {}; const di = lk.decals.indexOf(id); lk.decalPos[id] = Object.assign({ x: 0.2 + di * 0.18, y: 0.62, s: 1, r: 0 }, lk.decalPos[id] || {}, { [k]: +val });
+  in_decalPos(val, el) { const inst = this.tuneInst(); const lk = inst.look; const id = el.dataset.id, k = el.dataset.k; lk.decalPos = lk.decalPos || {}; const di = lk.decals.indexOf(id); lk.decalPos[id] = Object.assign({ f: 'L', x: 0.2 + di * 0.18, y: 0.55, s: 1, r: 0 }, lk.decalPos[id] || {}, { [k]: +val });
     el.nextElementSibling.textContent = k === 'r' ? val + '°' : Math.round(val * 100) + '%'; SAVE.save(); clearTimeout(this._slT); this._slT = setTimeout(() => this.show.setCar(inst, true), 90); },
+  a_decalFace(v) { const [id, f] = v.split(':'); const inst = this.tuneInst(); const lk = inst.look; lk.decalPos = lk.decalPos || {}; const di = lk.decals.indexOf(id); const cur = Object.assign({ x: 0.2 + di * 0.18, y: 0.55, s: 1, r: 0 }, lk.decalPos[id] || {}); cur.f = f; if (f !== 'L' && f !== 'R') { cur.x = 0.5; cur.y = 0.5; } else if (cur.y < 0.15) cur.y = 0.55; lk.decalPos[id] = cur; this.afterTune(); },
   a_decalReset(id) { const inst = this.tuneInst(); if (inst.look.decalPos) delete inst.look.decalPos[id]; this.afterTune(); },
   async a_fbLogin() { try { this.toast('ログイン画面を開いています…'); await window.DL_FB.google(); await window.DL_FB.loadProfile(); if (!window.DL_FB.profile.name) { this.toast('ログインしました！ユーザーネームを決めましょう'); this.open('account'); } else this.render(); } catch (e) { if (e && e.code === 'auth/popup-closed-by-user') return this.toast('ログインをキャンセルしました'); logErr('Googleログイン', e); this.toast('ログインできませんでした: ' + (e.code || e.message)); } },
   async a_fbLogout() { try { await window.DL_FB.logout(); this.toast('ログアウトしました（データはこの端末に残ります）'); } catch (e) { this.toast('ログアウトできませんでした'); } },
@@ -4244,7 +4372,7 @@ const UI = {
     if (!window.DL_STANDALONE) h += T('online', 'globe', 'オンライン対戦', 'ONLINE BATTLE', { col: '#5ad1ff' });
     if (window.DL_FB) h += T('ranking', 'trophy', '週間ランキング', 'WEEKLY RANKING', { col: '#ffcf3d', badge: 'NEW' });
     h += `</div><div class="mm-sec">CAR</div><div class="mm-grid">`;
-    h += T('garage', 'garage', 'ガレージ', 'GARAGE') + T('tuning', 'wrench', 'チューニング', 'TUNING & CUSTOM') + T('shop', 'shop', 'カーショップ', 'CAR SHOP') + T('chest', 'gift', 'チェスト・ショップ', 'CHESTS & SHOP', { badge: freeChest ? 'FREE' : '', bdc: 'g' });
+    h += T('garage', 'garage', 'ガレージ', 'GARAGE') + T('tuning', 'wrench', 'チューニング', 'TUNING & CUSTOM') + T('shop', 'shop', 'カーショップ', 'CAR SHOP') + T('pshop', 'gear', 'パーツショップ', 'PARTS & EXTRAS', { badge: 'NEW' }) + T('bag', 'collection', 'バックパック', 'BACKPACK', { badge: (SAVE.data.medals.g + SAVE.data.medals.s + SAVE.data.medals.b) ? 'MEDAL' : '', bdc: 'g' }) + T('chest', 'gift', 'チェスト・ショップ', 'CHESTS & SHOP', { badge: freeChest ? 'FREE' : '', bdc: 'g' });
     h += `</div><div class="mm-sec">EVENT</div><div class="mm-grid">`;
     h += T('events', 'tree', 'イベント', 'EVENTS', { col: '#2fdc7a', badge: xm ? '開催中' : '' , bdc: 'g' }) + T('advent', 'calendar', 'アドベント', 'ADVENT CALENDAR', { col: '#ffd76a', badge: advOpen ? 'OPEN' : '' });
     h += `</div>` + T('settings', 'gear', '設定', 'SETTINGS', { cls: 'wide', col: '#aab' });
@@ -4275,7 +4403,7 @@ const UI = {
   },
   back() { if (this.stack.length) { const [s, a] = this.stack.pop(); this.open(s, a, false); } else this.goMenu(); },
   render() {
-    const fn = this['r_' + this.screen]; const body = $('panelBody'); const st = body.scrollTop;
+    const fn = this['r_' + this.screen]; if (!fn) return; const body = $('panelBody'); const st = body.scrollTop;
     $('panelBody').classList.toggle('wide', false); $('stageInfo').innerHTML = '';
     try { body.innerHTML = fn.call(this, this.arg); } catch (e) { console.error(e); body.innerHTML = '<div class="note">表示エラーが発生しました。BACKで戻ってください。</div>'; }
     body.scrollTop = st; this.refreshTop();
@@ -4448,6 +4576,93 @@ const UI = {
     if (!SAVE.spend(RARITY[it.rarity].shop)) return; grantChestItem(it); d.shopBuy.ids.push(id); SAVE.save(); AUDIO.buy ? AUDIO.buy() : 0; this.toast(it.name + ' を購入しました'); this.render();
   },
   a_setBg(k) { if (k !== 'garage' && !invHas('bg_' + k)) return; SAVE.data.settings.bg = k; SAVE.save(); this.show.rebuildStudio(); this.toast('ホーム背景を「' + (BG_THEMES[k].name || 'ガレージ') + '」に変更しました'); this.render(); },
+  // ---------------- パーツショップ ----------------
+  r_pshop() {
+    $('panelTitle').textContent = 'PARTS SHOP'; const inst = SAVE.cur(), car = CAR_BY_ID[inst.id], lk = inst.look, t = inst.tune; this.show.setCar(inst);
+    if (!this.tab) this.tab = 'wheel';
+    const tabs = [['wheel', 'ホイール'], ['tire', 'タイヤ'], ['body', 'ボディキット'], ['engine', 'エンジン'], ['extra', 'エキストラ']];
+    let h = `<div class="note">「${esc(car.name)}」に取り付けます（ガレージで車を変えると、その車のパーツになります）。購入済みのパーツは無料で付け替えできます。</div>`;
+    h += `<div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+    const card = (on, owned, icon, name, sub, price, act, val) => `<button class="pcard ${on ? 'on' : ''}" data-a="${act}" data-v="${val}"><span class="pc-ic">${icon}</span><span class="pc-tx"><b>${name}</b><small>${sub || ''}</small></span><span class="pc-pr">${on ? '装着中' : owned ? '購入済み' : yen(price)}</span></button>`;
+    if (this.tab === 'wheel') {
+      const ws = WHEEL_STYLES.filter(w => !w.xmas && !w.chest);
+      h += `<div class="pgrid">${ws.map(w => card(lk.wheel === w.id, lk.owned.wheel.includes(w.id), wheelIcon({ spokes: w.spokes || 5, rim: w.rim || '#c8c8cc', deep: w.deep }, 40), w.name, (w.spokes ? w.spokes + '本スポーク' : 'スチール') + (w.deep ? '・深リム' : ''), w.price, 'lookWheel', w.id)).join('')}</div>`;
+      h += `<div class="note">ホイールの色はカスタマイズ画面で変えられます。限定ホイールはチェスト・イベントで手に入ります。</div>`;
+    }
+    if (this.tab === 'tire') {
+      h += `<div class="pgrid">${PARTS.tire.opts.map(o => card(t.tire === o.id, t.owned.tire.includes(o.id), ICO('tire', '#ffcf3d', 36), o.name, `グリップ ${Math.round(o.mu * 100)} ・ 滑りやすさ ${Math.round(o.slide * 100)} ・ 雨 ${Math.round(o.wet * 100)} ・ 雪 ${Math.round(o.snow * 100)}`, o.price, 'tuneOpt', 'tire:' + o.id)).join('')}</div>`;
+    }
+    if (this.tab === 'body') {
+      for (const k of ['wing', 'front', 'rear', 'side', 'hood', 'roof', 'fender']) { const A = AERO[k]; lk.owned[k] = lk.owned[k] || [0];
+        h += `<div class="h3">${A.label}</div><div class="pgrid">${A.opts.map(([nm, pr], i) => card((lk[k] || 0) === i, lk.owned[k].includes(i), ICO(k === 'wing' ? 'wing' : k === 'front' ? 'carFront' : k === 'roof' || k === 'hood' ? 'carSide' : 'carSide', '#ffcf3d', 32), nm, '', pr, 'lookOpt', k + ':' + i)).join('')}</div>`; }
+    }
+    if (this.tab === 'engine') {
+      h += `<div class="pgrid">${PARTS.engine.opts.map(o => card(t.engine === o.id, t.owned.engine.includes(o.id), ICO(o.id.includes('turbo') ? 'turbo' : o.id.includes('super') || o.id === 'twin' ? 'gear' : 'engine', '#ffcf3d', 36), o.name, o.id === 'stock' ? '' : 'ランキング対象（通常のエンジン強化）', o.price, 'tuneOpt', 'engine:' + o.id)).join('')}</div>`;
+      h += `<div class="note">ECUや吸排気などの細かい強化はチューニング画面から。</div>`;
+    }
+    if (this.tab === 'extra') {
+      const d = SAVE.data, cur = lk.extra || '';
+      h += `<div class="note" style="color:#ffcf3d">エキストラは1台に1つ装着できます。レース中は<b>ブースト（NITRO）ボタン</b>で作動します。<br>${ICO('lock', '#ff8a8a', 12)} マークのもの（ジェット・ロケットなど）を装着中は、<b>週間ランキングに記録されません</b>。</div>`;
+      h += `<div class="pgrid">${card(!cur, true, ICO('gear', '#888', 32), 'なし', 'ブーストボタンは通常のニトロになります', 0, 'setExtra', '')}${EXTRAS.map(e => card(cur === e.id, d.extras.includes(e.id), extraIcon(e, 40), (e.perf ? ICO('lock', '#ff8a8a', 12) + ' ' : '') + e.name, e.desc, e.price, 'setExtra', e.id)).join('')}</div>`;
+    }
+    this.stageInfo(`<div class="car-name">${car.name}</div><div class="car-sub">${lk.extra && EXTRA_BY_ID[lk.extra] ? 'エキストラ: ' + EXTRA_BY_ID[lk.extra].name : ''}</div>`);
+    return h;
+  },
+  a_setExtra(id) {
+    const d = SAVE.data, inst = SAVE.cur(); if (id && !d.extras.includes(id)) { const e = EXTRA_BY_ID[id]; if (!e || !SAVE.spend(e.price)) return; d.extras.push(id); AUDIO.buy(); this.toast(e.name + ' を購入しました'); }
+    inst.look.extra = id || ''; SAVE.save(); this.show.setCar(inst, true); if (id) this.toast((EXTRA_BY_ID[id].perf ? '装着しました（ランキング対象外になります）' : '装着しました')); this.render();
+  },
+  // ---------------- バックパック ----------------
+  r_bag() {
+    $('panelTitle').textContent = 'BACKPACK'; const d = SAVE.data; if (!this.tab) this.tab = 'medal'; this.show.setCar(SAVE.cur());
+    const tabs = [['medal', 'メダル'], ['items', 'アイテム'], ['extra', 'エキストラ'], ['wallet', '所持品']];
+    let h = `<div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+    if (this.tab === 'medal') {
+      const M = d.medals; h += `<div class="medals">${[['g', '金メダル', '1位'], ['s', '銀メダル', '2位'], ['b', '銅メダル', '3位']].map(([k, nm, r]) => `<div class="medal ${k}">${medalIcon(k, 64)}<b>${M[k] || 0}</b><small>${nm}（${r}）</small></div>`).join('')}</div>`;
+      h += `<div class="note">週間ランキングで1〜3位になるともらえます。何枚でも集められます。</div><div class="h3">獲得の記録</div>`;
+      h += d.medalLog.length ? `<div class="lb-list">${d.medalLog.slice().reverse().slice(0, 40).map(m => `<div class="lb-row"><span class="rk">${m.r ? medalIcon(['', 'g', 's', 'b'][m.r], 24) : ICO('gift', '#aaa', 18)}</span><span class="nm">${esc(lbBoardName(m.b))}<small style="display:block;font-size:10px;color:#999;font-weight:400">${m.w.slice(1, 5)}/${m.w.slice(5, 7)}/${m.w.slice(7, 9)} の週 ・ ${m.r ? m.r + '位' : '参加賞'}</small></span><span class="vl">${m.item ? esc((ITEM_BY_ID[m.item] || {}).name || '') : m.money ? yen(m.money) : ''}</span></div>`).join('')}</div>` : `<div class="note">まだ記録がありません。週間ランキングに参加してみよう！</div>`;
+    }
+    if (this.tab === 'items') {
+      const own = ITEMS.filter(i => invHas(i.id));
+      h += `<div class="note">持っているアイテム ${own.length}種類（重複は ×数 で表示）</div>`;
+      for (const ty of Object.keys(ITEM_TYPES)) { const list = own.filter(i => i.type === ty); if (!list.length) continue;
+        h += `<div class="h3">${ITEM_TYPES[ty]}（${list.length}）</div><div class="col-grid">${list.map(i => `<div class="citem" style="border-color:${RARITY[i.rarity].color}"><div class="si-ic">${this.itemIcon(i, 36)}</div><div class="ci-nm">${esc(i.name)}${(d.inv[i.id] || 1) > 1 ? ' ×' + d.inv[i.id] : ''}</div></div>`).join('')}</div>`; }
+      if (!own.length) h += `<div class="note">チェストやアドベントカレンダー、ランキングの報酬で手に入ります。</div>`;
+    }
+    if (this.tab === 'extra') {
+      const list = EXTRAS.filter(e => d.extras.includes(e.id));
+      h += list.length ? `<div class="pgrid">${list.map(e => `<div class="pcard"><span class="pc-ic">${extraIcon(e, 40)}</span><span class="pc-tx"><b>${e.name}</b><small>${e.desc}</small></span><span class="pc-pr">${e.perf ? 'ランキング対象外' : ''}</span></div>`).join('')}</div>` : `<div class="note">まだエキストラを持っていません。パーツショップで買えます。</div>`;
+      h += `<div class="btns"><button class="btn gold" data-a="goPshop">パーツショップへ</button></div>`;
+    }
+    if (this.tab === 'wallet') {
+      const ps = d.stats.playSec || 0;
+      h += `<div class="dv-stat"><span>所持金</span><b>${DEV.inf() ? '∞' : yen(d.money)}</b><span>クリスマスポイント</span><b>${(d.event.points || 0).toLocaleString()} pt</b><span>所持車両</span><b>${d.cars.length} 台</b><span>アイテム</span><b>${ITEMS.filter(i => invHas(i.id)).length} / ${ITEMS.length}</b><span>エキストラ</span><b>${d.extras.length} / ${EXTRAS.length}</b><span>アドベント</span><b>${d.advent.open.length} / 25</b><span>プレイ時間</span><b>${Math.floor(ps / 3600)}時間${Math.floor(ps % 3600 / 60)}分</b><span>レース回数</span><b>${d.stats.races}</b></div>`;
+    }
+    return h;
+  },
+  a_goPshop() { this.open('pshop'); this.tab = 'extra'; this.render(); },
+  // ---- 先週のランキング報酬を受け取る ----
+  async lbClaimRewards() {
+    const F = window.DL_FB, d = SAVE.data; if (!F || !F.isGoogle() || !F.profile.name || this._claiming) return; const wk = F.weekKey(-1); if (d.lbClaim[wk]) return; this._claiming = true;
+    try {
+      const boards = LB_BOARDS.map(b => b.id).concat(MAPS.map(m => 'ta_' + m.id)); const res = []; const me = F.user.uid;
+      for (const b of boards) { const mine = await F.lbMine(wk, b); if (!mine) continue; const top = await F.lbTop(wk, b, 3); const r = top.findIndex(x => x.uid === me) + 1; res.push({ b, r: r >= 1 && r <= 3 ? r : 0, v: mine.v }); }
+      d.lbClaim[wk] = true; if (!res.length) { SAVE.save(); return; }
+      const lines = []; let anyPart = false;
+      for (const x of res) {
+        if (x.r) { const k = ['', 'g', 's', 'b'][x.r]; d.medals[k] = (d.medals[k] || 0) + 1; const pool = RANK_POOLS[x.r].filter(id => !invHas(id)); let item = null, money = 0;
+          if (pool.length) { item = pool[(Math.random() * pool.length) | 0]; grantChestItem(ITEM_BY_ID[item]); } else { money = [0, 5000000, 3000000, 1500000][x.r]; SAVE.addMoney(money); }
+          d.medalLog.push({ w: wk, b: x.b, r: x.r, item, money }); lines.push(`${medalIcon(k, 22)} ${esc(lbBoardName(x.b))}：<b>${x.r}位</b> → ${item ? esc(ITEM_BY_ID[item].name) : yen(money)}`); }
+        else anyPart = true;
+      }
+      if (anyPart) { const pool = ITEMS.filter(i => !i.lim && ['decal', 'paint', 'wheel', 'neon', 'caliper', 'plate', 'meter'].includes(i.type)); const un = pool.filter(i => !invHas(i.id)); const it = (un.length ? un : pool)[(Math.random() * (un.length ? un : pool).length) | 0]; const g = grantChestItem(it);
+        d.medalLog.push({ w: wk, b: res.find(x => !x.r).b, r: 0, item: it.id }); lines.push(`${ICO('gift', '#2fdc7a', 20)} 参加賞：<b>${esc(it.name)}</b>${g.isNew ? '' : `（重複 → ${yen(g.refund)}）`}`); }
+      SAVE.save(); this.refreshTop();
+      this.modal(`<h2>${ICO('trophy', '#ffcf3d', 26)} 先週のランキング結果</h2><div class="note">参加ありがとうございました！報酬を受け取りました。</div><div class="lb-list">${lines.map(l => `<div class="lb-row" style="display:block;line-height:1.7">${l}</div>`).join('')}</div><div class="btns"><button class="btn pri" data-a="closeModal">OK</button><button class="btn" data-a="openBag">バックパックを見る</button></div>`);
+      AUDIO.fanfare(); if (this.screen === 'menu') this.menuItems();
+    } catch (e) { console.warn('claim', e); } finally { this._claiming = false; }
+  },
+  a_openBag() { this.closeModal(); this.open('bag'); },
   // ---------------- アカウント・ユーザーネーム ----------------
   r_account() {
     $('panelTitle').textContent = 'ACCOUNT'; const F = window.DL_FB; this.show.setCar(SAVE.cur());
@@ -4467,7 +4682,7 @@ const UI = {
     const F = window.DL_FB; const v = (($('unameIn') || {}).value || '').trim(); const m = $('unameMsg');
     const bad = F.checkName(v); if (bad) { if (m) m.textContent = bad; return; } if (m) { m.style.color = '#aaa'; m.textContent = '確認しています…'; }
     try { await F.setName(v); this.unameDraft = null; this.unameMsg = ''; this.toast('ユーザーネームを「' + v + '」にしました'); AUDIO.buy();
-      for (const b of LB_BOARDS) { try { const mine = await F.lbMine(F.weekKey(), b.id); if (mine) await F.lbSubmit(b.id, mine.v); } catch (e) { } }
+      for (const id of LB_BOARDS.map(b => b.id).concat(MAPS.map(m => 'ta_' + m.id))) { try { const mine = await F.lbMine(F.weekKey(), id); if (mine) await F.lbSubmit(id, mine.v, id.startsWith('ta_') ? 'min' : 'max'); } catch (e) { } }
       this.lbSync(); this.render(); }
     catch (e) { const msg = e.code === 'taken' ? 'その名前はほかの人が使っています。別の名前にしてください' : e.code === 'bad' ? e.message : e.code === 'login' ? 'Googleでログインしてください' : '保存できませんでした（通信を確認してください）'; this.unameMsg = msg; if (m) { m.style.color = '#ff8a8a'; m.textContent = msg; } AUDIO.error(); }
   },
@@ -4476,10 +4691,13 @@ const UI = {
   r_ranking() {
     $('panelTitle').textContent = 'WEEKLY RANKING'; const F = window.DL_FB; this.show.setCar(SAVE.cur());
     if (!F) return `<div class="note">ランキングはGitHub版で使えます。</div>`;
-    if (!this.tab) this.tab = 'drift'; if (this.lbWeek === undefined) this.lbWeek = 0; const B = LB_BOARDS.find(b => b.id === this.tab) || LB_BOARDS[0];
+    if (!this.tab) this.tab = 'drift'; if (this.lbWeek === undefined) this.lbWeek = 0; if (!this.lbMap) this.lbMap = 'akigiri';
+    const isTA = this.tab === 'ta'; const B = isTA ? { id: 'ta_' + this.lbMap, name: 'タイムアタック', desc: 'タイムアタックの最速ラップ（コースごと・速い順）', fmt: fmtLap } : (LB_BOARDS.find(b => b.id === this.tab) || LB_BOARDS[0]);
     const wk = F.weekKey(this.lbWeek === 0 ? 0 : -1), key = wk + '/' + B.id; const data = (this.lbCache || {})[key];
     let h = `<div class="lb-head">${ICO('trophy', '#ffcf3d', 30)}<div><b>週間ランキング</b><small>毎週月曜 0:00（日本時間）にリセット</small></div><div class="lb-cd" id="lbCd">${this.lbWeek === 0 ? 'リセットまで ' + fmtLeft(F.weekEnd() - Date.now()) : '先週の結果'}</div></div>`;
-    h += `<div class="tabs">${LB_BOARDS.map(b => `<button class="tab ${b.id === B.id ? 'on' : ''}" data-a="setTab" data-v="${b.id}">${b.name}</button>`).join('')}</div>`;
+    h += `<div class="tabs">${LB_BOARDS.map(b => `<button class="tab ${b.id === this.tab ? 'on' : ''}" data-a="setTab" data-v="${b.id}">${b.name}</button>`).join('')}<button class="tab ${isTA ? 'on' : ''}" data-a="setTab" data-v="ta">タイムアタック</button></div>`;
+    if (isTA) h += `<div class="row"><label>コース</label><select data-in="lbMap">${MAPS.map(m => `<option value="${m.id}" ${m.id === this.lbMap ? 'selected' : ''}>${esc(m.jp)}</option>`).join('')}</select></div>`;
+    h += `<div class="note" style="font-size:11px;color:#ffcf3d">1〜3位には金・銀・銅メダルと限定報酬、それ以外の参加者にも参加賞（ランダムなカスタマイズパーツ）がもらえます。ジェット・ロケットなど性能が変わるエキストラを付けた記録は対象外です。</div>`;
     h += `<div class="seg" style="margin-bottom:6px"><button class="${this.lbWeek === 0 ? 'on' : ''}" data-a="lbWeek" data-v="0">今週</button><button class="${this.lbWeek === 1 ? 'on' : ''}" data-a="lbWeek" data-v="1">先週</button></div><div class="note">${B.desc}</div>`;
     if (!F.isGoogle() || !F.profile.name) h += `<button class="mm-acc warn" data-a="goAccount">${ICO('trophy', '#ffcf3d', 22)}<span><b>${F.isGoogle() ? 'ユーザーネームを決めて参加しよう' : 'Googleでログインして参加しよう'}</b><small>見るだけならログインなしでもOK</small></span><i>参加</i></button>`;
     if (!data) { this.lbLoad(wk, B.id, key); h += `<div class="note">読み込み中…</div>`; }
@@ -4500,6 +4718,7 @@ const UI = {
     if (this.screen === 'ranking') this.render();
   },
   a_lbWeek(v) { this.lbWeek = +v; this.render(); },
+  in_lbMap(v) { this.lbMap = v; this.render(); },
   a_lbReload() { this.lbCache = {}; this.render(); },
   a_goAccount() { this.open('account'); },
   lbSync() { this.lbCache = {}; if (this.screen === 'menu') this.menuItems(); },
@@ -4709,9 +4928,10 @@ const UI = {
       const cps = ITEMS.filter(i => i.type === 'paint' && invHas(i.id));
       html += `<div class="h3">限定カラー</div>` + (cps.length ? `<div class="opt-row">${cps.map(i => `<button class="opt ${lk.color === i.color && lk.paint === i.paint ? 'on' : ''}" data-a="lookChestPaint" data-v="${i.id}"><span style="display:inline-block;width:14px;height:14px;background:${i.color};border:1px solid #fff;vertical-align:middle;margin-right:4px"></span>${i.name}<span class="pr" style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}</span></button>`).join('')}</div>` : `<div class="note">チェストや日替わりショップで手に入る特別なカラーです。</div>`);
       // デカールの貼り付け位置
-      html += `<div class="h3">貼り付け位置</div>` + (lk.decals.length ? lk.decals.map((id, di) => { const d = DECALS.find(x => x.id === id) || { name: id }; const ps = Object.assign({ x: 0.2 + di * 0.18, y: 0.62, s: 1, r: 0 }, (lk.decalPos || {})[id] || {});
+      html += `<div class="h3">貼り付け位置</div>` + (lk.decals.length ? lk.decals.map((id, di) => { const d = DECALS.find(x => x.id === id) || { name: id }; const ps = Object.assign({ f: 'L', x: 0.2 + di * 0.18, y: 0.55, s: 1, r: 0 }, (lk.decalPos || {})[id] || {});
         const sl = (k, lab, min, max, step, val, f) => `<div class="row"><label>${lab}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-in="decalPos" data-id="${id}" data-k="${k}"><span class="val">${f(val)}</span></div>`;
-        return `<div class="part" style="border-left-color:#3a8cff"><div class="ph">${esc(d.name)}</div>${sl('x', '前後位置', 0, 1, 0.01, ps.x, v => Math.round(v * 100) + '%')}${sl('y', '高さ', 0.15, 0.95, 0.01, ps.y, v => Math.round(v * 100) + '%')}${sl('s', '大きさ', 0.4, 2.5, 0.05, ps.s, v => Math.round(v * 100) + '%')}${sl('r', '回転', -180, 180, 5, ps.r, v => v + '°')}<div class="btns"><button class="btn" data-a="decalReset" data-v="${id}">位置をリセット</button></div></div>`; }).join('') : `<div class="note">デカールを装着すると、ここで位置・大きさ・回転を自由に調整できます。</div>`);
+        const face = ps.f || 'L', side = face === 'L' || face === 'R'; const faces = [['L', '左側面'], ['R', '右側面'], ['H', 'ボンネット'], ['T', 'ルーフ'], ['K', 'トランク']];
+        return `<div class="part" style="border-left-color:#3a8cff"><div class="ph">${esc(d.name)}</div><div class="opt-row">${faces.map(([f, nm]) => `<button class="opt ${face === f ? 'on' : ''}" data-a="decalFace" data-v="${id}:${f}">${nm}</button>`).join('')}</div>${sl('x', '前後位置', 0, 1, 0.01, ps.x, v => Math.round(v * 100) + '%')}${sl('y', side ? '高さ' : '左右位置', side ? 0.15 : 0, side ? 0.95 : 1, 0.01, ps.y, v => Math.round(v * 100) + '%')}${sl('s', '大きさ', 0.4, 2.5, 0.05, ps.s, v => Math.round(v * 100) + '%')}${sl('r', '回転', -180, 180, 5, ps.r, v => v + '°')}<div class="btns"><button class="btn" data-a="decalReset" data-v="${id}">位置をリセット</button></div></div>`; }).join('') : `<div class="note">デカールを装着すると、ここで位置・大きさ・回転を自由に調整できます。</div>`);
     }
     if (this.tab === 'engine') {
       const sps = ITEMS.filter(i => i.type === 'tune' && invHas(i.id)); const cur = inst.tune.special || '';
@@ -5158,7 +5378,10 @@ const UI = {
   a_quit() { this.closeModal(); this.paused = false; AUDIO.applyVol(); const test = this.game.cfg.testDrive, online = this.game.cfg.mode === 'online'; this.game.exit(); if (online) { NET.publishLobby({ race: null }); this.goMenu(); this.open('online'); return; } if (test && this.returnTo) { const [s, a, sel] = this.returnTo; this.returnTo = null; this.goMenu(); this.open(s, a, false); this.sel = sel; this.render(); } else this.goMenu(); },
   // ---------------- リザルト ----------------
   showResults(res) {
-    if (window.DL_FB) { if (res.mode === 'touge' && res.score > 0) window.DL_FB.lbSubmit('drift', Math.round(res.score)).then(b => { if (b) this.toast('ランキングの自己ベストを更新！'); }); lbSendDist(); }
+    if (window.DL_FB && !lbBlocked(this.game.carInst, this.game)) {
+      if (res.mode === 'touge' && res.score > 0) window.DL_FB.lbSubmit('drift', Math.round(res.score)).then(b => { if (b) this.toast('ランキングの自己ベストを更新！'); });
+      if (res.mode === 'time' && res.laps && res.laps.length && res.reason !== 'crash') { const best = Math.min(...res.laps.map(l => l.t).filter(x => isFinite(x) && x > 5)); if (isFinite(best)) window.DL_FB.lbSubmit('ta_' + res.mapId, Math.round(best * 1000) / 1000, 'min').then(b => { if (b) this.toast('タイムアタック ランキングの自己ベストを更新！'); }); }
+      lbSendDist(); }
     const d = SAVE.data, cfg = res.cfg, m = MAP_BY_ID[res.mapId]; const tr = this.game.track; let html = '', money = 0, xp = 0; const notes = [];
     d.stats.races++; d.stats.nightDist += res.nightDist || 0;
     if (res.maxSpeed >= 250) unlockAch('speed250');
@@ -5359,7 +5582,7 @@ class Showroom {
   if (window.DL_FB) { window.DL_FB.onStats(() => UI.refreshMenuStats()); setTimeout(() => window.DL_FB.startStats(), 800); }
   // プレイ時間（画面が表示されている間だけ数える）
   setInterval(() => { if (!document.hidden && SAVE.data && SAVE.data.stats) { SAVE.data.stats.playSec = (SAVE.data.stats.playSec || 0) + 10; if (UI.screen === 'menu') UI.refreshMenuStats(); } }, 10000);
-  if (window.DL_FB) { window.DL_FB.loadProfile().then(() => UI.lbSync()); window.DL_FB.onUser(() => window.DL_FB.loadProfile().then(() => { UI.lbSync(); if (UI.screen === 'account') UI.render(); })); }
+  if (window.DL_FB) { window.DL_FB.loadProfile().then(() => { UI.lbSync(); setTimeout(() => UI.lbClaimRewards(), 2500); }); window.DL_FB.onUser(() => window.DL_FB.loadProfile().then(() => { UI.lbSync(); if (UI.screen === 'account') UI.render(); setTimeout(() => UI.lbClaimRewards(), 1500); })); }
   if (window.DL_FB) window.DL_FB.onUser((u, changed) => { if (u && changed) { CLOUD.doc = null; CLOUD.init(!u.isAnonymous); } DEV.owner = false; DEV.init(); if (UI.screen === 'settings') UI.render(); });
   UI.saveStatus();
   window.addEventListener('error', e => { console.error(e.error || e.message); });
