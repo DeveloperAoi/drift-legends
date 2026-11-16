@@ -138,7 +138,8 @@ button{font-family:inherit;cursor:pointer}
 .back:active{background:var(--red)}
 .ptitle{font-family:Orbitron;font-weight:900;font-size:18px;letter-spacing:.12em;transform:skewX(-8deg);border-left:4px solid var(--red);padding-left:10px}
 /* メインメニュー */
-.menu-col{position:absolute;left:calc(18px + var(--safe-l));top:calc(70px + var(--safe-t));bottom:calc(16px + var(--safe-b));width:min(330px,44vw);display:flex;flex-direction:column;gap:6px;pointer-events:auto;overflow-y:auto;padding-right:4px;justify-content:center}
+.menu-col{position:absolute;left:calc(18px + var(--safe-l));top:calc(70px + var(--safe-t));bottom:calc(16px + var(--safe-b));width:min(330px,44vw);display:flex;flex-direction:column;gap:6px;pointer-events:auto;overflow-y:auto;overflow-x:hidden;padding:4px 8px 4px 4px;justify-content:flex-start;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(180deg,transparent 0,#000 14px,#000 calc(100% - 22px),transparent)}
+.menu-col>.mbtn{flex:0 0 auto}.menu-col>.mbtn:first-child{margin-top:auto}.menu-col>.mbtn:last-child{margin-bottom:auto}
 .mbtn{position:relative;text-align:left;color:#fff;background:linear-gradient(90deg,rgba(15,16,20,.92),rgba(15,16,20,.6));border:0;border-left:3px solid #333;padding:10px 16px;font-family:Orbitron;font-weight:700;font-size:clamp(14px,2.1vw,19px);letter-spacing:.12em;transform:skewX(-8deg);transition:all .12s;display:flex;align-items:baseline;gap:12px}
 .mbtn small{font-family:'Noto Sans JP';font-weight:400;font-size:11px;color:#9aa0aa;letter-spacing:.05em}
 .mbtn:hover,.mbtn:focus{border-left-color:var(--red);background:linear-gradient(90deg,rgba(225,6,0,.55),rgba(15,16,20,.6));padding-left:24px;outline:none}
@@ -364,6 +365,27 @@ body.layB #tCal{left:calc(2vw + var(--safe-l));bottom:calc(4vh + var(--safe-b));
 .co-box{display:flex;justify-content:center;font-size:0}
 .co-ic{filter:drop-shadow(0 0 14px var(--rc))}
 .opt .ico{margin-right:3px}
+
+/* ---- タッチ操作の拡張 ---- */
+#touch{opacity:var(--tbo,1)}
+.tbtn{transform:scale(var(--tbs,1));transform-origin:50% 100%}
+#tLeft,#tBrake,#tPad,#tUp,#tDown,#tCam,#tGyro,#tCal{transform-origin:0 100%}#tRight,#tGas,#tHand,#tNitro{transform-origin:100% 100%}
+.tbtn>span{display:inline-block;pointer-events:none;text-align:center;line-height:1.15}
+.tbtn small{font-size:9px;font-family:'Noto Sans JP';font-weight:700;opacity:.8}
+body.mirror #touch{transform:scaleX(-1)}body.mirror .tbtn>span{transform:scaleX(-1)}
+body.accAuto #tGas{display:none}
+.tbtn.gas.latched{background:rgba(47,220,122,.6);border-color:#2fdc7a;color:#fff;box-shadow:0 0 18px rgba(47,220,122,.6)}
+#tPad{display:none;overflow:hidden;border-style:dashed}
+body.steerSlide:not(.gyro) #tPad{display:flex}body.steerSlide #tLeft,body.steerSlide #tRight{display:none}
+#tPad .padlab{font-size:clamp(11px,1.8vw,15px);font-family:'Noto Sans JP';opacity:.7}
+#tPadKnob{position:absolute;left:calc(50% - 22px);top:calc(50% - 22px);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.6);transition:transform .05s;pointer-events:none}
+#tPad.on #tPadKnob{background:rgba(225,6,0,.55);border-color:#fff}
+body.layA #tPad{left:calc(2vw + var(--safe-l));bottom:38vh;width:max(17vw,90px);height:28vh}
+body.layB #tPad{left:calc(2vw + var(--safe-l));bottom:calc(4vh + var(--safe-b));width:max(31vw,170px);height:34vh}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:6px}
+.preset{text-align:left;color:#fff;background:rgba(255,255,255,.05);border:1px solid var(--line);padding:9px 10px;display:flex;flex-direction:column;gap:3px;font-family:'Noto Sans JP'}
+.preset b{font-size:14px}.preset small{font-size:11px;color:#aaa;line-height:1.4}
+.preset.on{border-color:var(--red);background:rgba(225,6,0,.22)}.preset.ro{opacity:.6}.preset.ro.on{opacity:1}
 </style>
 </head>
 <body>
@@ -402,10 +424,11 @@ body.layB #tCal{left:calc(2vw + var(--safe-l));bottom:calc(4vh + var(--safe-b));
     <div id="fps" class="hidden"></div>
   </section>
   <section id="touch" class="hidden">
-    <div class="tbtn steer" id="tLeft">◀</div><div class="tbtn steer" id="tRight">▶</div>
-    <div class="tbtn pedal" id="tBrake">BRAKE</div><div class="tbtn pedal gas" id="tGas">GAS</div>
-    <div class="tbtn small" id="tHand">E-BRAKE</div><div class="tbtn small nitro" id="tNitro">NITRO</div>
-    <div class="tbtn mini" id="tUp">▲</div><div class="tbtn mini" id="tDown">▼</div><div class="tbtn mini" id="tCam">CAM</div><div class="tbtn mini" id="tGyro">GYRO<br>OFF</div><div class="tbtn mini" id="tCal">CENTER</div>
+    <div class="tbtn steer" id="tLeft"><span>◀</span></div><div class="tbtn steer" id="tRight"><span>▶</span></div>
+    <div class="tbtn pad" id="tPad"><span class="padlab">◀ スライド ▶</span><i id="tPadKnob"></i></div>
+    <div class="tbtn pedal" id="tBrake"><span>BRAKE</span></div><div class="tbtn pedal gas" id="tGas"><span>GAS</span></div>
+    <div class="tbtn small" id="tHand"><span>E-BRAKE</span></div><div class="tbtn small nitro" id="tNitro"><span>NITRO</span></div>
+    <div class="tbtn mini" id="tUp"><span>▲</span></div><div class="tbtn mini" id="tDown"><span>▼</span></div><div class="tbtn mini" id="tCam"><span>CAM</span></div><div class="tbtn mini" id="tGyro"><span>GYRO<br>OFF</span></div><div class="tbtn mini" id="tCal"><span>CENTER</span></div>
   </section>
   <div id="overlay" class="hidden"></div>
   <div id="toast"></div>
@@ -2933,30 +2956,36 @@ const Input = {
   //            指をボタン間で滑らせても反応し、複数の指を同時に使える
   initTouch(root) {
     const hold = { tLeft: 'left', tRight: 'right', tGas: 'gas', tBrake: 'brake', tHand: 'hand', tNitro: 'nitro' }, tapEv = { tUp: 'up', tDown: 'down', tCam: 'cam' }, endEv = { tGyro: 'gyro', tCal: 'cal' };
-    const active = new Map();
+    const active = new Map(); const S = () => (SAVE.data && SAVE.data.settings) || {}; this.padId = null; this.padSteer = 0;
+    const knob = document.getElementById('tPadKnob'); const setKnob = () => { if (knob) knob.style.transform = `translateX(${this.padSteer * 60}%)`; };
     const btnAt = (x, y) => { const el = document.elementFromPoint(x, y); const b = el && el.closest ? el.closest('#touch .tbtn') : null; return b && b.offsetParent !== null ? b.id : null; };
     const refresh = () => {
-      for (const k of Object.values(hold)) this.touch[k] = false;
+      for (const k of Object.values(hold)) this.touch[k] = false; const s = S(), tog = s.accelMode === 'toggle';
       root.querySelectorAll('.tbtn.on').forEach(e => e.classList.remove('on'));
-      for (const id of active.values()) { if (!id) continue; const el = document.getElementById(id); if (el) el.classList.add('on'); if (hold[id]) this.touch[hold[id]] = true; }
+      for (const id of active.values()) { if (!id) continue; const el = document.getElementById(id); if (el) el.classList.add('on'); let k = hold[id]; if (!k || (tog && k === 'gas')) continue; if (s.mirror && k === 'left') k = 'right'; else if (s.mirror && k === 'right') k = 'left'; this.touch[k] = true; }
+      const g = document.getElementById('tGas'); if (g) g.classList.toggle('latched', tog && this.gasLatch);
     };
     root.addEventListener('touchstart', e => {
       if (!e.target.closest || !e.target.closest('.tbtn')) return; e.preventDefault();
-      for (const t of e.changedTouches) { const id = btnAt(t.clientX, t.clientY) || (e.target.closest('.tbtn') || {}).id; active.set(t.identifier, id); if (id && tapEv[id]) this.events.push(tapEv[id]); }
+      for (const t of e.changedTouches) { const id = btnAt(t.clientX, t.clientY) || (e.target.closest('.tbtn') || {}).id;
+        if (id === 'tPad') { this.padId = t.identifier; this.padX0 = t.clientX; this.padSteer = 0; setKnob(); active.set(t.identifier, null); document.getElementById('tPad').classList.add('on'); continue; }
+        active.set(t.identifier, id); if (id && tapEv[id]) this.events.push(tapEv[id]);
+        if (id === 'tGas' && S().accelMode === 'toggle') { this.gasLatch = !this.gasLatch; if (navigator.vibrate) try { navigator.vibrate(15); } catch (x) { } } }
       refresh();
     }, { passive: false });
     root.addEventListener('touchmove', e => {
       e.preventDefault(); let ch = false;
-      for (const t of e.changedTouches) { if (!active.has(t.identifier)) continue; const prev = active.get(t.identifier); if (prev && !hold[prev]) continue; const id = btnAt(t.clientX, t.clientY); const nid = id && hold[id] ? id : null; if (nid !== prev) { active.set(t.identifier, nid); ch = true; } }
+      for (const t of e.changedTouches) { if (t.identifier === this.padId) { const R = Math.max(40, innerWidth * (0.1 - (S().steerSens || 0.5) * 0.05)); this.padSteer = clamp((t.clientX - this.padX0) / R, -1, 1); setKnob(); continue; } if (!active.has(t.identifier)) continue; const prev = active.get(t.identifier); if (prev && !hold[prev]) continue; const id = btnAt(t.clientX, t.clientY); const nid = id && hold[id] ? id : null; if (nid !== prev) { active.set(t.identifier, nid); ch = true; } }
       if (ch) refresh();
     }, { passive: false });
     const end = e => {
       e.preventDefault();
-      for (const t of e.changedTouches) { const id = active.get(t.identifier); active.delete(t.identifier); if (e.type === 'touchend' && id && endEv[id] && this.onEndEv) this.onEndEv(endEv[id]); }
+      for (const t of e.changedTouches) { if (t.identifier === this.padId) { this.padId = null; this.padSteer = 0; setKnob(); const pe = document.getElementById('tPad'); if (pe) pe.classList.remove('on'); } const id = active.get(t.identifier); active.delete(t.identifier); if (e.type === 'touchend' && id && endEv[id] && this.onEndEv) this.onEndEv(endEv[id]); }
       refresh();
     };
     root.addEventListener('touchend', end, { passive: false }); root.addEventListener('touchcancel', end, { passive: false });
-    window.addEventListener('blur', () => { active.clear(); refresh(); });
+    window.addEventListener('blur', () => { active.clear(); this.padId = null; this.padSteer = 0; setKnob(); refresh(); });
+    this.refreshTouch = refresh;
   },
   bindTouch(el, name, isEvent) {
     // マウス/ペン用（指の操作は initTouch の touch イベントで処理）
@@ -2980,8 +3009,10 @@ const Input = {
         for (const kk in now) if (now[kk] && !prev[kk]) this.events.push(kk); this.pad = now; break;
       }
     } catch (e) { }
+    if (set && steer === 0 && !analog && this.padId !== null && set.steerMode === 'slide') { steer = this.padSteer; analog = true; }
     if (set && steer === 0 && !analog) { const gs = Gyro.steer(set); if (gs !== null) { steer = gs; analog = true; } }
-    if (set && set.autoAccel && !brake && !hand) gas = Math.max(gas, 1);
+    if (set && set.accelMode === 'auto' && !brake && !hand) gas = Math.max(gas, 1);
+    if (set && set.accelMode === 'toggle' && this.gasLatch && !brake) gas = Math.max(gas, 1);
     return { throttle: gas, brake, steer, hand, nitro, analog, steerRate: set ? 1.6 + set.steerSens * 2.2 : 2.6 };
   },
   pop() { const e = this.events; this.events = []; return e; }
@@ -3000,11 +3031,11 @@ const Gyro = {
     this.listen(); const t0 = performance.now();
     await new Promise(r => setTimeout(r, 1500));
     if (!this.ok || this.last < t0) return this.fail('ジャイロのデータを取得できません（この表示環境ではモーションセンサーが制限されている可能性があります）');
-    this.on = true; this.calibrate(); SAVE.data.settings.gyro = true; SAVE.save(); document.body.classList.add('gyro'); UI.toast('ジャイロ操作 ON（現在の傾きを中央に設定）'); UI.gyroChanged(); return true;
+    this.on = true; this.calibrate(); SAVE.data.settings.gyro = true; SAVE.data.settings.steerMode = 'gyro'; SAVE.save(); document.body.classList.add('gyro'); UI.toast('ジャイロ操作 ON（現在の傾きを中央に設定）'); UI.gyroChanged(); return true;
   },
-  disable() { this.on = false; SAVE.data.settings.gyro = false; SAVE.save(); document.body.classList.remove('gyro'); UI.toast('ジャイロ操作 OFF'); UI.gyroChanged(); },
+  disable() { this.on = false; SAVE.data.settings.gyro = false; if (SAVE.data.settings.steerMode === 'gyro') SAVE.data.settings.steerMode = 'buttons'; SAVE.save(); document.body.classList.remove('gyro'); UI.toast('ジャイロ操作 OFF'); UI.gyroChanged(); },
   toggle() { return this.on ? this.disable() : this.enable(); },
-  fail(msg) { this.on = false; SAVE.data.settings.gyro = false; SAVE.save(); document.body.classList.remove('gyro'); UI.toast(msg); AUDIO.error(); UI.gyroChanged(); return false; },
+  fail(msg) { this.on = false; SAVE.data.settings.gyro = false; if (SAVE.data.settings.steerMode === 'gyro') SAVE.data.settings.steerMode = 'buttons'; SAVE.save(); document.body.classList.remove('gyro'); UI.toast(msg); AUDIO.error(); UI.gyroChanged(); return false; },
   calibrate() { this.offset = this.cur; },
   steer(set) {
     if (!this.on || !this.ok || performance.now() - this.last > 1000) return null;
@@ -3036,6 +3067,7 @@ class SkidMarks {
 class Game {
   constructor(R, ui) { this.R = R; this.ui = ui; this.active = false; this.paused = false; this.camMode = 0; this.tmpM = M4.create(); }
   start(cfg) {
+    Input.gasLatch = false; if (Input.refreshTouch) Input.refreshTouch();
     this.cleanup();
     this.cfg = cfg; const R = this.R; const set = SAVE.data.settings;
     const def = MAP_BY_ID[cfg.mapId];
@@ -3127,6 +3159,13 @@ class Game {
       if (n !== this.lastCD && n <= 3 && n >= 0) { this.lastCD = n; if (n > 0) { AUDIO.countdown(n); this.ui.countdown(String(n)); } }
       if (this.countdown <= 0.6) { this.started = true; v.gear = 1; AUDIO.countdown(0); this.ui.countdown('GO!'); this.raceT = 0; this.lapStart = 0; }
       else { inp.brake = 1; inp.hand = 1; inp.steer = 0; v.gear = 0; }
+    }
+    // 操作アシスト（オートサイドブレーキ / オートニトロ）
+    if (this.started && !this.finished && set && tr.K) {
+      if (set.autoHand) { this._ahT = (this._ahT || 0) - dt; const k = Math.abs(tr.K[(this.loc.i + 6 + Math.floor(v.speed * 0.5)) % tr.n] || 0);
+        if (this._ahT <= 0 && k > 1 / 45 && v.speed > 14 && Math.abs(v.beta) < 0.22 && Math.abs(inp.steer) > 0.45) { this._ahT = 1.4; this._ahOn = 0.16; }
+        if (this._ahOn > 0) { this._ahOn -= dt; inp.hand = true; } }
+      if (set.autoNitro && !inp.brake) { const k = Math.abs(tr.K[(this.loc.i + 12) % tr.n] || 0); if (v.speed > 16 && k < 1 / 260 && Math.abs(v.beta) < 0.2) inp.nitro = true; }
     }
     if (this.finished) { inp.throttle = 0; inp.brake = 0.4; inp.steer = 0; inp.nitro = 0; }
     // 物理（サブステップ）
@@ -3538,7 +3577,7 @@ const SAVE = {
   defaults() {
     const c = this.newCar('ak_kiri');
     return { v: 1, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0 }, event: { done: {}, items: [], best: {} },
-      inv: {}, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
+      inv: {}, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
   },
   ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); return true; } catch (e) { if (v === undefined) return this.mem[k] ?? null; this.mem[k] = v; return false; } },
   load() {
@@ -3547,7 +3586,7 @@ const SAVE = {
     if (!d || !Array.isArray(d.cars) || !d.cars.length) d = def;
     // 欠損項目を補完
     for (const k in def) if (d[k] === undefined) d[k] = def[k];
-    d.settings = Object.assign(def.settings, d.settings || {}); d.inv = d.inv || {}; d.chest = Object.assign({ freeDate: '' }, d.chest); d.shopBuy = Object.assign({ date: '', ids: [] }, d.shopBuy); d.records = Object.assign({ ta: {}, touge: {} }, d.records); d.event = Object.assign({ done: {}, items: [], best: {} }, d.event); d.stats = Object.assign(def.stats, d.stats);
+    const _old = d.settings || {}; d.settings = Object.assign(def.settings, _old); if (!('accelMode' in _old) && _old.autoAccel) d.settings.accelMode = 'auto'; d.inv = d.inv || {}; d.chest = Object.assign({ freeDate: '' }, d.chest); d.shopBuy = Object.assign({ date: '', ids: [] }, d.shopBuy); d.records = Object.assign({ ta: {}, touge: {} }, d.records); d.event = Object.assign({ done: {}, items: [], best: {} }, d.event); d.stats = Object.assign(def.stats, d.stats);
     d.cars = d.cars.filter(c => CAR_BY_ID[c.id]).map(c => { const car = CAR_BY_ID[c.id]; c.tune = Object.assign(defaultTune(car), c.tune || {}); c.tune.owned = Object.assign(defaultTune(car).owned, c.tune.owned || {}); c.look = Object.assign(defaultLook(car), c.look || {}); c.look.owned = Object.assign(defaultLook(car).owned, c.look.owned || {}); return c; });
     if (!d.cars.length) { const c = this.newCar('ak_kiri'); d.cars.push(c); d.current = c.uid; }
     if (!d.cars.find(c => c.uid === d.current)) d.current = d.cars[0].uid;
@@ -3671,11 +3710,20 @@ const LOADER = {
   hide(min = 1400) { const wait = Math.max(0, min - (performance.now() - (this.t0 || 0))); this.setP(0.95); clearInterval(this._pi);
     setTimeout(() => { this.setP(1); setTimeout(() => { $('loading').classList.add('hidden'); clearInterval(this._ti); }, 180); }, wait); }
 };
+const CTRL_PRESETS = [
+  { id: 'standard', name: '標準', desc: '初期設定。ボタンを押している間アクセル', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'A', mirror: false, trans: 'AT' } },
+  { id: 'easy', name: 'かんたん', desc: 'アクセル自動＋ドリフトとニトロもおまかせ', v: { accelMode: 'auto', steerMode: 'buttons', autoHand: true, autoNitro: true, assist: 3, layout: 'A', mirror: false, trans: 'AT' } },
+  { id: 'toggle', name: 'アクセル切替', desc: 'GASをタップでON/OFF。指が疲れにくい', v: { accelMode: 'toggle', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'A', mirror: false, trans: 'AT' } },
+  { id: 'slide', name: 'スライド', desc: '左手でなぞってハンドル。細かく切れる', v: { accelMode: 'hold', steerMode: 'slide', autoHand: false, autoNitro: false, assist: 2, layout: 'B', mirror: false, trans: 'AT' } },
+  { id: 'onehand', name: '片手でらくらく', desc: 'アクセル自動＋スライド操作＋アシスト全開', v: { accelMode: 'auto', steerMode: 'slide', autoHand: true, autoNitro: true, assist: 3, layout: 'B', mirror: false, trans: 'AT' } },
+  { id: 'tilt', name: '傾き操作', desc: 'スマホを傾けてハンドル。アクセル自動', v: { accelMode: 'auto', steerMode: 'gyro', autoHand: false, autoNitro: false, assist: 3, layout: 'A', mirror: false, trans: 'AT' } },
+  { id: 'pro', name: '上級者', desc: 'アシストOFF・マニュアル。腕で勝負', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 0, layout: 'A', mirror: false, trans: 'MT' } }
+];
 const UI = {
   init(R, game, show) {
     this.R = R; this.game = game; this.show = show; this.screen = 'title'; this.stack = [];
     document.body.classList.toggle('touch', this.touchUI());
-    document.body.classList.add(SAVE.data.settings.layout === 'B' ? 'layB' : 'layA');
+    document.body.classList.add(SAVE.data.settings.layout === 'B' ? 'layB' : 'layA'); this.applyCtrl();
     $('btnStart').onclick = () => { AUDIO.init(); AUDIO.resume(); AUDIO.setVol({ bgm: SAVE.data.settings.bgm, sfx: SAVE.data.settings.sfx, mute: SAVE.data.settings.mute }); AUDIO.click(); AUDIO.playCat(xmasThemeOn() ? 'xmas' : 'menu'); this.goMenu(); if (SAVE.data.firstRunShown !== true) { SAVE.data.firstRunShown = true; SAVE.save(); this.welcome(); } };
     $('btnBack').onclick = () => { AUDIO.click(); this.back(); };
     $('btnProfile').onclick = () => { AUDIO.click(); this.open('profile'); };
@@ -3692,12 +3740,30 @@ const UI = {
     Input.onEndEv = k => { AUDIO.click(); if (k === 'gyro') Gyro.toggle(); else if (k === 'cal') { Gyro.calibrate(); this.toast('現在の傾きを中央にしました'); } };
     this.gyroChanged();
     AUDIO.listeners.push(tr => { const el = $('musicToast'); el.textContent = '♪ ' + tr.name; el.style.opacity = 1; clearTimeout(this._mt); this._mt = setTimeout(() => el.style.opacity = 0, 3500); if (this.screen === 'settings' && this.tab === 'sound') this.render(); });
-    document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('.panel,.modal')) e.preventDefault(); }, { passive: false });
+    document.addEventListener('touchmove', e => { if (!e.target.closest || !e.target.closest('.panel,.modal,.menu-col')) e.preventDefault(); }, { passive: false });
     window.addEventListener('resize', () => this.checkRotate());
     this.menuItems();
   },
-  gyroChanged() { const b = $('tGyro'); if (b) { b.innerHTML = 'GYRO<br>' + (Gyro.on ? 'ON' : 'OFF'); b.classList.toggle('act', Gyro.on); } if (this.paused) this.pause(true); else if (this.screen === 'settings' && this.tab === 'control') this.render(); },
+  gyroChanged() { this.applyCtrl(); const b = $('tGyro'); if (b) { b.innerHTML = '<span>GYRO<br>' + (Gyro.on ? 'ON' : 'OFF') + '</span>'; b.classList.toggle('act', Gyro.on); } if (this.paused) this.pause(true); else if (this.screen === 'settings' && this.tab === 'control') this.render(); },
   a_gyroToggle() { Gyro.toggle(); },
+  // ---- タッチ操作の設定 ----
+  applyCtrl() {
+    const s = SAVE.data && SAVE.data.settings; if (!s) return; const B = document.body.classList;
+    B.toggle('accAuto', s.accelMode === 'auto'); B.toggle('accToggle', s.accelMode === 'toggle'); B.toggle('steerSlide', s.steerMode === 'slide'); B.toggle('mirror', !!s.mirror);
+    const t = $('touch'); if (t) { t.style.setProperty('--tbs', s.btnScale || 1); t.style.setProperty('--tbo', s.btnAlpha || 1); }
+    const L = $('tLeft'), R = $('tRight'); if (L && R) { L.firstChild.textContent = s.mirror ? '▶' : '◀'; R.firstChild.textContent = s.mirror ? '◀' : '▶'; }
+    const g = $('tGas'); if (g) g.firstChild.innerHTML = s.accelMode === 'toggle' ? 'GAS<br><small>タップでON/OFF</small>' : 'GAS';
+    if (Input.refreshTouch) Input.refreshTouch();
+  },
+  ctrlPresetMatch() { const s = SAVE.data.settings; return (CTRL_PRESETS.find(p => Object.keys(p.v).every(k => String(s[k]) === String(p.v[k]))) || {}).id || 'custom'; },
+  a_ctrlPreset(id) {
+    const p = CTRL_PRESETS.find(x => x.id === id); if (!p) return; const s = SAVE.data.settings; Object.assign(s, p.v); s.ctrlPreset = id; SAVE.save();
+    if (s.steerMode === 'gyro' && !Gyro.on) Gyro.enable(); else if (s.steerMode !== 'gyro' && Gyro.on) Gyro.disable();
+    if (this.game.active) this.game.veh.auto = s.trans !== 'MT';
+    document.body.classList.toggle('layA', s.layout === 'A'); document.body.classList.toggle('layB', s.layout === 'B');
+    this.applyCtrl(); this.toast('操作プリセット「' + p.name + '」にしました'); this.render();
+  },
+  a_ctrlTest() { const inst = SAVE.cur(); this.launch({ mode: 'free', mapId: 'akigiri', weather: 'clear', time: 'day', laps: 1, carInst: inst, rivals: [] }); },
   a_gyroCal() { if (!Gyro.on) return this.toast('ジャイロ操作がOFFです'); Gyro.calibrate(); this.toast('現在の傾きを中央にしました'); },
   saveStatus() { const t = saveLabel(); for (const id of ['saveSt', 'saveSt2']) { const e = $(id); if (e) { e.textContent = t; e.classList.toggle('warn', CLOUD.state === 'error'); } } },
   afterLoad() { if (this.screen === 'menu') this.goMenu(); else if (this.screen !== 'title' && this.screen !== 'race') this.render(); this.refreshTop(); },
@@ -4161,15 +4227,22 @@ const UI = {
       html += `<div class="note">BGMはすべて本ゲーム内でリアルタイムに生成されるオリジナルのユーロビートです（外部音源は使用していません）。PCではレース中に M キーで曲を変更できます。</div>`;
     }
     if (this.tab === 'control') {
+      const pm = this.ctrlPresetMatch();
+      html += `<div class="h3">スマホの操作プリセット</div><div class="note">操作が苦手な人向けの設定もあります。選んだあとに下の項目で細かく変更できます（変更すると「カスタム」になります）。</div><div class="preset-grid">${CTRL_PRESETS.map(p => `<button class="preset ${pm === p.id ? 'on' : ''}" data-a="ctrlPreset" data-v="${p.id}"><b>${p.name}</b><small>${p.desc}</small></button>`).join('')}<div class="preset ${pm === 'custom' ? 'on' : ''} ro"><b>カスタム</b><small>自分で細かく設定した状態</small></div></div>`;
       html += `<div class="h3">ライバルの強さ（ストーリー・イベント）</div>` + opt('aiLevel', [[0, 'やさしい'], [1, 'ふつう'], [2, 'むずかしい']]);
       html += `<div class="h3">トランスミッション</div>` + opt('trans', [['AT', 'オートマ (AT)'], ['MT', 'マニュアル (MT)']]);
       html += `<div class="h3">ドリフトアシスト（自動カウンター）</div>` + opt('assist', [[0, 'OFF'], [1, '弱'], [2, '標準'], [3, '強']]);
       html += `<div class="row"><label>ステアリング感度</label><input type="range" min="0" max="1" step="0.05" value="${s.steerSens}" data-in="setNum" data-k="steerSens"><span class="val">${Math.round(s.steerSens * 100)}</span></div><div class="note">ハンドルはボタン/キーを押している時間に応じて切れ角が増えます。感度を上げると早く切れます。</div>`;
-      html += `<div class="h3">タッチ操作</div>` + opt('touchUI', [['auto', '自動'], ['on', '常に表示'], ['off', '非表示']]) + opt('layout', [['A', 'レイアウトA（左右ハンドル）'], ['B', 'レイアウトB（左手ハンドル）']]) ;
-      html += `<div class="h3">ジャイロ操作（端末を傾けてハンドル）</div><div class="opt-row"><button class="opt ${!Gyro.on ? 'on' : ''}" data-a="${Gyro.on ? 'gyroToggle' : 'noop'}">OFF</button><button class="opt ${Gyro.on ? 'on' : ''}" data-a="${Gyro.on ? 'noop' : 'gyroToggle'}">ON</button><button class="opt" data-a="gyroCal">現在の傾きを中央に</button></div>`
+      html += `<div class="h3">アクセル</div>` + opt('accelMode', [['hold', '押している間'], ['toggle', 'タップでON/OFF'], ['auto', '自動（ブレーキで減速）']]) + `<div class="note">「タップでON/OFF」はGASボタンを1回タップすると踏みっぱなしになり、もう1回で離します（ブレーキ中は自動で離します）。「自動」はGASボタンが消えて常にアクセルON。</div>`;
+      html += `<div class="h3">ハンドル</div>` + opt('steerMode', [['buttons', '◀ ▶ ボタン'], ['slide', 'スライド操作'], ['gyro', '傾き（ジャイロ）']]) + `<div class="note">「スライド操作」は左側のエリアに指を置いて左右になぞると、なぞった量だけハンドルが切れます（細かく調整しやすい）。</div>`;
+      html += `<div class="h3">操作アシスト</div>` + `<div class="row"><label>オートサイドブレーキ</label></div>` + opt('autoHand', [[false, 'OFF'], [true, 'ON（きついコーナーで自動でドリフトのきっかけ）']]) + `<div class="row"><label>オートニトロ</label></div>` + opt('autoNitro', [[false, 'OFF'], [true, 'ON（直線で自動で使う）']]);
+      html += `<div class="h3">ボタン</div>` + opt('layout', [['A', 'レイアウトA（左右ハンドル）'], ['B', 'レイアウトB（左手ハンドル）']]) + opt('mirror', [[false, '左右 通常'], [true, '左右 入れ替え（アクセルを左手に）']])
+        + `<div class="row"><label>ボタンの大きさ</label><input type="range" min="0.7" max="1.3" step="0.05" value="${s.btnScale}" data-in="setNum" data-k="btnScale"><span class="val">${Math.round(s.btnScale * 100)}</span></div>`
+        + `<div class="row"><label>ボタンの濃さ</label><input type="range" min="0.3" max="1" step="0.05" value="${s.btnAlpha}" data-in="setNum" data-k="btnAlpha"><span class="val">${Math.round(s.btnAlpha * 100)}</span></div>`
+        + `<div class="row"><label>タッチボタンの表示</label></div>` + opt('touchUI', [['auto', '自動'], ['on', '常に表示'], ['off', '非表示']]) + `<div class="btns"><button class="btn" data-a="ctrlTest">試し走りで確認する</button></div>`;
+      html += `<div class="h3">ジャイロの細かい設定</div><div class="opt-row"><button class="opt ${!Gyro.on ? 'on' : ''}" data-a="${Gyro.on ? 'gyroToggle' : 'noop'}">OFF</button><button class="opt ${Gyro.on ? 'on' : ''}" data-a="${Gyro.on ? 'noop' : 'gyroToggle'}">ON</button><button class="opt" data-a="gyroCal">現在の傾きを中央に</button></div>`
         + `<div class="row"><label>ジャイロ感度</label><input type="range" min="0" max="1" step="0.05" value="${s.gyroSens}" data-in="setNum" data-k="gyroSens"><span class="val">${Math.round(s.gyroSens * 100)}</span></div>` + opt('gyroInvert', [[false, '左右 通常'], [true, '左右 反転']])
         + `<div class="note">ONにすると ◀ ▶ ボタンが消え、端末の傾きでハンドルを切れます（傾けた角度に比例してアナログに切れます）。レース中は画面の GYRO ボタンでもON/OFFでき、CENTER ボタンで中央を補正できます。<br>※ claude.ai 上の表示ではモーションセンサーがブラウザ側で制限され、使えない場合があります。その場合は理由を表示して自動でOFFに戻ります。</div>`;
-      html += `<div class="h3">オートアクセル（スマホ向け）</div>` + opt('autoAccel', [[false, 'OFF'], [true, 'ON']]);
       html += `<div class="h3">PC キーボード</div><div class="keys"><kbd>W / ↑</kbd><span>アクセル</span><kbd>S / ↓</kbd><span>ブレーキ（停止中長押しでバック）</span><kbd>A / ←</kbd><span>左ハンドル</span><kbd>D / →</kbd><span>右ハンドル</span><kbd>Space</kbd><span>サイドブレーキ</span><kbd>E / X</kbd><span>ニトロ</span><kbd>Shift</kbd><span>ギアアップ</span><kbd>Ctrl / Q</kbd><span>ギアダウン（Ctrl+W 等はブラウザの機能が優先されるためQも使えます）</span><kbd>C</kbd><span>カメラ切り替え</span><kbd>N</kbd><span>ニュートラル</span><kbd>R</kbd><span>リセット（コースに戻す）</span><kbd>M</kbd><span>曲を変更</span><kbd>Esc / P</kbd><span>ポーズメニュー</span></div>`;
       html += `<div class="h3">スマートフォン</div><div class="keys"><kbd>◀ ▶</kbd><span>ハンドル左 / 右（押している時間で切れ角が増加）</span><kbd>GAS</kbd><span>アクセル（右下）</span><kbd>BRAKE</kbd><span>ブレーキ（左下）</span><kbd>E-BRAKE</kbd><span>サイドブレーキ</span><kbd>NITRO</kbd><span>ニトロ</span><kbd>▲ ▼</kbd><span>ギアアップ / ダウン</span><kbd>CAM</kbd><span>カメラ切り替え</span><kbd>GYRO</kbd><span>ジャイロ操作 ON/OFF</span><kbd>CENTER</kbd><span>ジャイロの中央補正（ジャイロON時）</span><kbd>II</kbd><span>ポーズ</span></div>`;
       html += `<div class="h3">ゲームパッド</div><div class="note">左スティック: ハンドル / RT: アクセル / LT: ブレーキ / A: サイドブレーキ / B: ニトロ / RB・LB: シフト / Y: カメラ / START: ポーズ</div>`;
@@ -4211,10 +4284,12 @@ const UI = {
     if (k === 'showFps') $('fps').classList.toggle('hidden', !val);
     if (k === 'devInfinite') { if (!DEV.owner) { s.devInfinite = false; } this.refreshTop(); }
     if (k === 'trans' && this.game.active) this.game.veh.auto = val !== 'MT';
+    if (k === 'steerMode') { if (val === 'gyro' && !Gyro.on) Gyro.enable(); else if (val !== 'gyro' && Gyro.on) Gyro.disable(); }
+    if (['accelMode', 'steerMode', 'mirror', 'layout'].includes(k)) this.applyCtrl();
     this.render();
   },
   in_setVol(val, el) { const k = el.dataset.k; SAVE.data.settings[k] = +val; AUDIO.setVol({ [k]: +val }); el.nextElementSibling.textContent = Math.round(val * 100); SAVE.save(); },
-  in_setNum(val, el) { SAVE.data.settings[el.dataset.k] = +val; el.nextElementSibling.textContent = Math.round(val * 100); SAVE.save(); },
+  in_setNum(val, el) { SAVE.data.settings[el.dataset.k] = +val; el.nextElementSibling.textContent = Math.round(val * 100); SAVE.save(); if (['btnScale', 'btnAlpha'].includes(el.dataset.k)) this.applyCtrl(); },
   a_mPrev() { AUDIO.nextTrack(-1); this.refreshMusic(); }, a_mNext() { AUDIO.nextTrack(1); this.refreshMusic(); },
   a_mPlay() { if (!AUDIO.music.playing) AUDIO.playCat(AUDIO.music.cat || 'menu', true); else AUDIO.togglePause(); this.refreshMusic(); },
   a_mSel(id) { AUDIO.play(id); this.refreshMusic(); },
