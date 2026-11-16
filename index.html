@@ -425,6 +425,14 @@ body.layB #tPad{left:calc(2vw + var(--safe-l));bottom:calc(4vh + var(--safe-b));
 .mm-ban b{display:block;font-size:13px}.mm-ban small{font-size:11px;color:#ffe9a8}
 @media (max-height:500px) and (orientation:landscape){ .mt{min-height:44px;padding:6px 8px}.mt-ic{width:30px;height:30px}.mt-tx b{font-size:13px}.mt.hero{min-height:52px}.mt.hero .mt-tx b{font-size:16px}.mm-sec{margin:6px 2px 3px} }
 @media (orientation:portrait){ .mm-grid{grid-template-columns:repeat(3,1fr)} .mt.hero{grid-column:span 3} }
+
+/* ---- 開発者メニュー ---- */
+.mt.dev{border-color:rgba(255,207,61,.6);background:linear-gradient(135deg,rgba(70,55,10,.95),rgba(20,16,6,.9))}
+.dv-head{display:flex;gap:10px;align-items:center;background:linear-gradient(110deg,#3a2c05,#15120a);border:1px solid #ffcf3d;padding:9px 12px;margin-bottom:8px}.dv-head b{display:block;font-size:16px;color:#ffcf3d}.dv-head small{font-size:11px;color:#ddd}
+.dv-stat{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;background:rgba(0,0,0,.3);padding:8px 12px;margin-bottom:8px;font-size:12px}.dv-stat b{font-family:Orbitron;color:#ffcf3d;text-align:right}
+.dv-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}.dv-row b{display:block;font-size:14px}.dv-row small{display:block;font-size:11px;color:#aaa;margin-top:2px}
+.tgl{flex:0 0 auto;width:50px;height:28px;border-radius:20px;background:#444;border:0;position:relative;transition:background .15s}.tgl i{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}.tgl.on{background:#1fa85a}.tgl.on i{left:25px}
+.btn.danger{background:#7a0d0d;border-color:#ff4040;color:#fff}
 </style>
 </head>
 <body>
@@ -3455,6 +3463,7 @@ class Game {
       logErr('物理NaN', new Error('spec[' + badSpec.join(',') + '] input[' + badIn.join(',') + '] surf[' + badSurf.join(',') + '] car=' + this.carInst.id + ' map=' + this.cfg.mapId + ' weather=' + this.cfg.weather));
       const p = this.track.pointAt(this.loc.prog, 0); v.reset(p.x, p.z, p.y, p.hd); v.gear = this.started ? 1 : 0;
     }
+    if (DEV.owner && set.devNitro) v.nitro = 1;
     if (v.blowoff) { v.blowoff = 0; AUDIO.blowoff(); }
     if (this.started) this.raceT += dt;
     // 位置・壁
@@ -3576,6 +3585,7 @@ class Game {
     rubber *= [0.88, 1, 1.12][SAVE.data.settings.aiLevel ?? 1];
     const ahead = Math.floor(clamp(r.v * 0.25, 4, 16));
     let target = tr.vmax[(i + ahead) % tr.n] * skill * 0.8 * rubber * Math.sqrt(this.env.grip);
+    if (DEV.owner && SAVE.data.settings.devGhostCar) target *= 0.5;
     target = Math.min(target, r.spec.car.top / 3.6 * 0.97);
     if (r.finished) target = Math.min(target, 12);
     const pw = r.spec.P / (r.spec.mass * Math.max(r.v, 4)); const aMax = Math.min(pw * 0.5, 5 * this.env.grip) - r.spec.dragK * r.v * r.v / r.spec.mass;
@@ -3938,7 +3948,7 @@ const CLOUD = {
   set(st) { this.state = st; UI.saveStatus && UI.saveStatus(); }
 };
 // ---- 開発者モード（このページの所有者にだけ表示） ----
-const DEV = { owner: false, async init() { try { if (!window.claude || typeof window.claude.use !== 'function') return; const u = await window.claude.use('user'); this.owner = !!(u && await u.isOwner()); if (this.owner && UI.screen === 'settings') UI.render(); } catch (e) { this.owner = false; } },
+const DEV = { owner: false, why: '確認中', async init() { try { if (!window.claude || typeof window.claude.use !== 'function') { this.why = 'この環境では開発者の確認ができません'; return; } const u = await window.claude.use('user'); if (!u) { this.why = 'アカウントに接続できませんでした'; return; } this.owner = !!(await u.isOwner()); this.why = this.owner ? '有効' : (window.DL_FB && !window.DL_FB.isGoogle() ? 'Googleでログインしていません（ゲスト）' : 'このアカウントは開発者に登録されていません'); if (UI.screen === 'settings' || UI.screen === 'dev') UI.render(); if (UI.screen === 'menu') UI.menuItems(); } catch (e) { this.owner = false; this.why = '確認中にエラー: ' + (e && e.message); } },
   inf() { return this.owner && SAVE.data.settings.devInfinite; } };
 function saveLabel() {
   const st = CLOUD.state; const t = SAVE.data && SAVE.data.savedAt ? new Date(SAVE.data.savedAt) : null; const hm = t ? t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0') : '';
@@ -3948,7 +3958,7 @@ function mapUnlocked(m) { const u = m.unlock; if (!u) return true; const d = SAV
 function mapLockText(m) { const u = m.unlock; if (!u) return ''; if (u.story) return `ストーリー第${u.story}話クリアで解放`; if (u.level) return `Lv.${u.level}で解放`; if (u.event) return 'クリスマスイベント期間限定'; return ''; }
 function carBuyable(c) { const u = c.unlock; if (!u) return true; if (u.event || u.chest) return false; if (u.story) return SAVE.data.story.cleared.includes(u.story); if (u.level) return SAVE.level() >= u.level; return true; }
 function carLockText(c) { const u = c.unlock; if (!u) return ''; if (u.chest) return 'チェスト限定'; if (u.event) return 'イベント報酬限定'; if (u.story) return `ストーリー第${u.story}話クリアで販売`; if (u.level) return `Lv.${u.level}で販売`; return ''; }
-function eventActive() { const now = new Date(); const s = new Date(XMAS_EVENT.start + 'T00:00:00+09:00'), e = new Date(XMAS_EVENT.end + 'T23:59:59+09:00'); return now >= s && now <= e; }
+function eventActive() { if (typeof DEV !== 'undefined' && DEV.owner && SAVE.data && SAVE.data.settings.devEvent) return true; const now = new Date(); const s = new Date(XMAS_EVENT.start + 'T00:00:00+09:00'), e = new Date(XMAS_EVENT.end + 'T23:59:59+09:00'); return now >= s && now <= e; }
 function xmasThemeOn() { const t = SAVE.data.settings.xmasTheme; return t === 'on' || (t === 'auto' && eventActive()); }
 const TRACK_CACHE = {};
 function getTrack(id) { if (!TRACK_CACHE[id]) TRACK_CACHE[id] = new Track(MAP_BY_ID[id]); return TRACK_CACHE[id]; }
@@ -4129,6 +4139,7 @@ const UI = {
     h += `</div><div class="mm-sec">EVENT</div><div class="mm-grid">`;
     h += T('events', 'tree', 'イベント', 'EVENTS', { col: '#2fdc7a', badge: xm ? '開催中' : '' , bdc: 'g' }) + T('advent', 'calendar', 'アドベント', 'ADVENT CALENDAR', { col: '#ffd76a', badge: advOpen ? 'OPEN' : '' });
     h += `</div>` + T('settings', 'gear', '設定', 'SETTINGS', { cls: 'wide', col: '#aab' });
+    if (DEV.owner) h += T('dev', 'wrench', '開発者メニュー', 'DEVELOPER MENU', { cls: 'wide dev', col: '#ffcf3d' });
     const el = $('menuList'); el.innerHTML = h;
     el.onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; AUDIO.click(); const k = b.dataset.m; if (['time', 'touge', 'free'].includes(k)) this.open('maps', { mode: k }); else this.open(k); };
   },
@@ -4339,6 +4350,63 @@ const UI = {
     this.modal(`<div class="chest-open" style="--rc:${rc}"><div class="co-box">${ICO('calendar', '#ffd76a', 110)}</div><div class="co-res"><div class="co-ic">${it ? this.itemIcon(it, 72) : adventRewardIcon(rw, 72)}</div>${it ? `<div class="co-rar" style="color:${rc}">${RARITY[it.rarity].name}</div>` : `<div class="co-rar" style="color:#ffd76a">${k}日目</div>`}<div class="co-nm">${esc(label)}</div><div class="co-ty">${it ? ITEM_TYPES[it.type] + (it.lim ? '・アドベント限定' : '') : 'アドベントカレンダー'}</div>${extra ? `<div class="co-new">${esc(extra)}</div>` : (res && res.isNew ? '<div class="co-new">NEW!</div>' : '')}</div></div><div class="btns"><button class="btn pri" data-a="closeChest">OK</button></div>`);
     AUDIO.tone(523, 0.15, 'triangle', 0.2); setTimeout(() => { AUDIO.fanfare(); }, 800); if (it && it.type === 'car') this.toast('ガレージに ' + it.name + ' が追加されました！');
   },
+  // ---------------- 開発者メニュー（所有者のみ） ----------------
+  a_openDev() { if (DEV.owner) this.open('dev'); },
+  a_devRecheck() { DEV.owner = false; DEV.why = '確認中'; this.render(); DEV.init().then(() => this.render()); },
+  r_dev() {
+    $('panelTitle').textContent = 'DEVELOPER'; if (!DEV.owner) return `<div class="note">開発者モードが無効です（${esc(DEV.why)}）。</div>`;
+    const d = SAVE.data, s = d.settings; if (!this.tab) this.tab = 'money'; this.show.setCar(SAVE.cur());
+    const tabs = [['money', 'お金・レベル'], ['unlock', '解放・入手'], ['event', 'イベント'], ['race', 'レース'], ['data', 'データ']];
+    const tg = (k, l, desc) => `<div class="dv-row"><div><b>${l}</b>${desc ? `<small>${desc}</small>` : ''}</div><button class="tgl ${s[k] ? 'on' : ''}" data-a="devToggle" data-v="${k}"><i></i></button></div>`;
+    const bt = (a, l, v, cls) => `<button class="btn ${cls || ''}" data-a="${a}"${v !== undefined ? ` data-v="${v}"` : ''}>${l}</button>`;
+    let h = `<div class="dv-head">${ICO('wrench', '#ffcf3d', 26)}<div><b>開発者メニュー</b><small>あなたのアカウントにだけ表示されます。ここでの変更はこの端末とクラウドのセーブに反映されます。</small></div></div>`;
+    h += `<div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+    if (this.tab === 'money') {
+      h += `<div class="dv-stat"><span>所持金</span><b>${DEV.inf() ? '∞' : yen(d.money)}</b><span>レベル</span><b>Lv.${SAVE.level()}</b><span>クリスマスpt</span><b>${(d.event.points || 0).toLocaleString()}</b></div>`;
+      h += tg('devInfinite', '無限マネー', '買い物をしてもお金が減りません');
+      h += `<div class="h3">お金を追加</div><div class="btns">${[1e6, 1e7, 1e8, 1e9].map(n => bt('devMoney', '+' + yen(n), n, 'gold')).join('')}</div><div class="btns">${bt('devMoneyZero', '所持金を ¥0 にする')}</div>`;
+      h += `<div class="h3">レベル</div><div class="btns">${bt('devLevel', 'レベル +5')}${bt('devLevelMax', 'レベル 50 にする')}</div>`;
+    }
+    if (this.tab === 'unlock') {
+      const ownItems = ITEMS.filter(i => invHas(i.id)).length, carsAll = CARS.length, carsOwn = new Set(d.cars.map(c => c.id)).size;
+      h += `<div class="dv-stat"><span>アイテム</span><b>${ownItems} / ${ITEMS.length}</b><span>車両</span><b>${carsOwn} / ${carsAll}</b><span>ストーリー</span><b>${d.story.cleared.length} / ${STORY.length}</b></div>`;
+      h += `<div class="h3">まとめて解放</div><div class="btns">${bt('devStory', 'ストーリー全話クリア扱い（コース・車も解放）')}</div><div class="btns">${bt('devAllItems', 'チェスト・アドベントのアイテムを全部入手', undefined, 'gold')}</div><div class="btns">${bt('devAllXmas', 'クリスマスショップのアイテムを全部入手')}</div><div class="btns">${bt('devAllCars', '全車両をガレージに追加（限定車も）', undefined, 'gold')}</div>`;
+      h += `<div class="note">全車両を追加すると、ガレージの台数がかなり増えます。</div>`;
+    }
+    if (this.tab === 'event') {
+      h += tg('devEvent', 'クリスマスイベントを強制開催', '期間外でもイベントコース・クリスマスショップ・装飾が使えます');
+      h += tg('devAdvent', 'アドベントカレンダーのテスト', '12/25扱いで全部の扉を開けられます（本番の12月には持ち越しません）');
+      h += `<div class="btns">${bt('devAdvReset', 'アドベントの開けた扉をリセット')}</div>`;
+      h += `<div class="h3">クリスマスポイント</div><div class="btns">${[1000, 10000, 100000].map(n => bt('devPts', '+' + n.toLocaleString() + 'pt', n)).join('')}</div>`;
+      h += `<div class="h3">チェスト・ショップ</div><div class="btns">${bt('devFreeChest', 'デイリーチェストをもう一度無料にする')}${bt('devShopReset', '日替わりショップの購入をリセット')}</div>`;
+    }
+    if (this.tab === 'race') {
+      h += tg('devNitro', 'ニトロ無限', 'レース中ニトロが減りません');
+      h += tg('devGhostCar', 'ライバルを遅くする', 'ストーリー・イベントのライバルの速さを半分にします（テスト用）');
+      h += tg('showFps', 'FPS表示', '画面の動きの滑らかさ（フレームレート）を表示します');
+      h += `<div class="h3">すぐに試す</div><div class="btns">${bt('devTest', 'ジャンプ台コースで試し走り', 'jumppark')}${bt('devTest', '峠で試し走り', 'akigiri')}</div>`;
+    }
+    if (this.tab === 'data') {
+      h += `<div class="h3">セーブデータの書き出し・読み込み</div><div class="note">バックアップや別の端末への引っ越しに使えます。</div><textarea id="devSave" style="height:90px" placeholder="ここにセーブデータを貼り付けて「読み込む」"></textarea><div class="btns">${bt('devExport', '書き出す（コピー）')}${bt('devImport', '貼り付けたデータを読み込む', undefined, 'gold')}</div>`;
+      h += `<div class="h3">エラー情報</div><div class="note">記録されたエラー: ${(d.errLog || []).length}件（設定 → データで確認できます）</div>`;
+      h += `<div class="h3">危険な操作</div><div class="btns">${bt('devWipe', 'セーブデータを最初からにする', undefined, 'danger')}</div>`;
+    }
+    return h;
+  },
+  a_devToggle(k) { if (!DEV.owner) return; const s = SAVE.data.settings; s[k] = !s[k]; SAVE.save(); if (k === 'showFps') $('fps').classList.toggle('hidden', !s[k]); if (k === 'devEvent') this.show.rebuildStudio(); this.refreshTop(); this.render(); },
+  a_devMoneyZero() { if (!DEV.owner) return; SAVE.data.money = 0; SAVE.save(); this.render(); },
+  a_devLevelMax() { if (!DEV.owner) return; SAVE.data.xp = Math.max(SAVE.data.xp, 49 * 1500); SAVE.save(); this.toast('Lv.' + SAVE.level() + ' になりました'); this.render(); },
+  a_devPts(n) { if (!DEV.owner) return; SAVE.data.event.points = (SAVE.data.event.points || 0) + +n; SAVE.save(); this.toast('クリスマスポイント +' + (+n).toLocaleString()); this.render(); },
+  a_devAllItems() { if (!DEV.owner) return; let k = 0; for (const it of ITEMS) { if (it.type === 'car') continue; if (!invHas(it.id)) { SAVE.data.inv[it.id] = 1; k++; } } SAVE.save(); this.toast(k + '個のアイテムを入手しました'); this.render(); },
+  a_devAllXmas() { if (!DEV.owner) return; for (const it of XMAS_SHOP) grantItem(it.item); SAVE.save(); this.toast('クリスマスショップのアイテムを全部入手しました'); this.render(); },
+  a_devAllCars() { if (!DEV.owner) return; const d = SAVE.data; let k = 0; for (const c of CARS) if (!d.cars.some(x => x.id === c.id)) { const n = SAVE.newCar(c.id); n.paid = c.price || 0; d.cars.push(n); k++; } SAVE.save(); this.toast(k + '台を追加しました'); this.render(); },
+  a_devFreeChest() { if (!DEV.owner) return; SAVE.data.chest.freeDate = ''; SAVE.save(); this.toast('デイリーチェストをもう一度開けられます'); },
+  a_devShopReset() { if (!DEV.owner) return; SAVE.data.shopBuy = { date: '', ids: [] }; SAVE.save(); this.toast('日替わりショップの購入をリセットしました'); },
+  a_devTest(map) { if (!DEV.owner) return; this.launch({ mode: 'free', mapId: map, weather: 'clear', time: 'evening', laps: 1, carInst: SAVE.cur(), rivals: [] }); },
+  a_devExport() { const t = $('devSave'); t.value = JSON.stringify(SAVE.data); t.select(); try { navigator.clipboard.writeText(t.value).then(() => this.toast('コピーしました'), () => this.toast('選択しました。手動でコピーしてください')); } catch (e) { this.toast('選択しました。手動でコピーしてください'); } },
+  a_devImport() { if (!DEV.owner) return; let o; try { o = JSON.parse($('devSave').value); } catch (e) { return this.toast('データの形式が正しくありません'); } if (!o || !Array.isArray(o.cars) || !o.cars.length) return this.toast('セーブデータではないようです'); o.savedAt = Date.now(); SAVE.adopt(o); SAVE.save(); this.afterLoad(); this.toast('読み込みました'); this.render(); },
+  a_devWipe() { if (!DEV.owner) return; this.modal(`<h2>セーブデータを最初からにしますか？</h2><div class="note">所持金・車両・アイテム・記録がすべて消えます（開発者の設定は残ります）。元に戻せません。</div><div class="btns"><button class="btn" data-a="closeModal">やめる</button><button class="btn danger" data-a="devWipeYes">最初からにする</button></div>`); },
+  a_devWipeYes() { if (!DEV.owner) return; const keep = { devInfinite: SAVE.data.settings.devInfinite }; const n = SAVE.defaults(); Object.assign(n.settings, SAVE.data.settings, keep); n.savedAt = Date.now(); SAVE.adopt(n); SAVE.save(); this.closeModal(); this.afterLoad(); this.toast('セーブデータを最初からにしました'); this.goMenu(); },
   // ---------------- ガレージ ----------------
   r_garage() {
     $('panelTitle').textContent = 'GARAGE'; const d = SAVE.data;
@@ -4611,7 +4679,7 @@ const UI = {
       html += `<div class="h3">クリスマステーマ（ガレージ装飾）</div>` + opt('xmasTheme', [['auto', '自動（イベント期間）'], ['on', 'ON'], ['off', 'OFF']]);
     }
     if (this.tab === 'dev' && DEV.owner) {
-      html += `<div class="note" style="color:var(--gold)">${ICO('wrench', '#ffcf3d', 15)} 開発者モード（このページの所有者にだけ表示されます）</div>`;
+      html += `<div class="note" style="color:var(--gold)">${ICO('wrench', '#ffcf3d', 15)} 開発者モード（このページの所有者にだけ表示されます）</div><div class="btns"><button class="btn gold" data-a="openDev" style="flex:1">開発者メニューを開く ▶</button></div>`;
       html += `<div class="h3">無限マネー</div>` + opt('devInfinite', [[false, 'OFF'], [true, 'ON（購入しても減らない）']]);
       html += `<div class="h3">お金を追加</div><div class="btns">${[1e6, 1e7, 1e8, 1e9].map(n => `<button class="btn gold" data-a="devMoney" data-v="${n}">+${yen(n)}</button>`).join('')}</div><div class="note">現在: ${yen(SAVE.data.money)}</div>`;
       html += `<div class="h3">アドベントカレンダーのテスト</div>` + opt('devAdvent', [[false, 'OFF（本来の日付）'], [true, 'ON（12/25扱いで全部開けられる）']]) + `<div class="btns"><button class="btn" data-a="devAdvReset">開けた扉をリセット</button></div>`;
@@ -4621,7 +4689,7 @@ const UI = {
       html += `<div class="h3">自動セーブ</div><div class="note" style="font-size:13px;color:#fff">状態: ${saveLabel()}</div><div class="note" style="font-size:12px;line-height:1.8">進行状況（所持金・車両・カスタマイズ・チューニング・ストーリー・記録・解放マップ・設定・実績）は、変更があるたびに自動で保存されます。<br>・端末のブラウザ内（2か所に二重保存）<br>${window.DL_FIREBASE ? '・クラウドにも自動保存（Googleでログインすると、別の端末でも続きから遊べます）' : '・claude.ai にサインインしていて保存が許可されている場合は、アカウントのクラウドにも保存（別の端末でも続きから遊べます）'}<br>レース中も30秒ごと、アプリを閉じる/切り替える時にも保存します。</div><div class="btns"><button class="btn pri" data-a="saveNow">今すぐ保存</button></div>`;
       if (window.DL_FIREBASE) { const F = window.DL_FB; const g = F.isGoogle();
         html += `<div class="h3">アカウント</div><div class="note" style="font-size:13px;color:#fff">${esc(F.label())}</div><div class="note" style="font-size:12px;line-height:1.8">${g ? 'このGoogleアカウントにセーブデータを保存しています。別の端末でも同じアカウントでログインすると続きから遊べます。' : 'Googleでログインすると、今のデータを引き継いだままクラウドに保存され、スマホとPCで同じデータを使えます。<br>※すでに別の端末でログインしたことがあるアカウントの場合は、そのアカウントのデータが読み込まれます。'}</div>
-          <div class="btns">${g ? `<button class="btn" data-a="fbLogout">ログアウト</button>` : `<button class="btn pri" data-a="fbLogin" style="flex:1">Googleでログイン</button>`}</div>${g && F.user ? `<div class="note" style="font-size:10px;color:#666;word-break:break-all">ユーザーID: ${esc(F.user.uid)}</div>` : ''}`; }
+          <div class="btns">${g ? `<button class="btn" data-a="fbLogout">ログアウト</button>` : `<button class="btn pri" data-a="fbLogin" style="flex:1">Googleでログイン</button>`}</div>${g && F.user ? `<div class="note" style="font-size:10px;color:#666;word-break:break-all">ユーザーID: ${esc(F.user.uid)}</div>` : ''}<div class="note" style="font-size:12px">開発者モード: <b style="color:${DEV.owner ? '#2fdc7a' : '#ff8a8a'}">${esc(DEV.why)}</b>${DEV.owner ? '' : ' <button class="btn" data-a="devRecheck" style="padding:3px 8px;font-size:11px">再確認</button>'}</div>`; }
       const el = SAVE.data.errLog || [];
       html += `<div class="h3">エラー情報</div>` + (el.length ? `<textarea id="errLogText" readonly>${esc(el.map(x => new Date(x.t).toLocaleString('ja-JP') + ' ×' + x.n + ' ' + x.m + ' [' + x.v + ']').join('\n'))}</textarea><div class="btns"><button class="btn" data-a="copyErr">エラー情報をコピー</button><button class="btn" data-a="clearErr">消去</button></div>` : `<div class="note">記録されたエラーはありません。</div>`);
       html += `<div class="h3">バックアップコード</div><textarea id="saveCode" readonly>${SAVE.exportCode()}</textarea><div class="btns"><button class="btn" data-a="copyCode">コードをコピー</button></div>`;
