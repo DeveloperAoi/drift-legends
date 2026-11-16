@@ -1,7 +1,105 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>window.DL_STANDALONE = true;</script>
+<script src="firebase-config.js"></script>
+<script>
+// =====================================================================
+// fbshim.js — GitHub Pages 版：Firebase で claude.ai の room / db / user 機能を再現する
+// window.FIREBASE_CONFIG（firebase-config.js）が設定されているときだけ有効
+// =====================================================================
+(function () {
+  const V = '10.12.2', BASE = 'https://www.gstatic.com/firebasejs/' + V + '/';
+  const cfg = window.FIREBASE_CONFIG;
+  if (!cfg || !cfg.apiKey || !cfg.databaseURL) { window.DL_STANDALONE = true; return; }
+  window.DL_FIREBASE = true;
+  const loadJs = src => new Promise((ok, ng) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ng(new Error('load ' + src)); document.head.appendChild(s); });
+  let readyP = null, app, auth, db;
+  const FB = window.DL_FB = {
+    user: null, listeners: [],
+    ready() {
+      if (readyP) return readyP;
+      readyP = (async () => {
+        await loadJs(BASE + 'firebase-app-compat.js');
+        await Promise.all([loadJs(BASE + 'firebase-auth-compat.js'), loadJs(BASE + 'firebase-database-compat.js')]);
+        app = firebase.initializeApp(cfg); auth = firebase.auth(); db = firebase.database();
+        try { await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) { }
+        try { await auth.getRedirectResult(); } catch (e) { console.warn(e); }
+        await new Promise(res => { const un = auth.onAuthStateChanged(u => { un(); res(u); }); });
+        if (!auth.currentUser) await auth.signInAnonymously();
+        FB.user = auth.currentUser;
+        auth.onAuthStateChanged(u => { const changed = (u && u.uid) !== (FB.user && FB.user.uid); FB.user = u; FB.listeners.forEach(f => { try { f(u, changed); } catch (e) { } }); });
+        return true;
+      })();
+      readyP.catch(e => { console.error('Firebase', e); readyP = null; });
+      return readyP;
+    },
+    onUser(f) { this.listeners.push(f); },
+    isGoogle() { const u = this.user; return !!(u && !u.isAnonymous); },
+    label() { const u = this.user; if (!u) return '未接続'; if (u.isAnonymous) return 'ゲスト（この端末だけ）'; return (u.displayName || u.email || 'Googleアカウント'); },
+    async google() {
+      await this.ready(); const prov = new firebase.auth.GoogleAuthProvider(); const cur = auth.currentUser;
+      const usePopup = async fn => { try { return await fn(); } catch (e) { if (e && /popup-blocked|operation-not-supported|popup-closed-by-browser|web-storage-unsupported/.test(e.code || '')) { if (cur && cur.isAnonymous) return cur.linkWithRedirect(prov); return auth.signInWithRedirect(prov); } throw e; } };
+      if (cur && cur.isAnonymous) {
+        try { return await usePopup(() => cur.linkWithPopup(prov)); } // ゲストのデータをそのまま Google に引き継ぐ
+        catch (e) { if (e && e.code === 'auth/credential-already-in-use' && e.credential) return auth.signInWithCredential(e.credential); throw e; }
+      }
+      return usePopup(() => auth.signInWithPopup(prov));
+    },
+    async logout() { await this.ready(); await auth.signOut(); await auth.signInAnonymously(); },
+    db() { return db; }, auth() { return auth; }
+  };
+  // ---- claude.use 互換 ----
+  const wrapErr = e => { const x = new Error(e && e.message || 'error'); x.code = (e && /PERMISSION_DENIED|permission/i.test(e.code || e.message || '')) ? 'not_granted' : 'unavailable'; return x; };
+  const dbCap = {
+    doc(path) {
+      const ref = () => db.ref(path.replace(/^data\/users\//, 'users/').replace(/[.#$\[\]]/g, '_'));
+      return {
+        async get() { try { const s = await ref().get(); return { exists: s.exists(), data: () => s.val() }; } catch (e) { throw wrapErr(e); } },
+        async set(v) { try { await ref().set(v); } catch (e) { throw wrapErr(e); } }
+      };
+    }
+  };
+  const userCap = { async id() { await FB.ready(); return FB.user ? FB.user.uid : null; }, async isOwner() { await FB.ready(); const own = [].concat(cfg.ownerUids || []); return !!(FB.user && !FB.user.isAnonymous && own.includes(FB.user.uid)); } };
+  const tabId = Math.random().toString(36).slice(2, 8);
+  const roomCap = {
+    async join(name) {
+      await FB.ready(); const code = String(name).replace(/^dl-/, '');
+      if (!/^[a-z0-9]{3,12}$/.test(code)) { const e = new Error('bad code'); e.code = 'invalid_argument'; throw e; }
+      const pid = FB.user.uid.slice(0, 10) + '_' + tabId; const peersRef = db.ref('rooms/' + code + '/peers'), me = peersRef.child(pid);
+      let snap; try { snap = await peersRef.get(); } catch (e) { throw wrapErr(e); }
+      const now = Date.now(); const live = snap.exists() ? Object.entries(snap.val()).filter(([k, v]) => k !== pid && v && now - (v._t || 0) < 45000) : [];
+      if (live.length >= 4) { const e = new Error('full'); e.code = 'limit_reached'; throw e; }
+      if (snap.exists()) Object.entries(snap.val()).forEach(([k, v]) => { if (k !== pid && (!v || now - (v._t || 0) > 45000)) peersRef.child(k).remove().catch(() => { }); });
+      let mine = { _t: firebase.database.ServerValue.TIMESTAMP, _j: now };
+      await me.onDisconnect().remove(); await me.set(mine);
+      let list = [], peerCbs = [], connCbs = [], left = false;
+      const hb = setInterval(() => { if (!left) me.update({ _t: firebase.database.ServerValue.TIMESTAMP }).catch(() => { }); }, 15000);
+      const seenAt = {}, seenJs = {};
+      const onVal = s => { const v = s.val() || {}; const t = Date.now();
+        list = Object.entries(v).filter(([k, p]) => p && (k === pid || !p._t || t - p._t < 60000)).map(([k, p]) => { const js = JSON.stringify(p.race || p); if (js !== seenJs[k]) { seenJs[k] = js; seenAt[k] = t; }
+          return { peer: (p._j || 0).toString(36).padStart(9, '0') + k, kind: 'viewer', sameTab: k === pid, presence: p, updatedAt: seenAt[k] }; });
+        peerCbs.forEach(f => { try { f(list); } catch (e) { } }); };
+      const onErr = e => peerCbs.forEach(() => { });
+      peersRef.on('value', onVal, onErr);
+      const connRef = db.ref('.info/connected'); const onConn = s => { const c = !!s.val(); if (c && !left) { me.onDisconnect().remove(); me.update(mine).catch(() => { }); } connCbs.forEach(f => { try { f(c); } catch (e) { } }); };
+      connRef.on('value', onConn);
+      return {
+        peers: () => list,
+        presence(patch) { if (left) return Promise.resolve(); const clean = {}; for (const k in patch) clean[k] = patch[k] === undefined ? null : patch[k]; Object.assign(mine, clean); return me.update(clean).catch(e => { throw wrapErr(e); }); },
+        onPeers(cb, err) { peerCbs.push(cb); return () => { peerCbs = peerCbs.filter(f => f !== cb); }; },
+        onConnection(cb) { connCbs.push(cb); return () => { connCbs = connCbs.filter(f => f !== cb); }; },
+        async leave() { left = true; clearInterval(hb); peersRef.off('value', onVal); connRef.off('value', onConn); try { await me.onDisconnect().cancel(); await me.remove(); } catch (e) { } }
+      };
+    }
+  };
+  window.claude = window.claude || {};
+  window.claude.use = async name => {
+    try { await Promise.race([FB.ready(), new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 15000))]); } catch (e) { return null; }
+    return name === 'db' ? dbCap : name === 'user' ? userCap : name === 'room' ? roomCap : null;
+  };
+})();
+
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
@@ -3482,7 +3580,7 @@ const IDB = {
 // ---- クラウド保存（claude.ai アカウントに紐づく自動保存） ----
 const CLOUD = {
   db: null, doc: null, uid: null, state: 'local', writing: false, pending: false, t: 0, lastSaved: 0,
-  async init() {
+  async init(preferCloud) {
     // ブラウザ予備保存の方が新しければ採用
     try { const s = await IDB.get(SAVE.key); if (s) { const d = JSON.parse(s); if ((d.savedAt || 0) > (SAVE.data.savedAt || 0) && d.cars) { SAVE.adopt(d); UI.afterLoad(); } } } catch (e) { }
     try {
@@ -3493,7 +3591,7 @@ const CLOUD = {
       this.db = db; this.uid = id; this.doc = db.doc('data/users/' + id + '/save');
       const snap = await Promise.race([this.doc.get(), new Promise((_, rj) => setTimeout(() => rj({ code: 'timeout' }), 10000))]);
       const body = snap.exists ? snap.data() : null; let cd = null; try { cd = body && body.json ? JSON.parse(body.json) : null; } catch (e) { }
-      if (cd && cd.cars && (cd.savedAt || 0) > (SAVE.data.savedAt || 0) && !UI.game.active) { SAVE.adopt(cd); UI.afterLoad(); UI.toast('☁ クラウドのセーブデータを読み込みました'); this.set('synced'); }
+      if (cd && cd.cars && (preferCloud || (cd.savedAt || 0) > (SAVE.data.savedAt || 0)) && !UI.game.active) { SAVE.adopt(cd); UI.afterLoad(); UI.toast('☁ クラウドのセーブデータを読み込みました'); this.set('synced'); }
       else { this.pending = true; await this.flush(); }
       // ゴースト復元
       for (const m in SAVE.data.records.ta) { if (!SAVE.loadGhost(m)) { try { const g = await db.doc('data/users/' + id + '/ghost_' + m).get(); if (g.exists && g.data().json) SAVE.ls('dl_ghost_' + m, g.data().json); } catch (e) { } } }
@@ -3617,6 +3715,9 @@ const UI = {
   in_decalPos(val, el) { const inst = this.tuneInst(); const lk = inst.look; const id = el.dataset.id, k = el.dataset.k; lk.decalPos = lk.decalPos || {}; const di = lk.decals.indexOf(id); lk.decalPos[id] = Object.assign({ x: 0.2 + di * 0.18, y: 0.62, s: 1, r: 0 }, lk.decalPos[id] || {}, { [k]: +val });
     el.nextElementSibling.textContent = k === 'r' ? val + '°' : Math.round(val * 100) + '%'; SAVE.save(); clearTimeout(this._slT); this._slT = setTimeout(() => this.show.setCar(inst, true), 90); },
   a_decalReset(id) { const inst = this.tuneInst(); if (inst.look.decalPos) delete inst.look.decalPos[id]; this.afterTune(); },
+  async a_fbLogin() { try { this.toast('ログイン画面を開いています…'); await window.DL_FB.google(); } catch (e) { if (e && e.code === 'auth/popup-closed-by-user') return this.toast('ログインをキャンセルしました'); logErr('Googleログイン', e); this.toast('ログインできませんでした: ' + (e.code || e.message)); } },
+  async a_fbLogout() { try { await window.DL_FB.logout(); this.toast('ログアウトしました（データはこの端末に残ります）'); } catch (e) { this.toast('ログアウトできませんでした'); } },
+  a_netRetry() { NET.room = undefined; this.render(); },
   a_saveNow() { SAVE.save(true); CLOUD.flush(); this.toast('保存しました'); },
   touchUI() { const t = SAVE.data.settings.touchUI; return t === 'on' || (t === 'auto' && IS_TOUCH); },
   welcome() {
@@ -4086,7 +4187,10 @@ const UI = {
       html += `<div class="h3">その他</div><div class="btns"><button class="btn" data-a="devLevel">レベル+5</button><button class="btn" data-a="devStory">ストーリー全話クリア扱い</button></div>`;
     }
     if (this.tab === 'data') {
-      html += `<div class="h3">自動セーブ</div><div class="note" style="font-size:13px;color:#fff">状態: ${saveLabel()}</div><div class="note" style="font-size:12px;line-height:1.8">進行状況（所持金・車両・カスタマイズ・チューニング・ストーリー・記録・解放マップ・設定・実績）は、変更があるたびに自動で保存されます。<br>・端末のブラウザ内（2か所に二重保存）<br>・claude.ai にサインインしていて保存が許可されている場合は、アカウントのクラウドにも保存（別の端末でも続きから遊べます）<br>レース中も30秒ごと、アプリを閉じる/切り替える時にも保存します。</div><div class="btns"><button class="btn pri" data-a="saveNow">今すぐ保存</button></div>`;
+      html += `<div class="h3">自動セーブ</div><div class="note" style="font-size:13px;color:#fff">状態: ${saveLabel()}</div><div class="note" style="font-size:12px;line-height:1.8">進行状況（所持金・車両・カスタマイズ・チューニング・ストーリー・記録・解放マップ・設定・実績）は、変更があるたびに自動で保存されます。<br>・端末のブラウザ内（2か所に二重保存）<br>${window.DL_FIREBASE ? '・クラウドにも自動保存（Googleでログインすると、別の端末でも続きから遊べます）' : '・claude.ai にサインインしていて保存が許可されている場合は、アカウントのクラウドにも保存（別の端末でも続きから遊べます）'}<br>レース中も30秒ごと、アプリを閉じる/切り替える時にも保存します。</div><div class="btns"><button class="btn pri" data-a="saveNow">今すぐ保存</button></div>`;
+      if (window.DL_FIREBASE) { const F = window.DL_FB; const g = F.isGoogle();
+        html += `<div class="h3">アカウント</div><div class="note" style="font-size:13px;color:#fff">${esc(F.label())}</div><div class="note" style="font-size:12px;line-height:1.8">${g ? 'このGoogleアカウントにセーブデータを保存しています。別の端末でも同じアカウントでログインすると続きから遊べます。' : 'Googleでログインすると、今のデータを引き継いだままクラウドに保存され、スマホとPCで同じデータを使えます。<br>※すでに別の端末でログインしたことがあるアカウントの場合は、そのアカウントのデータが読み込まれます。'}</div>
+          <div class="btns">${g ? `<button class="btn" data-a="fbLogout">ログアウト</button>` : `<button class="btn pri" data-a="fbLogin" style="flex:1">Googleでログイン</button>`}</div>${g && F.user ? `<div class="note" style="font-size:10px;color:#666;word-break:break-all">ユーザーID: ${esc(F.user.uid)}</div>` : ''}`; }
       const el = SAVE.data.errLog || [];
       html += `<div class="h3">エラー情報</div>` + (el.length ? `<textarea id="errLogText" readonly>${esc(el.map(x => new Date(x.t).toLocaleString('ja-JP') + ' ×' + x.n + ' ' + x.m + ' [' + x.v + ']').join('\n'))}</textarea><div class="btns"><button class="btn" data-a="copyErr">エラー情報をコピー</button><button class="btn" data-a="clearErr">消去</button></div>` : `<div class="note">記録されたエラーはありません。</div>`);
       html += `<div class="h3">バックアップコード</div><textarea id="saveCode" readonly>${SAVE.exportCode()}</textarea><div class="btns"><button class="btn" data-a="copyCode">コードをコピー</button></div>`;
@@ -4183,6 +4287,7 @@ const UI = {
     if (!this.netOpt) this.netOpt = { map: 'akigiri', time: 'night', weather: 'clear', laps: 1 };
     let html = '';
     if (NET.room === undefined) { NET.ensure().then(() => { if (this.screen === 'online') this.render(); }); return '<div class="note">接続を確認しています…</div>'; }
+    if ((!NET.room || st === 'unavailable') && window.DL_FIREBASE) return html + `<div class="note" style="font-size:13px;line-height:1.9">オンラインサーバーに接続できませんでした。通信状況を確認して、ページを再読み込みしてください。</div><div class="btns"><button class="btn pri" data-a="netRetry">再接続</button></div>`;
     if (!NET.room || st === 'unavailable') return html + `<div class="note" style="font-size:13px;line-height:1.9">この表示ではオンライン対戦に接続できません。<br>・claude.ai にサインインした状態でこのページを開いてください<br>・対戦相手には、このページを<b>メールアドレスで招待して共有</b>してください（同じ組織のメンバーも参加できます）<br>・一般公開のリンクから開いた人は、claude.ai の仕組み上オンライン部屋に接続できません</div>`;
     if (!NET.named) {
       html += `<div class="note" style="font-size:13px;line-height:1.8">相手と同じ「部屋コード」を入力すると、同じ部屋に入って対戦できます（最大4人）。</div>`;
@@ -4568,6 +4673,7 @@ class Showroom {
   document.addEventListener('visibilitychange', () => { if (document.hidden) flushAll(); });
   window.addEventListener('pagehide', flushAll);
   setTimeout(() => { CLOUD.init(); DEV.init(); }, 50);
+  if (window.DL_FB) window.DL_FB.onUser((u, changed) => { if (u && changed) { CLOUD.doc = null; CLOUD.init(!u.isAnonymous); } DEV.owner = false; DEV.init(); if (UI.screen === 'settings') UI.render(); });
   UI.saveStatus();
   window.addEventListener('error', e => { console.error(e.error || e.message); });
   window.addEventListener('unhandledrejection', e => { console.error(e.reason); });
