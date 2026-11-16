@@ -46,7 +46,22 @@
       return usePopup(() => auth.signInWithPopup(prov));
     },
     async logout() { await this.ready(); await auth.signOut(); await auth.signInAnonymously(); },
-    db() { return db; }, auth() { return auth; }
+    db() { return db; }, auth() { return auth; },
+    // ---- みんなのプレイ状況（全体カウンター） ----
+    stats: { plays: null, players: null, races: null, online: null }, statCbs: [],
+    async startStats() {
+      try {
+        await this.ready(); const inc = k => db.ref('stats/' + k).transaction(v => (v || 0) + 1).catch(() => { });
+        inc('plays'); try { if (!localStorage.getItem('dl_counted')) { localStorage.setItem('dl_counted', '1'); inc('players'); } } catch (e) { }
+        const fire = () => this.statCbs.forEach(f => { try { f(this.stats); } catch (e) { } });
+        db.ref('stats').on('value', s => { const v = s.val() || {}; Object.assign(this.stats, { plays: v.plays || 0, players: v.players || 0, races: v.races || 0 }); fire(); }, () => { });
+        db.ref('online').on('value', s => { this.stats.online = s.numChildren(); fire(); }, () => { });
+        const goOnline = () => { const u = auth.currentUser; if (!u) return; const r = db.ref('online/' + u.uid); r.onDisconnect().remove(); r.set(firebase.database.ServerValue.TIMESTAMP).catch(() => { }); const path = 'online/' + u.uid; if (this._onPath && this._onPath !== path) db.ref(this._onPath).remove().catch(() => { }); this._onPath = path; };
+        goOnline(); auth.onAuthStateChanged(() => goOnline()); db.ref('.info/connected').on('value', s => { if (s.val()) goOnline(); });
+      } catch (e) { console.warn('stats', e); }
+    },
+    countRace() { if (!db) return; db.ref('stats/races').transaction(v => (v || 0) + 1).catch(() => { }); },
+    onStats(f) { this.statCbs.push(f); }
   };
   // ---- claude.use 互換 ----
   const wrapErr = e => { const x = new Error(e && e.message || 'error'); x.code = (e && /PERMISSION_DENIED|permission/i.test(e.code || e.message || '')) ? 'not_granted' : 'unavailable'; return x; };
@@ -443,6 +458,15 @@ body.layB #tPad{left:calc(2vw + var(--safe-l));bottom:calc(4vh + var(--safe-b));
 
 button,[data-a],[data-m]{touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.08)}
 .topbar .chip,.topbar .money{touch-action:manipulation}
+
+/* ---- プレイ状況 ---- */
+.mm-stats{background:linear-gradient(135deg,rgba(12,30,48,.92),rgba(10,12,18,.88));border:1px solid rgba(90,209,255,.35);border-radius:10px;padding:7px 10px;margin-bottom:6px;font-family:'Noto Sans JP'}
+.ms-t{font-size:11px;font-weight:800;color:#bfe9ff;display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.ms-g{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}
+.ms-g b{display:block;font-family:Orbitron;font-size:14px;color:#fff;line-height:1.2}.ms-g small{font-size:9px;color:#9fb3c8}
+.ms-g .on b{color:#2fdc7a}.ms-g .on b::before{content:'●';font-size:8px;vertical-align:middle;margin-right:3px;animation:bdP 1s ease-in-out infinite alternate}
+.ms-me{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#aab;margin-top:5px}.ms-me b{color:#ffcf3d;font-weight:800}
+.mm-stats .ms-me:first-child{margin-top:0}
 </style>
 </head>
 <body>
@@ -3887,7 +3911,7 @@ const SAVE = {
   newCar(id) { const car = CAR_BY_ID[id]; return { uid: 'c' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), id, fav: false, tune: defaultTune(car), look: defaultLook(car), paid: car.price, spent: 0 }; },
   defaults() {
     const c = this.newCar('ak_kiri');
-    return { v: 1, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0 }, event: { done: {}, items: [], best: {} },
+    return { v: 1, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0, playSec: 0 }, event: { done: {}, items: [], best: {} },
       inv: {}, advent: { y: 0, open: [] }, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
   },
   ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); return true; } catch (e) { if (v === undefined) return this.mem[k] ?? null; this.mem[k] = v; return false; } },
@@ -4158,7 +4182,7 @@ const UI = {
     const advOpen = A.day > 0 && Array.from({ length: A.day }, (_, k) => k + 1).some(k => !d.advent.open.includes(k));
     const freeChest = d.chest.freeDate !== jstDateKey();
     const T = (k, ic, jp, en, opt = {}) => `<button class="mt ${opt.cls || ''}" data-m="${k}"><span class="mt-ic">${ICO(ic, opt.col || '#ffcf3d', opt.big ? 34 : 26)}</span><span class="mt-tx"><b>${jp}</b><small>${en}</small>${opt.sub ? `<em>${opt.sub}</em>` : ''}</span>${opt.badge ? `<i class="mt-bd ${opt.bdc || ''}">${opt.badge}</i>` : ''}</button>`;
-    let h = '';
+    let h = this.menuStatsHTML();
     if (xm || A.M === 12 || A.M === 11) h += `<button class="mm-ban" data-m="${advOpen ? 'advent' : xm ? 'events' : 'advent'}">${ICO(advOpen ? 'calendar' : 'tree', '#ffd76a', 30)}<span><b>${advOpen ? 'アドベントカレンダー：扉が開けられます！' : xm ? 'クリスマスイベント開催中' : 'アドベントカレンダー 12/1スタート'}</b><small>${A.M === 12 && A.D <= 25 ? `クリスマスまで あと${25 - A.D}日` : A.M === 12 ? 'メリークリスマス！' : '限定アイテムが毎日もらえる'}</small></span></button>`;
     h += `<div class="mm-sec">PLAY</div><div class="mm-grid">`;
     h += T('story', 'flag', 'ストーリー', 'STORY MODE', { cls: 'hero', big: true, sub: `${d.story.cleared.length} / ${STORY.length} 話クリア` });
@@ -4173,6 +4197,13 @@ const UI = {
     const el = $('menuList'); el.innerHTML = h;
     el.onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; AUDIO.click(); const k = b.dataset.m; if (['time', 'touge', 'free'].includes(k)) this.open('maps', { mode: k }); else this.open(k); };
   },
+  menuStatsHTML() {
+    const st = SAVE.data.stats, ps = st.playSec || 0, mine = `<div class="ms-me">${ICO('clock', '#9aa0aa', 13)}<span>あなた：プレイ時間 <b>${Math.floor(ps / 3600)}時間${Math.floor(ps % 3600 / 60)}分</b> ・ レース <b>${(st.races || 0).toLocaleString()}</b>回</span></div>`;
+    if (!window.DL_FB) return `<div class="mm-stats" id="mmStats">${mine}</div>`;
+    const S = window.DL_FB.stats, n = v => v === null || v === undefined ? '—' : Number(v).toLocaleString();
+    return `<div class="mm-stats" id="mmStats"><div class="ms-t">${ICO('globe', '#5ad1ff', 14)} みんなのプレイ状況</div><div class="ms-g"><div><b>${n(S.plays)}</b><small>プレイ回数</small></div><div><b>${n(S.players)}</b><small>プレイヤー</small></div><div><b>${n(S.races)}</b><small>レース回数</small></div><div class="on"><b>${n(S.online)}</b><small>いまオンライン</small></div></div>${mine}</div>`;
+  },
+  refreshMenuStats() { const e = $('mmStats'); if (e && this.screen === 'menu') e.outerHTML = this.menuStatsHTML(); },
   refreshTop() { const d = SAVE.data; const m = DEV.inf() ? '¥∞' : yen(d.money); $('tbMoney').textContent = m; $('tbMoney2').textContent = m; $('tbLevel').textContent = 'Lv.' + SAVE.level(); $('tbXp').style.width = ((d.xp % 1500) / 15) + '%'; },
   open(name, arg, push = true) {
     if (push && this.screen !== 'menu' && this.screen !== 'title') this.stack.push([this.screen, this.arg]);
@@ -4278,6 +4309,7 @@ const UI = {
     this.launch({ mode: cfg.mode, mapId: cfg.mapId, weather: cfg.weather, time: cfg.time, laps: cfg.mode === 'time' ? cfg.laps : 1, carInst: inst, rivals: [] });
   },
   launch(cfg) {
+    if (window.DL_FB && !cfg._retry) window.DL_FB.countRace();
     this.closeModal(); if (!cfg._retry) LOADER.show('LOADING ' + MAP_BY_ID[cfg.mapId].name);
     this.lastCfg = cfg;
     setTimeout(() => {
@@ -5206,6 +5238,9 @@ class Showroom {
   document.addEventListener('visibilitychange', () => { if (document.hidden) flushAll(); });
   window.addEventListener('pagehide', flushAll);
   setTimeout(() => { CLOUD.init(); DEV.init(); }, 50);
+  if (window.DL_FB) { window.DL_FB.onStats(() => UI.refreshMenuStats()); setTimeout(() => window.DL_FB.startStats(), 800); }
+  // プレイ時間（画面が表示されている間だけ数える）
+  setInterval(() => { if (!document.hidden && SAVE.data && SAVE.data.stats) { SAVE.data.stats.playSec = (SAVE.data.stats.playSec || 0) + 10; if (UI.screen === 'menu') UI.refreshMenuStats(); } }, 10000);
   if (window.DL_FB) window.DL_FB.onUser((u, changed) => { if (u && changed) { CLOUD.doc = null; CLOUD.init(!u.isAnonymous); } DEV.owner = false; DEV.init(); if (UI.screen === 'settings') UI.render(); });
   UI.saveStatus();
   window.addEventListener('error', e => { console.error(e.error || e.message); });
