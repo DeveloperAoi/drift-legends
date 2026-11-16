@@ -61,7 +61,38 @@
       } catch (e) { console.warn('stats', e); }
     },
     countRace() { if (!db) return; db.ref('stats/races').transaction(v => (v || 0) + 1).catch(() => { }); },
-    onStats(f) { this.statCbs.push(f); }
+    onStats(f) { this.statCbs.push(f); },
+    // ---- ユーザーネーム（重複禁止） ----
+    profile: { name: null, loaded: false },
+    async loadProfile() {
+      await this.ready(); const u = auth.currentUser; this.profile = { name: null, loaded: false };
+      if (!u || u.isAnonymous) { this.profile.loaded = true; return this.profile; }
+      try { const s = await db.ref('profiles/' + u.uid + '/name').get(); this.profile = { name: s.val() || null, loaded: true }; } catch (e) { this.profile = { name: null, loaded: true }; }
+      return this.profile;
+    },
+    checkName(n) { n = String(n || '').trim(); if (n.length < 2 || n.length > 12) return '2〜12文字で入力してください'; if (/[.#$\[\]\/\\\s]/.test(n)) return '使えない文字（空白 . # $ [ ] / \\）が入っています'; if (!/^[0-9A-Za-z_\-\u3041-\u3096\u30a1-\u30fa\u30fc\u4e00-\u9fff]+$/.test(n)) return '使えるのは英数字・ひらがな・カタカナ・漢字・_ - だけです'; return ''; },
+    async setName(n) {
+      await this.ready(); const u = auth.currentUser; if (!u || u.isAnonymous) throw { code: 'login' };
+      n = String(n).trim(); const bad = this.checkName(n); if (bad) throw { code: 'bad', message: bad };
+      const key = n.toLowerCase(), old = this.profile.name; if (old && old.toLowerCase() === key && old === n) return n;
+      const cur = await db.ref('unames/' + key).get(); if (cur.exists() && cur.val() !== u.uid) throw { code: 'taken' };
+      const up = {}; up['unames/' + key] = u.uid; up['profiles/' + u.uid + '/name'] = n; if (old && old.toLowerCase() !== key) up['unames/' + old.toLowerCase()] = null;
+      try { await db.ref().update(up); } catch (e) { throw { code: /permission/i.test(e.code || e.message || '') ? 'taken' : 'net', message: e.message }; }
+      this.profile.name = n; return n;
+    },
+    // ---- 週間ランキング ----
+    weekKey(off = 0) { const j = new Date(Date.now() + 9 * 3600000); const dow = (j.getUTCDay() + 6) % 7; const mon = new Date(Date.UTC(j.getUTCFullYear(), j.getUTCMonth(), j.getUTCDate() - dow + off * 7)); return 'w' + mon.toISOString().slice(0, 10).replace(/-/g, ''); },
+    weekEnd() { const j = new Date(Date.now() + 9 * 3600000); const dow = (j.getUTCDay() + 6) % 7; return Date.UTC(j.getUTCFullYear(), j.getUTCMonth(), j.getUTCDate() - dow + 7) - 9 * 3600000; },
+    async lbSubmit(board, v, mode = 'max') {
+      try { await this.ready(); const u = auth.currentUser; if (!u || u.isAnonymous || !this.profile.name || !isFinite(v) || v <= 0) return false;
+        const ref = db.ref('lb/' + this.weekKey() + '/' + board + '/' + u.uid); const n = this.profile.name; let better = false;
+        await ref.transaction(cur => { if (mode === 'max' && cur && cur.v >= v && cur.n === n) return; better = true; return { n, v: mode === 'max' && cur && cur.v > v ? cur.v : v, t: firebase.database.ServerValue.TIMESTAMP }; });
+        return better; } catch (e) { console.warn('lb', e); return false; }
+    },
+    async lbTop(week, board, lim = 50) {
+      await this.ready(); const s = await db.ref('lb/' + week + '/' + board).orderByChild('v').limitToLast(lim).get(); const out = []; s.forEach(c => { const v = c.val(); if (v) out.push({ uid: c.key, n: v.n, v: v.v }); }); return out.reverse();
+    },
+    async lbMine(week, board) { await this.ready(); const u = auth.currentUser; if (!u || u.isAnonymous) return null; const s = await db.ref('lb/' + week + '/' + board + '/' + u.uid).get(); return s.val(); }
   };
   // ---- claude.use 互換 ----
   const wrapErr = e => { const x = new Error(e && e.message || 'error'); x.code = (e && /PERMISSION_DENIED|permission/i.test(e.code || e.message || '')) ? 'not_granted' : 'unavailable'; return x; };
@@ -467,6 +498,20 @@ button,[data-a],[data-m]{touch-action:manipulation;-webkit-tap-highlight-color:r
 .ms-g .on b{color:#2fdc7a}.ms-g .on b::before{content:'●';font-size:8px;vertical-align:middle;margin-right:3px;animation:bdP 1s ease-in-out infinite alternate}
 .ms-me{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#aab;margin-top:5px}.ms-me b{color:#ffcf3d;font-weight:800}
 .mm-stats .ms-me:first-child{margin-top:0}
+
+/* ---- アカウント・ランキング ---- */
+.mm-acc{display:flex;align-items:center;gap:10px;width:100%;text-align:left;color:#fff;background:linear-gradient(110deg,#1b3a8a,#13203f);border:1px solid #5a8cff;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-family:'Noto Sans JP'}
+.mm-acc span{flex:1;min-width:0}.mm-acc b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mm-acc small{font-size:10.5px;color:#cfd8ff}
+.mm-acc i{font-style:normal;font-family:Orbitron;font-weight:900;font-size:10px;background:#fff;color:#1b3a8a;padding:4px 9px;border-radius:20px}
+.mm-acc.warn{background:linear-gradient(110deg,#6a4a05,#2a1e05);border-color:#ffcf3d}.mm-acc.warn i{color:#6a4a05}
+.mm-acc.on{background:linear-gradient(110deg,#1f2a1a,#121612);border-color:#2fdc7a}.mm-acc.on i{background:#2fdc7a;color:#000}
+.acc-box,.lb-head{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid var(--line);padding:9px 12px;margin-bottom:8px}.acc-box b,.lb-head b{display:block;font-size:15px}.acc-box small,.lb-head small{font-size:11px;color:#aaa}
+.lb-head{background:linear-gradient(110deg,#3a2c05,#15120a);border-color:#ffcf3d;flex-wrap:wrap}.lb-head>div:nth-child(2){flex:1}.lb-cd{font-size:12px;white-space:nowrap}.lb-head .lb-cd b{display:inline;font-size:14px;font-family:Orbitron;color:#ffcf3d}
+.lb-list{display:flex;flex-direction:column;gap:3px;margin-top:6px}
+.lb-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:7px 10px;font-family:'Noto Sans JP'}
+.lb-row .rk{width:34px;text-align:center;font-family:Orbitron;font-weight:900;color:#aaa;font-size:13px}.lb-row .nm{flex:1;font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .nm em{font-style:normal;font-size:10px;background:var(--red);color:#fff;padding:1px 6px;border-radius:10px;margin-left:4px}.lb-row .vl{font-family:Orbitron;font-weight:900;color:#ffcf3d;font-size:13px}
+.lb-row.top1{border-color:#ffd700;background:rgba(255,215,0,.1)}.lb-row.top2{border-color:#c8ccd4}.lb-row.top3{border-color:#cd7f32}.lb-row.me{box-shadow:0 0 0 2px var(--red) inset}
 </style>
 </head>
 <body>
@@ -3443,7 +3488,7 @@ class Game {
     try { this.world.dispose(); this.model.dispose(); this.rivals.forEach(r => r.model.dispose()); if (this.ghost) this.ghost.dispose(); this.skids.dispose(); } catch (e) { }
     AUDIO.stopAllEngines(); this.engine = null; this.world = null; this.active = false; Input.active = false;
   }
-  exit() { this.cleanup(); }
+  exit() { try { if (window.DL_FB && this.active !== false) lbSendDist(); } catch (e) { } this.cleanup(); }
   prepMinimap() {
     const tr = this.track; this.mmPts = []; for (let i = 0; i < tr.n; i += 3) this.mmPts.push([tr.X[i], tr.Z[i]]);
   }
@@ -3519,7 +3564,8 @@ class Game {
           const imp = Math.max(0, -v.vy); v.y = gnd; v.air = false; v.vy = 0;
           if (imp > 1.5) { AUDIO.land(Math.min(1, imp / 9)); this.camShake = Math.min(1, this.camShake + imp / 14); }
           if (v.airT > 0.35 && this.started) { const dist = Math.hypot(v.x - v.airX, v.z - v.airZ); this.jumps = (this.jumps || 0) + 1; this.bestJump = Math.max(this.bestJump || 0, dist); this.ui.toast(`JUMP! ${dist.toFixed(1)}m（${v.airT.toFixed(2)}秒）`);
-            if (this.drift && (cfg.mode === 'free' || cfg.mode === 'touge')) this.drift.total = (this.drift.total || 0) + Math.round(dist * 20); }
+            if (this.drift && (cfg.mode === 'free' || cfg.mode === 'touge')) this.drift.total = (this.drift.total || 0) + Math.round(dist * 20);
+            if (window.DL_FB && cfg.mode !== 'online') window.DL_FB.lbSubmit('jump', Math.round(dist * 10) / 10).then(b => { if (b) this.ui.toast(`JUMP! ${dist.toFixed(1)}m ランキング自己ベスト更新！`); }); }
         }
       }
     }
@@ -3663,7 +3709,7 @@ class Game {
     let dp = loc.prog - this.lastProg; if (dp < -L / 2) dp += L; if (dp > L / 2) dp -= L;
     this.lastProg = loc.prog;
     if (!this.started) return;
-    this.totalDist += dp;
+    this.totalDist += dp; if (dp > 0 && dp < 50 && this.started && window.DL_FB) { const w = lbWeekDist(); if (w) w.m += dp; }
     // 逆走判定
     const vt = v.vx * loc.tx + v.vz * loc.tz;
     this.wrongT = vt < -4 ? this.wrongT + dt : 0;
@@ -4062,6 +4108,14 @@ function adventCountdown() {
 }
 function adventRewardLabel(rw, long) { if (!rw) return ''; if (rw.t === 'money') return yen(rw.v); if (rw.t === 'pts') return 'クリスマスポイント ' + rw.v.toLocaleString() + 'pt'; if (rw.t === 'chest') return (CHESTS.find(c => c.id === rw.v) || {}).name || 'チェスト'; const it = ITEM_BY_ID[rw.v]; return it ? it.name : rw.v; }
 function adventRewardIcon(rw, size) { if (rw.t === 'money') return ICO('coin', '#ffcf3d', size); if (rw.t === 'pts') return ICO('tree', '#2fdc7a', size); if (rw.t === 'chest') return chestIcon(CHESTS.find(c => c.id === rw.v), size); return itemIconSvg(ITEM_BY_ID[rw.v], size); }
+// ---- 週間ランキングの種目 ----
+const LB_BOARDS = [
+  { id: 'drift', name: '峠ドリフト', desc: '峠チャレンジ1回の最高スコア（今週の自己ベストが記録されます）', fmt: v => Math.round(v).toLocaleString() + ' pt' },
+  { id: 'jump', name: '最長ジャンプ', desc: 'ジャンプ台での1回の最長飛距離（スカイランプ・パークなど）', fmt: v => (+v).toFixed(1) + ' m' },
+  { id: 'dist', name: '走行距離', desc: '今週走った距離の合計（どのモードでもOK）', fmt: v => (+v).toFixed(1) + ' km' }
+];
+function lbWeekDist() { const F = window.DL_FB, d = SAVE.data; if (!F) return null; const k = F.weekKey(); if (!d.wk || d.wk.k !== k) d.wk = { k, m: 0 }; return d.wk; }
+function lbSendDist() { const w = lbWeekDist(); if (w && w.m > 50) window.DL_FB.lbSubmit('dist', Math.round(w.m / 100) / 10, 'set'); }
 const CTRL_PRESETS = [
   { id: 'standard', name: '標準', desc: '初期設定。ボタンを押している間アクセル', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'A', mirror: false, trans: 'AT' } },
   { id: 'easy', name: 'かんたん', desc: 'アクセル自動＋ドリフトとニトロもおまかせ', v: { accelMode: 'auto', steerMode: 'buttons', autoHand: true, autoNitro: true, assist: 3, layout: 'A', mirror: false, trans: 'AT' } },
@@ -4154,7 +4208,7 @@ const UI = {
   in_decalPos(val, el) { const inst = this.tuneInst(); const lk = inst.look; const id = el.dataset.id, k = el.dataset.k; lk.decalPos = lk.decalPos || {}; const di = lk.decals.indexOf(id); lk.decalPos[id] = Object.assign({ x: 0.2 + di * 0.18, y: 0.62, s: 1, r: 0 }, lk.decalPos[id] || {}, { [k]: +val });
     el.nextElementSibling.textContent = k === 'r' ? val + '°' : Math.round(val * 100) + '%'; SAVE.save(); clearTimeout(this._slT); this._slT = setTimeout(() => this.show.setCar(inst, true), 90); },
   a_decalReset(id) { const inst = this.tuneInst(); if (inst.look.decalPos) delete inst.look.decalPos[id]; this.afterTune(); },
-  async a_fbLogin() { try { this.toast('ログイン画面を開いています…'); await window.DL_FB.google(); } catch (e) { if (e && e.code === 'auth/popup-closed-by-user') return this.toast('ログインをキャンセルしました'); logErr('Googleログイン', e); this.toast('ログインできませんでした: ' + (e.code || e.message)); } },
+  async a_fbLogin() { try { this.toast('ログイン画面を開いています…'); await window.DL_FB.google(); await window.DL_FB.loadProfile(); if (!window.DL_FB.profile.name) { this.toast('ログインしました！ユーザーネームを決めましょう'); this.open('account'); } else this.render(); } catch (e) { if (e && e.code === 'auth/popup-closed-by-user') return this.toast('ログインをキャンセルしました'); logErr('Googleログイン', e); this.toast('ログインできませんでした: ' + (e.code || e.message)); } },
   async a_fbLogout() { try { await window.DL_FB.logout(); this.toast('ログアウトしました（データはこの端末に残ります）'); } catch (e) { this.toast('ログアウトできませんでした'); } },
   a_netRetry() { NET.room = undefined; this.render(); },
   a_saveNow() { SAVE.save(true); CLOUD.flush(); this.toast('保存しました'); },
@@ -4182,12 +4236,13 @@ const UI = {
     const advOpen = A.day > 0 && Array.from({ length: A.day }, (_, k) => k + 1).some(k => !d.advent.open.includes(k));
     const freeChest = d.chest.freeDate !== jstDateKey();
     const T = (k, ic, jp, en, opt = {}) => `<button class="mt ${opt.cls || ''}" data-m="${k}"><span class="mt-ic">${ICO(ic, opt.col || '#ffcf3d', opt.big ? 34 : 26)}</span><span class="mt-tx"><b>${jp}</b><small>${en}</small>${opt.sub ? `<em>${opt.sub}</em>` : ''}</span>${opt.badge ? `<i class="mt-bd ${opt.bdc || ''}">${opt.badge}</i>` : ''}</button>`;
-    let h = this.menuStatsHTML();
+    let h = this.menuAccountHTML() + this.menuStatsHTML();
     if (xm || A.M === 12 || A.M === 11) h += `<button class="mm-ban" data-m="${advOpen ? 'advent' : xm ? 'events' : 'advent'}">${ICO(advOpen ? 'calendar' : 'tree', '#ffd76a', 30)}<span><b>${advOpen ? 'アドベントカレンダー：扉が開けられます！' : xm ? 'クリスマスイベント開催中' : 'アドベントカレンダー 12/1スタート'}</b><small>${A.M === 12 && A.D <= 25 ? `クリスマスまで あと${25 - A.D}日` : A.M === 12 ? 'メリークリスマス！' : '限定アイテムが毎日もらえる'}</small></span></button>`;
     h += `<div class="mm-sec">PLAY</div><div class="mm-grid">`;
     h += T('story', 'flag', 'ストーリー', 'STORY MODE', { cls: 'hero', big: true, sub: `${d.story.cleared.length} / ${STORY.length} 話クリア` });
     h += T('time', 'clock', 'タイムアタック', 'TIME ATTACK') + T('touge', 'mountain', '峠チャレンジ', 'TOUGE CHALLENGE') + T('free', 'carSide', 'フリードライブ', 'FREE DRIVE');
     if (!window.DL_STANDALONE) h += T('online', 'globe', 'オンライン対戦', 'ONLINE BATTLE', { col: '#5ad1ff' });
+    if (window.DL_FB) h += T('ranking', 'trophy', '週間ランキング', 'WEEKLY RANKING', { col: '#ffcf3d', badge: 'NEW' });
     h += `</div><div class="mm-sec">CAR</div><div class="mm-grid">`;
     h += T('garage', 'garage', 'ガレージ', 'GARAGE') + T('tuning', 'wrench', 'チューニング', 'TUNING & CUSTOM') + T('shop', 'shop', 'カーショップ', 'CAR SHOP') + T('chest', 'gift', 'チェスト・ショップ', 'CHESTS & SHOP', { badge: freeChest ? 'FREE' : '', bdc: 'g' });
     h += `</div><div class="mm-sec">EVENT</div><div class="mm-grid">`;
@@ -4196,6 +4251,13 @@ const UI = {
     if (DEV.owner) h += T('dev', 'wrench', '開発者メニュー', 'DEVELOPER MENU', { cls: 'wide dev', col: '#ffcf3d' });
     const el = $('menuList'); el.innerHTML = h;
     el.onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; AUDIO.click(); const k = b.dataset.m; if (['time', 'touge', 'free'].includes(k)) this.open('maps', { mode: k }); else this.open(k); };
+  },
+  menuAccountHTML() {
+    const F = window.DL_FB; if (!F) return '';
+    if (!F.isGoogle()) return `<button class="mm-acc" data-m="account">${ICO('globe', '#fff', 22)}<span><b>Googleでログイン</b><small>ランキングに参加・ユーザーネームを決めよう</small></span><i>LOGIN</i></button>`;
+    const nm = F.profile && F.profile.name;
+    if (!nm) return `<button class="mm-acc warn" data-m="account">${ICO('trophy', '#ffcf3d', 22)}<span><b>ユーザーネームを決めよう</b><small>決めるとランキングに参加できます</small></span><i>設定</i></button>`;
+    return `<button class="mm-acc on" data-m="account">${ICO('trophy', '#ffcf3d', 22)}<span><b>${esc(nm)}</b><small>ランキング参加中 ・ タップで名前を変更</small></span><i>変更</i></button>`;
   },
   menuStatsHTML() {
     const st = SAVE.data.stats, ps = st.playSec || 0, mine = `<div class="ms-me">${ICO('clock', '#9aa0aa', 13)}<span>あなた：プレイ時間 <b>${Math.floor(ps / 3600)}時間${Math.floor(ps % 3600 / 60)}分</b> ・ レース <b>${(st.races || 0).toLocaleString()}</b>回</span></div>`;
@@ -4386,6 +4448,61 @@ const UI = {
     if (!SAVE.spend(RARITY[it.rarity].shop)) return; grantChestItem(it); d.shopBuy.ids.push(id); SAVE.save(); AUDIO.buy ? AUDIO.buy() : 0; this.toast(it.name + ' を購入しました'); this.render();
   },
   a_setBg(k) { if (k !== 'garage' && !invHas('bg_' + k)) return; SAVE.data.settings.bg = k; SAVE.save(); this.show.rebuildStudio(); this.toast('ホーム背景を「' + (BG_THEMES[k].name || 'ガレージ') + '」に変更しました'); this.render(); },
+  // ---------------- アカウント・ユーザーネーム ----------------
+  r_account() {
+    $('panelTitle').textContent = 'ACCOUNT'; const F = window.DL_FB; this.show.setCar(SAVE.cur());
+    if (!F) return `<div class="note">この版ではアカウント機能を使えません（GitHub版で使えます）。</div>`;
+    let h = `<div class="acc-box">${ICO('globe', '#5ad1ff', 30)}<div><b>${esc(F.label())}</b><small>${F.isGoogle() ? 'Googleでログイン中（セーブデータもクラウドに保存されます）' : 'ゲスト（この端末だけ）'}</small></div></div>`;
+    if (!F.isGoogle()) return h + `<div class="note" style="font-size:13px;line-height:1.8">週間ランキングに参加するには、Googleアカウントでのログインが必要です。<br>ログインすると、今のセーブデータを引き継いだままクラウドに保存され、スマホとPCで同じデータを使えます。</div><div class="btns"><button class="btn pri" data-a="fbLogin" style="flex:1">Googleでログイン</button></div>`;
+    const nm = F.profile.name;
+    h += `<div class="h3">ユーザーネーム</div><div class="note">ランキングに表示される名前です。2〜12文字（英数字・ひらがな・カタカナ・漢字・_ -）。ほかの人が使っている名前は使えません。</div>`;
+    h += `<div class="row"><label>${nm ? '今の名前' : '名前'}</label><input type="text" id="unameIn" maxlength="12" placeholder="例：峠の龍" value="${esc(this.unameDraft ?? nm ?? '')}" data-in="unameDraft"></div><div class="note" id="unameMsg" style="min-height:1.4em;color:#ff8a8a">${esc(this.unameMsg || '')}</div>`;
+    h += `<div class="btns"><button class="btn pri" data-a="setName" style="flex:1">${nm ? '名前を変更する' : 'この名前に決める'}</button></div>`;
+    h += `<div class="h3">ランキング</div><div class="btns"><button class="btn gold" data-a="openRanking" style="flex:1">週間ランキングを見る ▶</button></div>`;
+    h += `<div class="h3">ログアウト</div><div class="btns"><button class="btn" data-a="fbLogout">ログアウト</button></div>`;
+    return h;
+  },
+  in_unameDraft(v) { this.unameDraft = v; const m = $('unameMsg'); if (m) { const bad = window.DL_FB.checkName(v); m.textContent = v && bad ? bad : ''; m.style.color = '#ff8a8a'; } },
+  async a_setName() {
+    const F = window.DL_FB; const v = (($('unameIn') || {}).value || '').trim(); const m = $('unameMsg');
+    const bad = F.checkName(v); if (bad) { if (m) m.textContent = bad; return; } if (m) { m.style.color = '#aaa'; m.textContent = '確認しています…'; }
+    try { await F.setName(v); this.unameDraft = null; this.unameMsg = ''; this.toast('ユーザーネームを「' + v + '」にしました'); AUDIO.buy();
+      for (const b of LB_BOARDS) { try { const mine = await F.lbMine(F.weekKey(), b.id); if (mine) await F.lbSubmit(b.id, mine.v); } catch (e) { } }
+      this.lbSync(); this.render(); }
+    catch (e) { const msg = e.code === 'taken' ? 'その名前はほかの人が使っています。別の名前にしてください' : e.code === 'bad' ? e.message : e.code === 'login' ? 'Googleでログインしてください' : '保存できませんでした（通信を確認してください）'; this.unameMsg = msg; if (m) { m.style.color = '#ff8a8a'; m.textContent = msg; } AUDIO.error(); }
+  },
+  a_openRanking() { this.open('ranking'); },
+  // ---------------- 週間ランキング ----------------
+  r_ranking() {
+    $('panelTitle').textContent = 'WEEKLY RANKING'; const F = window.DL_FB; this.show.setCar(SAVE.cur());
+    if (!F) return `<div class="note">ランキングはGitHub版で使えます。</div>`;
+    if (!this.tab) this.tab = 'drift'; if (this.lbWeek === undefined) this.lbWeek = 0; const B = LB_BOARDS.find(b => b.id === this.tab) || LB_BOARDS[0];
+    const wk = F.weekKey(this.lbWeek === 0 ? 0 : -1), key = wk + '/' + B.id; const data = (this.lbCache || {})[key];
+    let h = `<div class="lb-head">${ICO('trophy', '#ffcf3d', 30)}<div><b>週間ランキング</b><small>毎週月曜 0:00（日本時間）にリセット</small></div><div class="lb-cd" id="lbCd">${this.lbWeek === 0 ? 'リセットまで ' + fmtLeft(F.weekEnd() - Date.now()) : '先週の結果'}</div></div>`;
+    h += `<div class="tabs">${LB_BOARDS.map(b => `<button class="tab ${b.id === B.id ? 'on' : ''}" data-a="setTab" data-v="${b.id}">${b.name}</button>`).join('')}</div>`;
+    h += `<div class="seg" style="margin-bottom:6px"><button class="${this.lbWeek === 0 ? 'on' : ''}" data-a="lbWeek" data-v="0">今週</button><button class="${this.lbWeek === 1 ? 'on' : ''}" data-a="lbWeek" data-v="1">先週</button></div><div class="note">${B.desc}</div>`;
+    if (!F.isGoogle() || !F.profile.name) h += `<button class="mm-acc warn" data-a="goAccount">${ICO('trophy', '#ffcf3d', 22)}<span><b>${F.isGoogle() ? 'ユーザーネームを決めて参加しよう' : 'Googleでログインして参加しよう'}</b><small>見るだけならログインなしでもOK</small></span><i>参加</i></button>`;
+    if (!data) { this.lbLoad(wk, B.id, key); h += `<div class="note">読み込み中…</div>`; }
+    else if (data.err) h += `<div class="note" style="color:#ff8a8a">ランキングを読み込めませんでした（${esc(data.err)}）</div><div class="btns"><button class="btn" data-a="lbReload">再読み込み</button></div>`;
+    else {
+      const me = F.user && F.user.uid; const rows = data.list;
+      if (!rows.length) h += `<div class="note" style="text-align:center;padding:20px">まだ記録がありません。一番乗りを目指そう！</div>`;
+      h += `<div class="lb-list">${rows.map((r, i) => `<div class="lb-row ${r.uid === me ? 'me' : ''} ${i < 3 ? 'top' + (i + 1) : ''}"><span class="rk">${i < 3 ? ICO('trophy', ['#ffd700', '#c8ccd4', '#cd7f32'][i], 20) : i + 1}</span><span class="nm">${esc(r.n)}${r.uid === me ? ' <em>あなた</em>' : ''}</span><span class="vl">${B.fmt(r.v)}</span></div>`).join('')}</div>`;
+      if (data.mine && !rows.some(r => r.uid === me)) h += `<div class="lb-row me"><span class="rk">圏外</span><span class="nm">${esc(data.mine.n)} <em>あなた</em></span><span class="vl">${B.fmt(data.mine.v)}</span></div>`;
+      h += `<div class="btns"><button class="btn" data-a="lbReload">更新</button></div>`;
+    }
+    clearInterval(this._lbT); this._lbT = setInterval(() => { if (this.screen !== 'ranking') return clearInterval(this._lbT); const e = $('lbCd'); if (e && this.lbWeek === 0) e.innerHTML = 'リセットまで ' + fmtLeft(F.weekEnd() - Date.now()); }, 1000);
+    return h;
+  },
+  async lbLoad(wk, board, key) {
+    const F = window.DL_FB; this.lbCache = this.lbCache || {}; if (this.lbCache[key] && this.lbCache[key].loading) return; this.lbCache[key] = { loading: true };
+    try { const [list, mine] = await Promise.all([F.lbTop(wk, board, 50), F.lbMine(wk, board)]); this.lbCache[key] = { list, mine }; } catch (e) { this.lbCache[key] = { err: (e && (e.code || e.message)) || 'error' }; }
+    if (this.screen === 'ranking') this.render();
+  },
+  a_lbWeek(v) { this.lbWeek = +v; this.render(); },
+  a_lbReload() { this.lbCache = {}; this.render(); },
+  a_goAccount() { this.open('account'); },
+  lbSync() { this.lbCache = {}; if (this.screen === 'menu') this.menuItems(); },
   // ---------------- アドベントカレンダー ----------------
   r_advent() {
     $('panelTitle').textContent = 'ADVENT CALENDAR'; const A = adventInfo(), d = SAVE.data; adventSync(); this.show.setCar(SAVE.cur());
@@ -5041,6 +5158,7 @@ const UI = {
   a_quit() { this.closeModal(); this.paused = false; AUDIO.applyVol(); const test = this.game.cfg.testDrive, online = this.game.cfg.mode === 'online'; this.game.exit(); if (online) { NET.publishLobby({ race: null }); this.goMenu(); this.open('online'); return; } if (test && this.returnTo) { const [s, a, sel] = this.returnTo; this.returnTo = null; this.goMenu(); this.open(s, a, false); this.sel = sel; this.render(); } else this.goMenu(); },
   // ---------------- リザルト ----------------
   showResults(res) {
+    if (window.DL_FB) { if (res.mode === 'touge' && res.score > 0) window.DL_FB.lbSubmit('drift', Math.round(res.score)).then(b => { if (b) this.toast('ランキングの自己ベストを更新！'); }); lbSendDist(); }
     const d = SAVE.data, cfg = res.cfg, m = MAP_BY_ID[res.mapId]; const tr = this.game.track; let html = '', money = 0, xp = 0; const notes = [];
     d.stats.races++; d.stats.nightDist += res.nightDist || 0;
     if (res.maxSpeed >= 250) unlockAch('speed250');
@@ -5241,6 +5359,7 @@ class Showroom {
   if (window.DL_FB) { window.DL_FB.onStats(() => UI.refreshMenuStats()); setTimeout(() => window.DL_FB.startStats(), 800); }
   // プレイ時間（画面が表示されている間だけ数える）
   setInterval(() => { if (!document.hidden && SAVE.data && SAVE.data.stats) { SAVE.data.stats.playSec = (SAVE.data.stats.playSec || 0) + 10; if (UI.screen === 'menu') UI.refreshMenuStats(); } }, 10000);
+  if (window.DL_FB) { window.DL_FB.loadProfile().then(() => UI.lbSync()); window.DL_FB.onUser(() => window.DL_FB.loadProfile().then(() => { UI.lbSync(); if (UI.screen === 'account') UI.render(); })); }
   if (window.DL_FB) window.DL_FB.onUser((u, changed) => { if (u && changed) { CLOUD.doc = null; CLOUD.init(!u.isAnonymous); } DEV.owner = false; DEV.init(); if (UI.screen === 'settings') UI.render(); });
   UI.saveStatus();
   window.addEventListener('error', e => { console.error(e.error || e.message); });
