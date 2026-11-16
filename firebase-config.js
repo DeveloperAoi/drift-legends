@@ -8,5 +8,5 @@ window.FIREBASE_CONFIG = {
   storageBucket: "drift-legends-e9ca2.firebasestorage.app",
   messagingSenderId: "1008572973728",
   appId: "1:1008572973728:web:c1e29e3fc740254636bfc5",
-  ownerUids: []
+  ownerUids: ["Zde9C8Lc8selsvCUmmFn1bwTG0m2"]
 };
