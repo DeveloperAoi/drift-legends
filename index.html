@@ -59,7 +59,13 @@
       };
     }
   };
-  const userCap = { async id() { await FB.ready(); return FB.user ? FB.user.uid : null; }, async isOwner() { await FB.ready(); const own = [].concat(cfg.ownerUids || []); return !!(FB.user && !FB.user.isAnonymous && own.includes(FB.user.uid)); } };
+  const userCap = { async id() { await FB.ready(); return FB.user ? FB.user.uid : null; }, async isOwner() {
+    await FB.ready(); const u = FB.user; if (!u || u.isAnonymous) return false;
+    if ([].concat(cfg.ownerUids || []).includes(u.uid)) return true;
+    const hs = [].concat(cfg.ownerEmailSha256 || []); const em = (u.email || (u.providerData || []).map(p => p && p.email).find(Boolean) || '').trim().toLowerCase();
+    if (!hs.length || !em || !(window.crypto && crypto.subtle)) return false;
+    try { const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(em)); const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''); return hs.includes(hex); } catch (e) { return false; }
+  } };
   const tabId = Math.random().toString(36).slice(2, 8);
   const roomCap = {
     async join(name) {
@@ -4688,7 +4694,7 @@ const UI = {
     if (this.tab === 'data') {
       html += `<div class="h3">自動セーブ</div><div class="note" style="font-size:13px;color:#fff">状態: ${saveLabel()}</div><div class="note" style="font-size:12px;line-height:1.8">進行状況（所持金・車両・カスタマイズ・チューニング・ストーリー・記録・解放マップ・設定・実績）は、変更があるたびに自動で保存されます。<br>・端末のブラウザ内（2か所に二重保存）<br>${window.DL_FIREBASE ? '・クラウドにも自動保存（Googleでログインすると、別の端末でも続きから遊べます）' : '・claude.ai にサインインしていて保存が許可されている場合は、アカウントのクラウドにも保存（別の端末でも続きから遊べます）'}<br>レース中も30秒ごと、アプリを閉じる/切り替える時にも保存します。</div><div class="btns"><button class="btn pri" data-a="saveNow">今すぐ保存</button></div>`;
       if (window.DL_FIREBASE) { const F = window.DL_FB; const g = F.isGoogle();
-        html += `<div class="h3">アカウント</div><div class="note" style="font-size:13px;color:#fff">${esc(F.label())}</div><div class="note" style="font-size:12px;line-height:1.8">${g ? 'このGoogleアカウントにセーブデータを保存しています。別の端末でも同じアカウントでログインすると続きから遊べます。' : 'Googleでログインすると、今のデータを引き継いだままクラウドに保存され、スマホとPCで同じデータを使えます。<br>※すでに別の端末でログインしたことがあるアカウントの場合は、そのアカウントのデータが読み込まれます。'}</div>
+        html += `<div class="h3">アカウント</div><div class="note" style="font-size:13px;color:#fff">${esc(F.label())}${g && F.user && F.user.email && F.user.email !== F.label() ? `<br><small style="color:#aaa">${esc(F.user.email)}</small>` : ''}</div><div class="note" style="font-size:12px;line-height:1.8">${g ? 'このGoogleアカウントにセーブデータを保存しています。別の端末でも同じアカウントでログインすると続きから遊べます。' : 'Googleでログインすると、今のデータを引き継いだままクラウドに保存され、スマホとPCで同じデータを使えます。<br>※すでに別の端末でログインしたことがあるアカウントの場合は、そのアカウントのデータが読み込まれます。'}</div>
           <div class="btns">${g ? `<button class="btn" data-a="fbLogout">ログアウト</button>` : `<button class="btn pri" data-a="fbLogin" style="flex:1">Googleでログイン</button>`}</div>${g && F.user ? `<div class="note" style="font-size:10px;color:#666;word-break:break-all">ユーザーID: ${esc(F.user.uid)}</div>` : ''}<div class="note" style="font-size:12px">開発者モード: <b style="color:${DEV.owner ? '#2fdc7a' : '#ff8a8a'}">${esc(DEV.why)}</b>${DEV.owner ? '' : ' <button class="btn" data-a="devRecheck" style="padding:3px 8px;font-size:11px">再確認</button>'}</div>`; }
       const el = SAVE.data.errLog || [];
       html += `<div class="h3">エラー情報</div>` + (el.length ? `<textarea id="errLogText" readonly>${esc(el.map(x => new Date(x.t).toLocaleString('ja-JP') + ' ×' + x.n + ' ' + x.m + ' [' + x.v + ']').join('\n'))}</textarea><div class="btns"><button class="btn" data-a="copyErr">エラー情報をコピー</button><button class="btn" data-a="clearErr">消去</button></div>` : `<div class="note">記録されたエラーはありません。</div>`);
