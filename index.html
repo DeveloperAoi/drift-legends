@@ -520,6 +520,16 @@ button,[data-a],[data-m]{touch-action:manipulation;-webkit-tap-highlight-color:r
 .pc-pr{flex:0 0 auto;font-family:Orbitron;font-size:11px;font-weight:900;color:#ffcf3d;text-align:right}
 .medals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 8px}.medal{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
 .medal b{font-family:Orbitron;font-size:26px}.medal small{font-size:11px;color:#aaa}.medal.g{border-color:#ffd700}.medal.s{border-color:#c8ccd4}.medal.b{border-color:#cd7f32}
+
+/* ---- アップデート情報 ---- */
+.nw-hero{background:linear-gradient(135deg,#7a0d1c,#2a0a10 60%,#0b2a3a);border:1px solid #ff6a5a;border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.nw-hero::after{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(rgba(255,207,61,.35),transparent 70%)}
+.nw-tag{display:inline-block;font-family:Orbitron;font-weight:900;font-size:11px;letter-spacing:.25em;background:#ffcf3d;color:#000;padding:3px 10px;border-radius:20px}
+.nw-v{font-family:Orbitron;font-weight:900;font-size:30px;margin-top:6px}.nw-t{font-weight:900;font-size:16px;color:#ffe9a8;margin-bottom:6px}
+.nw-hero ul,.nw-old ul{margin:0;padding-left:18px;font-size:13px;line-height:1.75}.nw-hero li::marker{color:#ffcf3d}
+.nw-old{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+.nw-oh{display:flex;align-items:baseline;gap:10px;margin-bottom:3px}.nw-oh b{font-family:Orbitron;font-size:16px;color:#5ad1ff}.nw-oh span{font-weight:800;font-size:13px}
+.nw-old ul{font-size:12px;color:#ccd}
 </style>
 </head>
 <body>
@@ -1339,6 +1349,64 @@ const EXTRAS = [
   { id: 'smoke', name: 'レインボースモーク', price: 800000, perf: 0, kind: 'smoke', desc: 'ドリフトのタイヤスモークが虹色に（ブーストはニトロのまま）' }
 ];
 const EXTRA_BY_ID = Object.fromEntries(EXTRAS.map(e => [e.id, e]));
+
+// ---- アップデート情報（新しい順） ----
+const GAME_VERSION = '1.9';
+const CHANGELOG = [
+  { v: '1.9', title: 'パーツ＆エキストラ アップデート', items: [
+    'パーツショップを追加（ホイール・タイヤ・ボディキット・エンジン・エキストラ）',
+    'ホイール8種・タイヤ4種・ボディキット6種・スーパーチャージャー2種を追加',
+    'エキストラ10種を追加（ジェット・ロケット・ジャンプスラスター・花火など）。ブーストボタンで作動',
+    '週間ランキングにタイムアタック（コース別の最速ラップ）を追加',
+    'ランキング1〜3位に金・銀・銅メダルと限定報酬、参加者全員に参加賞',
+    'バックパックを追加（メダル・アイテム・エキストラ・所持品を確認）',
+    'ステッカーを左右・ボンネット・ルーフ・トランクの好きな場所に1枚ずつ貼れるように',
+    '新曲3曲（ドラム控えめのユーロビート）',
+    'アップデート情報の画面を追加'] },
+  { v: '1.8', title: 'ランキング アップデート', items: [
+    '週間ランキング（峠ドリフト・最長ジャンプ・走行距離）を追加。毎週月曜にリセット',
+    'Googleログインとユーザーネーム（重複不可）を追加',
+    'メインメニューに「みんなのプレイ状況」とあなたのプレイ時間を表示'] },
+  { v: '1.7', title: 'クリスマス大型アップデート', items: [
+    'アドベントカレンダー（12/1〜25、毎日限定アイテム。カウントダウン付き）',
+    '新コース「スカイランプ・パーク」（ジャンプ台つき）',
+    'スピードメーター16種（アナログ＆デジタル）',
+    'クリスマスショップに「窓からトナカイの角」「光るナンバー」を追加',
+    'メインメニューを新デザインに',
+    '開発者メニューを追加'] },
+  { v: '1.6', title: '操作設定アップデート', items: [
+    'スマホの操作プリセット7種（かんたん・アクセル切替・スライド・片手 など）',
+    'アクセルのタップでON/OFF・自動、スライド操作、ボタンの大きさ・濃さ・左右入れ替え',
+    'オートサイドブレーキ・オートニトロ',
+    '横画面でメニューをスクロールできるように',
+    'ボタンのタップ反応を改善、スマホの「戻る」操作に対応'] },
+  { v: '1.5', title: 'GitHub版 公開', items: [
+    'GitHub Pages でどこでも遊べるように',
+    'オンライン対戦とクラウド保存（Googleログインで端末間の引き継ぎ）'] },
+  { v: '1.4', title: 'チェスト＆コレクション', items: [
+    'チェスト5種（コモン〜レジェンダリーのレア度・確率表示）',
+    '限定アイテム114種・日替わりショップ・ホーム背景・チェスト限定車',
+    'ニトロの効果音、ステッカーの位置を自由に調整',
+    'ロード画面（ロゴ・TIPS・ランダム背景）',
+    'アイコンをすべてオリジナルデザインに'] },
+  { v: '1.3', title: 'カスタマイズ刷新＆不具合修正', items: [
+    '車のモデルをよりリアルに（フロント形状の修正）',
+    'カスタマイズ・チューニングのメニューを見やすく刷新',
+    '峠チャレンジの開始エラー、数値エラー、タッチボタンが反応しない問題を修正'] },
+  { v: '1.2', title: 'オンライン対戦＆大型拡張', items: [
+    'オンライン対戦（部屋コード制）',
+    'コース・車両・パーツを大幅追加',
+    'くり返し遊べるクリスマスイベント（ポイント・クリスマスショップ）',
+    'クリスマス曲（ジングルベル ロック編曲）'] },
+  { v: '1.1', title: '遊びやすさ改善', items: [
+    'ストーリーなどのライバルを遊びやすい強さに',
+    'スマホのジャイロ操作（ON/OFF）',
+    '進行状況の自動セーブ'] },
+  { v: '1.0', title: '初回リリース', items: [
+    'ストーリー・タイムアタック・峠チャレンジ・フリードライブ',
+    'ガレージ・カーショップ・チューニング',
+    'クリスマスイベント、ユーロビートBGM、HUD・ミニマップ'] }
+];
 
 // =====================================================================
 // items.js — チェスト／日替わりショップのアイテム（114種）
@@ -4080,7 +4148,7 @@ const SAVE = {
   newCar(id) { const car = CAR_BY_ID[id]; return { uid: 'c' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), id, fav: false, tune: defaultTune(car), look: defaultLook(car), paid: car.price, spent: 0 }; },
   defaults() {
     const c = this.newCar('ak_kiri');
-    return { v: 1, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0, playSec: 0 }, event: { done: {}, items: [], best: {} },
+    return { v: 1, seenVersion: GAME_VERSION, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0, playSec: 0 }, event: { done: {}, items: [], best: {} },
       inv: {}, extras: [], medals: { g: 0, s: 0, b: 0 }, medalLog: [], lbClaim: {}, advent: { y: 0, open: [] }, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
   },
   ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); return true; } catch (e) { if (v === undefined) return this.mem[k] ?? null; this.mem[k] = v; return false; } },
@@ -4358,6 +4426,7 @@ const UI = {
     $('menuCarName').textContent = CAR_BY_ID[c.id].name; $('menuCarSub').textContent = CAR_BY_ID[c.id].maker + ' ・ ' + CAR_BY_ID[c.id].era;
     AUDIO.playCat(xmasThemeOn() ? 'xmas' : 'menu');
     this.menuItems();
+    if (SAVE.data.seenVersion !== GAME_VERSION && !this._newsShown) { this._newsShown = true; setTimeout(() => { if (this.screen === 'menu' && $('overlay').classList.contains('hidden')) this.open('news'); else this._newsShown = false; }, 700); }
   },
   menuItems() {
     const d = SAVE.data, A = adventInfo(); adventSync(); const xm = eventActive();
@@ -4375,6 +4444,7 @@ const UI = {
     h += T('garage', 'garage', 'ガレージ', 'GARAGE') + T('tuning', 'wrench', 'チューニング', 'TUNING & CUSTOM') + T('shop', 'shop', 'カーショップ', 'CAR SHOP') + T('pshop', 'gear', 'パーツショップ', 'PARTS & EXTRAS', { badge: 'NEW' }) + T('bag', 'collection', 'バックパック', 'BACKPACK', { badge: (SAVE.data.medals.g + SAVE.data.medals.s + SAVE.data.medals.b) ? 'MEDAL' : '', bdc: 'g' }) + T('chest', 'gift', 'チェスト・ショップ', 'CHESTS & SHOP', { badge: freeChest ? 'FREE' : '', bdc: 'g' });
     h += `</div><div class="mm-sec">EVENT</div><div class="mm-grid">`;
     h += T('events', 'tree', 'イベント', 'EVENTS', { col: '#2fdc7a', badge: xm ? '開催中' : '' , bdc: 'g' }) + T('advent', 'calendar', 'アドベント', 'ADVENT CALENDAR', { col: '#ffd76a', badge: advOpen ? 'OPEN' : '' });
+    h += T('news', 'calendar', 'アップデート情報', 'UPDATE LOG  v' + GAME_VERSION, { col: '#5ad1ff', badge: SAVE.data.seenVersion !== GAME_VERSION ? 'NEW' : '' });
     h += `</div>` + T('settings', 'gear', '設定', 'SETTINGS', { cls: 'wide', col: '#aab' });
     if (DEV.owner) h += T('dev', 'wrench', '開発者メニュー', 'DEVELOPER MENU', { cls: 'wide dev', col: '#ffcf3d' });
     const el = $('menuList'); el.innerHTML = h;
@@ -4722,6 +4792,17 @@ const UI = {
   a_lbReload() { this.lbCache = {}; this.render(); },
   a_goAccount() { this.open('account'); },
   lbSync() { this.lbCache = {}; if (this.screen === 'menu') this.menuItems(); },
+  // ---------------- アップデート情報 ----------------
+  r_news() {
+    $('panelTitle').textContent = 'UPDATE LOG'; this.show.setCar(SAVE.cur()); const d = SAVE.data; const fresh = d.seenVersion !== GAME_VERSION;
+    if (fresh) { d.seenVersion = GAME_VERSION; SAVE.save(); }
+    const L = CHANGELOG[0];
+    let h = `<div class="nw-hero"><div class="nw-tag">${fresh ? 'NEW UPDATE' : '最新アップデート'}</div><div class="nw-v">version ${L.v}</div><div class="nw-t">${esc(L.title)}</div><ul>${L.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+    h += `<div class="mm-sec" style="margin-top:12px">過去のアップデート</div>`;
+    h += CHANGELOG.slice(1).map(c => `<div class="nw-old"><div class="nw-oh"><b>v${c.v}</b><span>${esc(c.title)}</span></div><ul>${c.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');
+    h += `<div class="note" style="text-align:center;margin:10px 0">DRIFT LEGENDS 現在のバージョン：v${GAME_VERSION}</div>`;
+    return h;
+  },
   // ---------------- アドベントカレンダー ----------------
   r_advent() {
     $('panelTitle').textContent = 'ADVENT CALENDAR'; const A = adventInfo(), d = SAVE.data; adventSync(); this.show.setCar(SAVE.cur());
