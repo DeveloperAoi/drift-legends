@@ -1,0 +1,118 @@
+<style>
+body.ad-race #s-title,body.ad-race #s-menu,body.ad-race #s-panel,body.ad-race #overlay,body.ad-race #hud,
+body.ad-show #s-title,body.ad-show #s-menu,body.ad-show #s-panel,body.ad-show #overlay,body.ad-show #hud,
+body.ad-ui #s-title,body.ad-ui #s-menu,body.ad-ui #hud,
+#touch,#musicToast,#toast,#rotateHint{display:none!important}
+body.ad-ui #topbar,body.ad-race #topbar,body.ad-show #topbar{pointer-events:none}
+body.ad-race #topbar,body.ad-show #topbar,body.ad-intro #topbar{display:none!important}
+#s-panel,#overlay{pointer-events:none!important}
+#adT{position:fixed;inset:0;pointer-events:none;z-index:70;font-family:'Noto Sans JP',sans-serif}
+#adT .l{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%) scale(1.08) skewX(-8deg);text-align:center;opacity:0;transition:opacity .45s,transform .45s;font-weight:900;text-shadow:0 4px 24px #000,0 0 6px #000}
+#adT .l.on{opacity:1;transform:translateY(-50%) scale(1) skewX(-8deg)}
+#adT .l.right{left:auto;right:2%;width:54%;top:auto;bottom:9%;transform:translateY(0) scale(1.08) skewX(-8deg)}
+#adT .l.right.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .l.top{top:20%;transform:translateY(0) scale(1.08) skewX(-8deg)}#adT .l.top.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .l.intro{top:52%;transform:translateY(0) scale(1.08) skewX(-8deg)}#adT .l.intro.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .l.low{top:auto;bottom:10%;transform:translateY(0) scale(1.08) skewX(-8deg)}#adT .l.low.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .big{font-family:Orbitron;font-size:clamp(38px,10vw,116px);letter-spacing:.06em;line-height:1}
+#adT .red{color:#e10600}#adT .gold{color:#ffcf3d}
+#adT .mid{font-size:clamp(22px,5vw,54px);line-height:1.25}#adT .sm{font-size:clamp(13px,2.4vw,24px);color:#e8e8f0;margin-top:6px}
+#adT .tag{display:inline-block;font-family:Orbitron;font-weight:900;font-size:clamp(12px,2vw,20px);letter-spacing:.3em;background:#e10600;color:#fff;padding:4px 14px;margin-bottom:10px}
+#adT .rr{display:inline-block;font-size:clamp(11px,1.8vw,18px);padding:2px 9px;margin:6px 3px 0;color:#000}
+#adBar{position:fixed;left:0;bottom:0;height:4px;background:#e10600;width:0;z-index:71}
+#adRe{position:fixed;right:14px;bottom:14px;background:#e10600;color:#fff;border:0;padding:10px 16px;font-weight:900;display:none;cursor:pointer;z-index:72;font-family:'Noto Sans JP',sans-serif}
+#adStart{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:rgba(0,0,0,.82);cursor:pointer;color:#fff;font-family:'Noto Sans JP',sans-serif}
+#adStart button{font-family:Orbitron,sans-serif;font-weight:900;font-size:clamp(18px,4vw,30px);letter-spacing:.15em;color:#fff;background:linear-gradient(90deg,#e10600,#900);border:0;padding:18px 40px;cursor:pointer}
+#adCover{position:fixed;inset:0;background:#000;z-index:69;transition:opacity .35s;pointer-events:none}
+#adFlash{position:fixed;inset:0;background:#fff;z-index:68;opacity:0;pointer-events:none;transition:opacity .5s}
+</style>
+<div id="adCover"></div><div id="adFlash"></div><div id="adT"></div><div id="adBar"></div><button id="adRe">↻ もう一度見る</button>
+<div id="adStart"><div style="font-family:Orbitron;font-weight:900;letter-spacing:.3em;color:#e10600">DRIFT LEGENDS</div><div style="font-size:clamp(16px,3vw,26px);font-weight:900">大型アップデート紹介動画（約48秒）</div><button>▶ 再生（音あり）</button></div>
+<script>
+(function(){
+const D=window.__DL; if(!D) return; const {game,UI,SAVE,Input,wrapAngle,clamp,AUDIO,LOADER}=D; const show=D.show; const B=document.body;
+SAVE.save=()=>{}; // 広告ではセーブしない
+const d=SAVE.data; d.money=12800000; d.settings.assist=3; d.settings.bg='garage';
+// コレクションの見栄え用に約7割を所持状態に
+const inv={}; const ids=['dc_t0','dc_t2','dc_t8','dc_t12','dc_t14','dc_t20','dc_t22','dc_t23','dc_t26','dc_t29','dc_s0','dc_s1','dc_s4','dc_s5','dc_s7','dc_s8','dc_s9','dc_s12','dc_s13','pt_0','pt_1','pt_2','pt_4','pt_5','pt_8','pt_10','pt_11','pt_15','wh_0','wh_2','wh_5','wh_6','wh_9','ne_1','ne_2','ne_4','cp_0','cp_3','cp_5','tn_4','tn_7','tn_9','tn_11','tn_14','tn_15','bg_yozakura','bg_neon','bg_space','bg_gold','bg_snowfield','bg_sunset'];
+ids.forEach(i=>inv[i]=1); d.inv=inv;
+const base=SAVE.data.cars[0];
+const mk=(id,look,tune)=>{const c=SAVE.newCar(id); Object.assign(c.look,look); Object.assign(c.tune,tune||{}); return c;};
+const C1=mk('hk_s3',{color:'#d01020',livery:'stripe',color2:'#f2f2f2',wing:2,front:2,wheel:'deep'},{engine:'turbo',diff:'2way',tire:'drift',nos:2});
+const CL=mk('lg_kiri',{color:'#f2f2f2',paint:'pearl',livery:'two',color2:'#d4af37',wing:3,front:3,side:2,rear:2,wheel:'wh_9',glow:'ne_4',decals:['dc_t29','dc_s13'],decalPos:{dc_t29:{x:0.5,y:0.55,s:1.4,r:0},dc_s13:{x:0.2,y:0.6,s:1.3,r:0}}},{nos:2,special:'tn_14',diff:'2way',tire:'drift'});
+const CD=mk('ak_kiri',{color:'#1e5aff',paint:'pearl',livery:'none',wing:1,front:2,wheel:'wh_0',decals:['dc_t8','dc_s12','dc_t12'],decalPos:{}});
+// ---- 台本 ----
+const T=48;
+const TXT=[
+ [0.3,4,'<div class="tag">BIG UPDATE</div><div class="mid">峠に、新しい伝説が来る。</div>','intro'],
+ [4,7.5,'<div class="big">DRIFT</div><div class="big red">LEGENDS</div><div class="mid gold" style="margin-top:10px">大型アップデート</div>',''],
+ [7.5,12,'<div class="tag">NEW</div><div class="mid">ニトロ、点火。</div><div class="sm">噴射音つきのブーストで、立ち上がりを一気に加速</div>','low'],
+ [12,19,'<div class="tag">NEW</div><div class="mid">チェスト登場</div><div class="sm">5種類のチェスト / デイリーは毎日無料</div><div><span class="rr" style="background:#b0b8c0">コモン</span><span class="rr" style="background:#2fdc7a">アンコモン</span><span class="rr" style="background:#3a8cff">レア</span><span class="rr" style="background:#b04dff">エピック</span><span class="rr" style="background:#ffb300">レジェンダリー</span></div>','right'],
+ [19,23.5,'<div class="mid">限定アイテム<br><span class="gold" style="font-size:1.5em">114</span>種類</div><div class="sm">デカール・カラー・ホイール・ネオン<br>チューニングパーツ・背景・限定車</div>','right'],
+ [23.5,27,'<div class="mid">毎日更新<br>日替わりショップ</div><div class="sm">0:00に品揃えが入れ替わる</div>','right'],
+ [27,33,'<div class="mid">ステッカーは<br>自由自在</div><div class="sm">位置・大きさ・回転を好きなように</div>','right'],
+ [33,38.5,'<div class="mid">ホーム背景を<br>着せ替え</div><div class="sm">夜桜 / ネオン / 宇宙 / ゴールド…</div>','right'],
+ [38.5,43,'<div class="tag" style="background:#ffb300;color:#000">LEGENDARY</div><div class="mid">チェスト限定の特別な車</div>','low'],
+ [43,T,'<div class="big" style="font-size:clamp(30px,8vw,92px)">DRIFT <span class="red">LEGENDS</span></div><div class="mid">大型アップデート配信中</div><div class="sm">スマホでもPCでも。今すぐプレイ</div>','top']
+];
+// シーン: [開始, 終了, 種類, 設定]
+const SCN=[
+ [0,4,'intro'],
+ [4,7.5,'logo'],
+ [7.5,12,'race',{map:'akigiri',time:'night',weather:'clear',car:C1,cams:[4,0],pos:0.1,sp:26}],
+ [12,19,'chest'],
+ [19,23.5,'col'],
+ [23.5,27,'shop'],
+ [27,33,'decal'],
+ [33,38.5,'bg'],
+ [38.5,43,'race',{map:'x_city',time:'night',weather:'snow',car:CL,cams:[4,1],pos:0.05,sp:24}],
+ [43,T+5,'end']
+];
+const el=document.getElementById('adT'),bar=document.getElementById('adBar'),cov=document.getElementById('adCover'),re=document.getElementById('adRe'),fl=document.getElementById('adFlash');
+let t0=0,ti=-1,si=-1,run=false,timers=[],decalAnim=false,bgI=0,nitroOn=false;
+const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
+function mode(m){B.classList.remove('ad-race','ad-show','ad-ui','ad-intro');if(m)B.classList.add('ad-'+m);}
+function bot(){const g=game,v=g.veh,tr=g.track;if(!tr||!v)return{};const L=tr.locate(v.x,v.z,g.loc.i);const a=tr.pointAt(L.prog+Math.max(5,v.speed*0.6),0);
+ const err=wrapAngle(Math.atan2(a.x-v.x,a.z-v.z)-v.heading);const k=Math.abs(tr.K[(L.i+8)%tr.n]);const vmax=tr.vmax[(L.i+Math.floor(v.speed*1.2))%tr.n]*0.95;
+ return{throttle:v.speed<vmax?1:0.4,brake:v.speed>vmax+6?1:0,steer:clamp(-err*3.2-L.lat*0.12,-1,1),hand:k>1/45&&v.speed>12&&Math.abs(v.beta)<0.35,analog:true,steerRate:3,nitro:nitroOn||(v.speed>25&&k<1/300)};}
+Input.read=()=>bot();
+function clearUI(){timers.forEach(clearTimeout);timers=[];decalAnim=false;try{UI.closeModal();}catch(e){}}
+function toMenu(){if(game.active)game.exit();UI.goMenu();UI.screen='ad';show.active=true;}
+function race(c){cov.style.opacity=1;setTimeout(()=>{try{mode('race');game.start({mode:'free',mapId:c.map,time:c.time,weather:c.weather,laps:9,carInst:c.car,rivals:[]});
+ const sp0=game.track.length*c.pos,p=game.track.pointAt(sp0,0);game.veh.reset(p.x,p.z,p.y,p.hd);game.veh.vx=Math.sin(p.hd)*c.sp;game.veh.vz=Math.cos(p.hd)*c.sp;game.veh.gear=3;
+ game.loc=game.track.locate(p.x,p.z,-1);game.lastProg=game.loc.prog;game.camMode=c.cams[0];game.camDir=[Math.sin(p.hd),Math.cos(p.hd)];for(let k=0;k<30;k++)game.update(1/60);}catch(e){console.error(e)}cov.style.opacity=0;},220);}
+function whoosh(){AUDIO.noiseBurst(0.6,900,0.7,0.35,0,'bandpass');AUDIO.noiseBurst(0.4,3000,1,0.15,0.05,'bandpass');}
+function flash(){fl.style.transition='none';fl.style.opacity=0.9;requestAnimationFrame(()=>{fl.style.transition='opacity .6s';fl.style.opacity=0;});}
+function seq(arr){let i=0;const n=Math.ceil(arr.length);return ()=>arr[i++%n];}
+function scene(k){
+ const [s0,s1,type,c]=SCN[k]; clearUI(); whoosh();
+ if(type==='intro'){mode('intro');toMenu();LOADER.show('UPDATE v3.0 LOADING');cov.style.opacity=0;}
+ else if(type==='logo'){LOADER.hide(0);mode('show');toMenu();show.dist=7.4;show.setCar(C1,true);show.rot=0.7;flash();AUDIO.countdown(0);cov.style.opacity=0;}
+ else if(type==='race'){race(c);if(k===2){later(()=>{nitroOn=true;AUDIO.nitroBurst();},1200);later(()=>nitroOn=false,4000);}else{later(()=>{nitroOn=true;},1500);later(()=>nitroOn=false,3800);}}
+ else if(type==='chest'){mode('ui');toMenu();UI.open('chest');cov.style.opacity=0;
+   later(()=>{const p=document.getElementById('panelBody');p.scrollTo({top:240,behavior:'smooth'});},1200);
+   later(()=>{const R=Math.random;const q=[0.97,0.999];Math.random=()=>q.length?q.shift():R();try{UI.a_openChest('gold');}finally{Math.random=R;}d.money=12800000;UI.refreshTop();},2600);
+   later(()=>{AUDIO.fanfare();},3500);}
+ else if(type==='col'){mode('ui');UI.closeModal();UI.open('chest');UI.a_setTab('col');const p=document.getElementById('panelBody');later(()=>p.scrollTo({top:700,behavior:'smooth'}),900);later(()=>p.scrollTo({top:1500,behavior:'smooth'}),2600);}
+ else if(type==='shop'){mode('ui');UI.open('chest');UI.a_setTab('shop');later(()=>{const b=document.querySelector('[data-a=shopBuy]:not([disabled])');if(b){UI.a_shopBuy(b.dataset.v);d.money=12800000;UI.refreshTop();}},1800);}
+ else if(type==='decal'){mode('show');toMenu();show.dist=5.0;show.rot=-1.5;show.setCar(CD,true);decalAnim=performance.now();cov.style.opacity=0;}
+ else if(type==='bg'){mode('show');toMenu();show.dist=7.2;show.setCar(C1,true);const L=['yozakura','neon','space','gold'];bgI=0;
+   const step=()=>{d.settings.bg=L[bgI%L.length];show.rebuildStudio();show.setCar(C1,true);flash();AUDIO.buy();bgI++;if(bgI<L.length)later(step,1350);};step();cov.style.opacity=0;}
+ else if(type==='end'){mode('show');toMenu();d.settings.bg='gold';show.rebuildStudio();show.dist=8.6;show.setCar(CL,true);show.rot=0.6;flash();AUDIO.fanfare();cov.style.opacity=0;}
+}
+let lastDecal=0;
+function f(now){requestAnimationFrame(f);if(!run)return;if(!t0)t0=now;const s=(now-t0)/1000;
+ const i=TXT.findIndex(x=>s>=x[0]&&s<x[1]);if(i!==ti){ti=i;el.innerHTML=i>=0?`<div class="l ${TXT[i][3]}">${TXT[i][2]}</div>`:'';requestAnimationFrame(()=>{const e=el.firstChild;e&&e.classList.add('on')})}
+ const j=SCN.findIndex(x=>s>=x[0]&&s<x[1]);if(j!==si&&j>=0){si=j;scene(j);}
+ if(j>=0&&SCN[j][2]==='race'&&game.active){const c=SCN[j][3],seg=(SCN[j][1]-SCN[j][0])/c.cams.length;game.camMode=c.cams[Math.min(c.cams.length-1,Math.floor((s-SCN[j][0])/seg))];}
+ if(decalAnim&&now-lastDecal>140){lastDecal=now;const u=(now-decalAnim)/1000;const lk=CD.look;
+   lk.decalPos={dc_t8:{x:0.3+0.2*Math.sin(u*1.1),y:0.6,s:1.8+0.9*Math.sin(u*1.3)**2,r:Math.sin(u*0.9)*40},dc_s12:{x:0.68+0.1*Math.cos(u),y:0.5+0.12*Math.sin(u*1.4),s:2.2,r:u*60%360},dc_t12:{x:0.15+0.1*Math.sin(u),y:0.35,s:1.6+0.6*Math.cos(u*0.8)**2,r:0}};
+   show.setCar(CD,true);}
+ bar.style.width=Math.min(100,s/T*100)+'%';if(s>=T)re.style.display='block';}
+function startAll(){AUDIO.init();AUDIO.resume();AUDIO.setVol({bgm:0.75,sfx:0.9,mute:false});AUDIO.play('t1');t0=0;ti=-1;si=-1;run=true;re.style.display='none';}
+AUDIO.playCat=()=>{};AUDIO.starter=()=>{};
+document.getElementById('adStart').onclick=()=>{document.getElementById('adStart').style.display='none';startAll();};
+re.onclick=()=>{clearUI();d.settings.bg='garage';show.rebuildStudio();startAll();};
+setTimeout(()=>{requestAnimationFrame(f);},300);
+})();
+</script>

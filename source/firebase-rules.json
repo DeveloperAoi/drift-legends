@@ -1,0 +1,29 @@
+{
+  "rules": {
+    "users": { "$uid": { ".read": "auth != null && auth.uid == $uid", ".write": "auth != null && auth.uid == $uid" } },
+    "rooms": { ".read": "auth != null", "$code": { ".write": "auth != null" } },
+    "stats": { ".read": true, ".write": "auth != null" },
+    "online": { ".read": true, "$uid": { ".write": "auth != null && auth.uid == $uid" } },
+    "profiles": { ".read": "auth != null", "$uid": { ".write": "auth != null && auth.uid == $uid" } },
+    "unames": { ".read": "auth != null", "$name": { ".write": "auth != null && (!data.exists() || data.val() == auth.uid)" } },
+    "lb": { ".read": true, "$week": { "$board": { ".indexOn": ["v"], "$uid": { ".write": "auth != null && auth.uid == $uid" } } } },
+    "friends": { "$uid": { ".read": "auth != null && auth.uid == $uid", "$f": { ".write": "auth != null && (auth.uid == $uid || auth.uid == $f)" } } },
+    "freq": { "$uid": { ".read": "auth != null && auth.uid == $uid", "$f": { ".write": "auth != null && (auth.uid == $uid || auth.uid == $f)" } } },
+    "ftask": { "$pair": { ".read": "auth != null && $pair.contains(auth.uid)", "$week": { "$uid": { ".write": "auth != null && auth.uid == $uid" } } } },
+    "clans": { ".read": "auth != null", ".indexOn": ["open"],
+      "$cid": { ".write": "auth != null && (!data.exists() || data.child('owner').val() == auth.uid)",
+        "members": { "$uid": { ".write": "auth != null && auth.uid == $uid" } } } },
+    "clanNames": { ".read": "auth != null", "$n": { ".write": "auth != null" } },
+    "clanCodes": { ".read": "auth != null", "$c": { ".write": "auth != null" } },
+    "clanOf": { "$uid": { ".read": "auth != null", ".write": "auth != null && auth.uid == $uid" } },
+    "clanChat": { "$cid": {
+      ".read": "auth != null && root.child('clans/' + $cid + '/members/' + auth.uid).exists()",
+      ".write": "auth != null && root.child('clans/' + $cid + '/owner').val() == auth.uid",
+      "$m": { ".write": "auth != null && root.child('clans/' + $cid + '/members/' + auth.uid).exists()" } } },
+    "trades": { "$tid": {
+      ".read": "auth != null && (!data.exists() || data.child('a').val() == auth.uid || data.child('b').val() == auth.uid)",
+      ".write": "auth != null && ((!data.exists() && newData.child('a').val() == auth.uid) || data.child('a').val() == auth.uid || data.child('b').val() == auth.uid)" } },
+    "tradeInv": { "$uid": { ".read": "auth != null && auth.uid == $uid", "$tid": { ".write": "auth != null" } } },
+    "codes": { ".read": "auth != null", "$code": { ".write": "auth != null && auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2'" } }
+  }
+}

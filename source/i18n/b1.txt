@@ -1,0 +1,400 @@
+0	 Top 3 get gold/silver/bronze medals and exclusive rewards; everyone else gets a participation prize (a random customization part). Records set with performance-changing extras like jets or rockets don't count.
+1	Purchased wheels, liveries, decals, roof accessories, window accessories, neon, glowing plates, calipers and meters can be equipped in the Customize screen.
+2	Your progress (money, cars, customization, tuning, story, records, unlocked maps, settings, achievements) is saved automatically whenever it changes.
+3	Big turbos make power at high RPM but add turbo lag. Superchargers have no lag. Intercoolers only work with forced induction.
+4	Opening a chest gives you one of: exclusive decals, colors, wheels, neon, calipers, tuning parts, home backgrounds or special limited cars
+5	The meter design shown during races (set per car). More designs from chests, the daily shop and events (owned 
+6	Wings and aero add high-speed downforce (grip) with a little more drag. Carbon hoods save weight.
+7	Drift tires break loose gently and hold angle easily. Wet tires excel in rain and snow. Wider tires add grip.
+8	"Slide" steering: put your finger on the left area and slide left/right — the car steers by how far you slide (easy to fine-tune).
+9	There are settings for players who find controls tricky. Pick one, then fine-tune below (changing anything makes it "Custom").
+10	". (Change cars in the Garage to fit parts to another car.) Purchased parts can be swapped for free.
+11	 — if you're signed in and saving is allowed, it's also saved to your account cloud (continue on other devices)
+12	, motion sensors may be restricted by the browser and unavailable. In that case the reason is shown and it automatically
+13	The table shows the chance of each rarity per chest. After the rarity is decided, one item of that rarity is picked with equal chance
+14	 are all original eurobeat generated in real time inside the game (no external audio).
+15	 buttons disappear and you steer by tilting the device (proportional to the tilt angle). During races, the on-screen
+16	 Your save data is stored on this account. Log in with the same account on another device to continue.
+17	Can't read gyro data (motion sensors may be restricted in this view)
+18	If this account has logged in on another device before, that account's data will be loaded.
+19	Parts like engine, suspension, tires, aero and paint are bought for and fitted to the car you're using.
+20	Change the home screen (garage) background. Limited backgrounds come from chests and the daily shop.
+21	Only shown on your account. Changes here apply to this device and your cloud save.
+22	Couldn't connect to the online server. Check your connection and reload the page.
+23	Wheel colors can be changed in Customize. Limited wheels come from chests and events.
+24	If it's slow on your phone, choose "Low". Scenery density changes from the next race.
+25	Pick a category to see parts. Purchased parts can be swapped for free anytime.
+26	All money, cars, items and records will be erased (developer settings stay). This can't be undone.
+27	Couldn't request motion sensor permission (restricted in this view)
+28	 extras added (jet, rocket, jump thruster, fireworks and more). Activated with the boost button
+29	Don't lift off too much while drifting. Control angle with the throttle and direction with the steering.
+30	Endless mode. Earn points by drifting; hitting walls builds up damage. Damage
+31	Weekly rankings added (Touge Drift, Longest Jump, Distance). Resets every Monday
+32	Parts Shop added (wheels, tires, body kits, engines, extras)
+33	Log in to save to the cloud while keeping your current data, so your phone and
+34	You can't join online rooms in this view (only invited people can join)
+35	 the steering angle grows the longer you hold the key. Higher sensitivity steers faster.
+36	 and log in to keep your current data and save to the cloud, so your phone and
+37	Christmas points: earned every time you drive a Christmas course (battle win 
+38	Fixed the Touge Challenge start error, a numeric error and unresponsive touch buttons
+39	Enter the same "room code" as your friend to join the same room and race (max 
+40	 and countersteer while on the throttle. Adjust drift assist in Settings.
+41	Graphics were reset. Please reload the page.
+42	Equip decals to freely adjust their position, size and rotation here.
+43	・Advent-exclusive items never appear in chests or the daily shop.
+44	Use "Placement" to freely change a decal's position, size and rotation.
+45	Repeatable Christmas event (points and Christmas Shop)
+46	Added "Reindeer Antlers from the Windows" and "Glowing Plate" to the Christmas Shop
+47	Tap the handbrake just before a corner to start a drift easily.
+48	Phone: steer with the left/right buttons, gas bottom-right, brake bottom-left.
+49	Get them from chests, the advent calendar and ranking rewards.
+50	You can change drift assist strength in Settings. Try lowering it once you're used to it.
+51	Backpack added (check medals, items, extras and belongings)
+52	Main menu now shows "Everyone's Play Stats" and your play time
+53	. If you get an item you already own, it's converted based on rarity to
+54	Halves the speed of story/event rivals (for testing)
+55	Available from chests, the daily shop and the Christmas Shop.
+56	The room is full or busy. Please wait a moment and try again
+57	Decals can be placed one at a time anywhere: left, right, hood, roof or trunk
+58	Change the home background from the "Home Background" tab on the Chest screen.
+59	Max lateral grip at about . Rear toe-out tends to oversteer.
+60	Event courses, the Christmas Shop and decorations are available outside the event period
+61	Time Attack (fastest lap per course) added to weekly rankings
+62	You don't have any extras yet. Buy them at the Parts Shop.
+63	Drift tire smoke turns rainbow (boost stays as nitro)
+64	A wide road with long high-speed sections. Race along the ridge at sunset.
+65	That name is taken. Please choose another name
+66	Story, Time Attack, Touge Challenge, Free Drive
+67	/auto, slide steering, button size, opacity and left/right swap
+68	An original international-grade circuit. Perfect for testing setups.
+69	No records yet. Try joining the weekly ranking!
+70	A special course lined with jump ramps. Speed up on the straights and fly!
+71	A night pass around a dam lake. The lake glows as you exit the tunnel.
+72	Special colors from chests and the daily shop.
+73	Switchbacks full of hairpins. Master the handbrake.
+74	 tap again to release (released automatically while braking). "Auto"
+75	A holy-night winding road through a snowy forest lit by tunnels of lights.
+76	This is our home course. Let's settle it on the downhill.
+77	Logged in with  (your save is also stored in the cloud)
+78	Not quite yet. See you next year... no, come challenge me again!
+79	Online battles: just enter the same room code as your friends.
+80	Fires with the boost button. Strong thrust you can hold for a long time
+81	Improved button tap response and support for the phone "back" gesture
+82	Adding all cars will greatly increase your garage size.
+83	A chain of hairpins dyed in autumn leaves. Set up your exits.
+84	A highland route of super-fast corners. A test of nerve.
+85	Developer mode (shown only to the owner of this page)
+86	 reduces drive-wheel spin and makes drifts easier to hold (
+87	Customize and Tuning menus redesigned for readability
+88	While items marked  (jet, rocket, etc.) are equipped, 
+89	A deep mountain pass said to be home to a legendary racer. Everything is tested.
+90	: gold/silver/bronze medals and exclusive rewards for top places, participation prizes for everyone
+91	Thanks for taking part! Rewards received.
+92	I'm Ryu Amagi. I've never lost on Tengu Pass.
+93	New course "Sky Ramp Park" (with jump ramps)
+94	Against the latest technology, the era of old cars is over.
+95	A super-wide special course on a runway. Test your top speed.
+96	Shows how smooth the screen is (frame rate)
+97	I'll show you the difference in theory on Kuremine's fast sections.
+98	A huge open test ground. For drift practice and test drives.
+99	 (JST) the lineup changes. Next refresh in 
+100	...So it's you. The one tearing up passes everywhere lately.
+101	...Unexpected. I'll keep your driving in my data.
+102	 (members of the same organization can join too)
+103	All progress will be erased. Are you sure?
+104	 log in to continue on other devices)
+105	Open this page while signed in to 
+106	 Detailed upgrades like ECU and intake/exhaust are in the Tuning screen.
+107	Switch cameras to enjoy hood and cockpit views.
+108	Fastest Time Attack lap (per course, fastest first)
+109	Text selected. Please copy it manually
+110	A street course through a neon-lit downtown. Watch the wet road.
+111	Errors keep happening during the race (paused)
+112	Logged out (your data stays on this device)
+113	 best score in a single run (this week's personal best is recorded)
+114	A compacted-snow drift course. Enjoy the low grip.
+115	In Touge Challenge, finishing without touching the shoulder gives a bonus.
+116	A snowy town decorated with a giant tree and lit-up roads.
+117	A bayside night cruise over long bridges and elevated roads.
+118	A fast skyline weaving along a volcanic ridge. Wrapped in fog.
+119	A mid-speed descent through a valley of blazing autumn leaves.
+120	The event is not running right now. Look forward to the next one.
+121	A city of right-angle corners. Braking is the key.
+122	If your opponent is still racing, positions are as of now
+123	 types, daily shop, home backgrounds, chest-exclusive cars
+124	Grip drops on snowy and rainy days. Brake early.
+125	Got all Christmas Shop items
+126	Nitro works best on corner exit.
+127	Use it for backups or moving to another device.
+128	Launch fireworks with the boost button (cosmetic)
+129	No way... diving in on that line?
+130	Motion sensor use was not allowed
+131	Logged in! Let's choose a username
+132	Couldn't save (check your connection)
+133	Marked all chapters cleared (courses and cars unlocked)
+134	Winter compacted snow. Slide it with delicate throttle work.
+135	A narrow, rough technical forest road. One mistake is fatal.
+136	 types (rarities from Common to Legendary, with odds shown)
+137	Watch out for the Kuremine crew. They're on another level.
+138	More realistic car models (front shape fixed)
+139	A narrow forest road wet with drizzle. Always slippery.
+140	...Total defeat. From today, you're the legend of this pass.
+141	Online battles can't connect in this view.
+142	 and send us the "Error info".
+143	Mark all story chapters cleared (unlocks courses and cars)
+144	On phones you can also use gyro steering (in Settings).
+145	Drift tip: before the corner, pull the handbrake
+146	Nitro sound effects; decal positions freely adjustable
+147	You made up the power gap... in the corners?
+148	A city expressway loop weaving between buildings and tunnels.
+149	Flames from the exhaust with the boost button (cosmetic)
+150	A legend isn't rewritten that easily. Come again.
+151	 place to earn one. Collect as many as you like.
+152	Allowed: letters, numbers, hiragana, katakana, kanji, 
+153	A fast toll-road pass with big sweeping curves. Beware of thick fog.
+154	Large Supercharger (Twin-Screw)
+155	 characters. Both players enter the same code.
+156	A night course through a plant of glowing chimneys and pipes.
+157	 (auto-starts drifts in tight corners)
+158	Paste save data here and press "Load"
+159	This account is not registered as a developer
+160	No records yet. Be the first!
+161	 Stronger LSD makes drifts easier to sustain.
+162	Wings make you stable in fast corners.
+163	An error occurred. Try again, or go to Settings
+164	Story and other rivals are now easier to beat
+165	Available from chests and the daily shop.
+166	Open a parachute with the boost button to slow down fast
+167	Mid-engine agility shines on Nanamagari.
+168	Join the rankings and choose a username
+169	 login and usernames (no duplicates) added
+170	 longest single jump (Sky Ramp Park etc.)
+171	As a touge racer, take on rivals across the country.
+172	A super-fast bayside route. For top-speed attacks.
+173	 presets (Easy, Gas Toggle, Slide, One-hand
+174	Can you beat my reindeer on the holy-night pass?
+175	Equipped (no longer eligible for rankings)
+176	A holy-night pass with falling snow and glowing lights.
+177	). Names already used by others can't be used.
+178	), so this won't be recorded in the weekly ranking
+179	, limited items every day, with countdown)
+180	 cannot connect to online rooms due to how it works
+181	Heh, nice throttle work. Let's drive again.
+182	Auto gas + slide steering + full assists
+183	Auto gas + drift and nitro handled for you
+184	Advent calendar: doors are ready to open!
+185	Task completed (first-time reward already received)
+186	Get all chest and advent items
+187	Power is justice. I'll flip it all on the straight.
+188	This year's advent calendar has ended
+189	If you want to be a legend, try running in front of me.
+190	 characters (letters, numbers, hiragana, katakana, kanji, 
+191	Daily shop purchases reset
+192	Menus can now be scrolled in landscape
+193	A string of mid-speed corners around a lake. Rhythm is everything.
+194	 seconds of explosive acceleration. Takes a while to recharge
+195	Splendid. A drift more vivid than the autumn leaves.
+196	The narrow rainy road bites back unless you drive gently.
+197	Account features aren't available in this version (
+198	 door each day to get limited items!
+199	 traction?
+200	Advent calendar reset
+201	Loaded cloud save data
+202	Get all Christmas Shop items
+203	I'll teach you how to use the handbrake!
+204	The driver... beat the technology?
+205	You can open the daily chest again
+206	Reindeer Antlers (from driver & passenger windows)
+207	Plays a melody horn with the boost button
+208	The boost button works as normal nitro
+209	Rival strength (Story / Events)
+210	Default. Gas while holding the button
+211	 tap to keep the gas pressed,
+212	Around the lake it's all about the exits. Get ready!
+213	Call me a straight-line bully, a win is a win.
+214	Selected. Please copy it manually
+215	Don't lose my taillights in the fog.
+216	Developer check isn't available in this environment
+217	's door holds a special limited car.
+218	All icons redesigned as originals
+219	Garage, Car Shop, Tuning
+220	Retrying cloud save (saved on this device)
+221	Tilt your phone to steer. Auto gas
+222	Make the daily chest free again
+223	 browser doesn't support gyro
+224	Ranking-eligible (normal engine upgrade)
+225	・Use prize money for tuning & new cars
+226	Total distance driven this week (any mode
+227	Glowing Plate "Champion Gold"
+228	No way... passed on a hairpin.
+229	Steer by sliding your left thumb. Fine control
+230	 mode: open every door (doesn't carry over to the real 
+231	Landscape mode makes it easier to play
+232	A refreshing winding road along the coastline.
+233	There are no parts in this category.
+234	 account login is required.
+235	Event tasks (retry as many times as you like)
+236	Event ranking (snow drift)
+237	Extras equipped (or test features 
+238	Auto handbrake, auto nitro
+239	Start your save data over?
+240	New course record in Time Attack
+241	Drift assist (auto countersteer)
+242	Jump on the spot with the boost button!
+243	Couldn't load the ranking (
+244	・People who open a public link 
+245	Add all cars to the garage (limited too)
+246	right (steering angle grows the longer you hold)
+247	There are places instinct alone can't reach.
+248	You took it all on the exit!
+249	 browser features take priority, so
+250	Can you keep up in the super-fast corners?
+251	Limited Color Pack (always usable)
+252	So you're the rookie everyone's talking about on this pass?
+253	 not logged in (guest)
+254	 can be opened until (missed doors too
+255	Couldn't connect to the account
+256	Advent calendar exclusive — holy-night 
+257	Illumination Time Attack
+258	Christmas event, eurobeat
+259	Christmas theme (garage decorations)
+260	Laps around a pier stacked with containers.
+261	Export / import save data
+262	Save data has been reset
+263	Brake (hold while stopped to reverse)
+264	I'll grab the present with my own hands!
+265	Choose a username and join
+266	The name shown in rankings.
+267	Hear the rotary sing?
+268	remove (free if owned). Max 
+269	Touge Drift & Street Racing
+270	Reset daily shop purchases
+271	 songs (eurobeat with light drums)
+272	Today's free chest has already been claimed
+273	A hairpin-filled plunge down terraced rice-field slopes
+274	Choose one to join the rankings
+275	Loaded with graphics set to "Low"
+276	Tell your friend this code
+277	Beat the Santa Drifter on Holy Night Pass
+278	Duplicate items are converted by rarity to
+279	A drive worthy of the name.
+280	 also works on decel). Camber 
+281	Not yet. The pass isn't that easy.
+282	Reset opened advent doors
+283	Drive through the Illumination City
+284	Online battles and cloud saves (
+285	Online battles (room codes)
+286	Many more courses, cars and parts
+287	Chest-exclusive tunes 
+288	The data format is invalid
+289	Full Aero (large splitter)
+290	You can't beat us on the hairpins!
+291	New personal best in the ranking!
+292	Legend Drift Package
+293	 and beyond join as spectators.
+294	Equipped parts are sold with it.
+295	No errors recorded.
+296	Money doesn't decrease when shopping
+297	To join the weekly ranking, 
+298	Not recorded in the weekly ranking
+299	A traditional misty pass. The second half's 
+300	A blue-flame booster. Recharges fast
+301	 ("Jingle Bells" rock arrangement)
+302	 (JST) you can open it again
+303	Update info screen added
+304	Advent calendar test
+305	Customization overhaul & bug fixes
+306	Christmas event tasks 
+307	Force the Christmas event on
+308	Couldn't load the course
+309	Gyro center calibration (gyro
+310	This doesn't look like save data
+311	Start save data over
+312	Special chest-exclusive parts (
+313	Twin-Charger (Turbo + 
+314	Paste a backup code
+315	Waiting for the host to start...
+316	 button recalibrates the center.
+317	New main menu design
+318	share by inviting with an email address
+319	Roof accessories (Christmas limited)
+320	login to carry over between devices)
+321	Login canceled
+322	Opening the login screen...
+323	・For your opponents, share this page by
+324	Swap (gas on the left hand)
+325	 also saved when switching apps.
+326	A wet road never lies.
+327	Viewing works without logging in
+328	 can be equipped. During races 
+329	 got me this far... I lose.
+330	Free driving on event courses
+331	Christmas event limited
+332	Christmas Big Update
+333	Christmas song (Jingle Bells
+334	Test drive on the jump course
+335	Win in Story for the first time
+336	Semi-Slick Compound
+337	Semi-Slick (drift)
+338	Data is saved automatically.
+339	High-Flow Injectors
+340	 the button disappears and gas is always on
+341	Meter "Snow Digital"
+342	Meter "Holy Night"
+343	New ranking personal best!
+344	Nitro doesn't decrease during races
+345	Couldn't log out
+346	 items obtained
+347	Current tilt set as center
+348	Waiting for opponents to join...
+349	A display error occurred.
+350	Load pasted data
+351	Reloading in lightweight mode...
+352	Get limited items every day
+353	 (JST) it changes.
+354	 (current tilt set as center)
+355	 has arrived in your garage!
+356	 log in and join
+357	 can use the same data.
+358	Online Battle & Big Expansion
+359	 key changes the song.
+360	Christmas event live
+361	Christmas garage
+362	Invalid code
+363	Codes use lowercase letters and numbers, 
+364	Enter a code
+365	God Speed Engine
+366	Mark all chapters cleared
+367	Snowflake Gold
+368	Swan-Neck Large Wing
+369	Twin-Scroll Turbine
+370	Reindeer antlers (both windows)
+371	Meter "Champion"
+372	Choose a username
+373	Reset (back to course)
+374	Racing Diffuser
+375	Couldn't log in
+376	・Also auto-saved to the cloud (
+377	legend-spec lightweight 
+378	Glowing Plate "Aurora"
+379	Full — can't spectate
+380	 types, superchargers
+381	 types (analog & digital)
+382	Window accessories (Christmas limited)
+383	Your own custom settings
+384	Developer mode is off (
+385	Limited tune removed
+386	Parking lot / test area
+387	 playable anywhere
+388	 to challenge drift scores
+389	 please log in
+390	Advent calendar (
+391	Under Diffuser
+392	Carbon Wide Skirts
+393	Chrome Deep-Rim Mesh
+394	Guest (this device only)
+395	Clear every story chapter
+396	All story chapters cleared!
+397	 at Snow Drift Park
+398	Phone gyro steering (
+399	Phone control presets

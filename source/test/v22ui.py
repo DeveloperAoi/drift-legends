@@ -1,0 +1,22 @@
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"])
+    pg=b.new_page(viewport={'width':900,'height':500}); errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('file:///home/claude/dl/dist/index.html'); pg.wait_for_timeout(800); pg.click('#btnStart'); pg.wait_for_timeout(300); pg.evaluate("document.querySelector('[data-a=closeModal]')?.click()")
+    pg.evaluate("window.__DL.SAVE.data.money=50000000; window.__DL.SAVE.data.diamonds=500")
+    U="window.__DL.UI"
+    pg.evaluate(f"{U}.open('pshop'); {U}.tab='cons'; {U}.render()"); pg.wait_for_timeout(300); pg.screenshot(path='test/v22u_pshop.png')
+    pg.evaluate(f"{U}.a_buyCons('energy:money'); {U}.a_buyCons('energy:money'); {U}.a_buyCons('charm:money'); {U}.a_buyCons('diacandy:dia')")
+    pg.evaluate(f"{U}.open('bag'); {U}.tab='cons'; {U}.render()"); pg.wait_for_timeout(300)
+    pg.evaluate(f"{U}.a_useCons('energy'); {U}.a_useCons('energy'); {U}.a_useCons('charm'); {U}.a_useCons('diacandy')"); pg.wait_for_timeout(1300); pg.screenshot(path='test/v22u_bag.png')
+    print(pg.evaluate("JSON.stringify(window.__DL.SAVE.data.boosts)"), pg.evaluate("JSON.stringify(window.__DL.SAVE.data.cons)"))
+    pg.evaluate(f"{U}.a_openChest('gold:10')"); pg.wait_for_timeout(500); print('luck after', pg.evaluate("window.__DL.SAVE.data.boosts.luck"))
+    pg.evaluate("window.__DL.UI.closeModal&&window.__DL.UI.closeModal()")
+    pg.evaluate(f"{U}.open('pshop'); {U}.tab='body'; {U}.render()"); pg.wait_for_timeout(200)
+    pg.evaluate(f"{U}.a_buyKit('timeattack'); {U}.a_hlCol('blue')"); pg.wait_for_timeout(600); pg.screenshot(path='test/v22u_kit.png')
+    print(pg.evaluate("JSON.stringify((()=>{const l=window.__DL.SAVE.cur().look; return [l.wing,l.front,l.hood,l.hlCol]})())"))
+    pg.evaluate(f"{U}.open('diamond'); {U}.render()"); pg.wait_for_timeout(200)
+    print('dia cons cards', pg.evaluate("document.querySelectorAll('[data-a=buyCons]').length"))
+    pg.evaluate(f"{U}.goMenu ? {U}.goMenu() : {U}.open('menu')"); pg.wait_for_timeout(1200); pg.screenshot(path='test/v22u_menu.png')
+    print('boostBar', pg.evaluate("document.getElementById('boostBar').children.length"))
+    print(errs[:5]); b.close()

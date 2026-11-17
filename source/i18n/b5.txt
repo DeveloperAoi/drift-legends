@@ -1,0 +1,262 @@
+0	Body parts (spoilers, bumpers, skirts, hoods, roofs, trunks) added with color finishes
+1	New currency "Diamonds" and the Diamond Shop where only diamonds can buy items (diamond & gold cars and parts)
+2	Items bought in the shop can be equipped in the Customize screen (they also come from chests).
+3	Weekly rotating "Diamond Races". Diamonds also come from story/event wins and more
+4	Get them from the Parts Shop (Custom Items), chests and the Diamond Shop.
+5	Shiny diamond and gold cars and parts that only diamonds can buy.
+6	Christmas limited car "Santa's Sleigh" (choose with or without reindeer)
+7	 Sound). Chest-exclusive and diamond-exclusive songs too.
+8	Earn them by winning in Story/Events or completing Diamond Races
+9	Diamond Race goal not reached. Try again!
+10	Menus, descriptions, story, item names and more translated into English
+11	 at once. Chest opening sound effects added
+12	 races rotate. Next rotation in 
+13	Chest-exclusive songs and songs you can buy in the shop added
+14	 are added to race BGM and selectable in the Music Player (Settings
+15	Diamond Shop exclusive — pure gold roadster
+16	Diamonds & Massive Items Update
+17	Songs from chests and shops: 
+18	A limited car was added to your garage!
+19	Win a Story/Event battle
+20	Diamond Shop exclusive — shining crystal 
+21	Green flames from the exhaust (cosmetic)
+22	Blue flames from the exhaust (cosmetic)
+23	
+24	Huge item expansion: decals 
+25	Body parts (with color finishes)
+26	Glowing Plate "Diamond"
+27	Jump once more in mid-air
+28	A jet shining in gold. Golden flames too
+29	Tire smoke turns pink
+30	Switching to Japanese...
+31	 s of super acceleration. Long recharge
+32	Background "Diamond Hall"
+33	A powered-up jump that goes high
+34	A sparkly chime sound
+35	A fanfare-style horn
+36	Meter "Diamond"
+37	Weaker but fires for a long time
+38	Intense thrust like a fighter jet
+39	Pure Gold Vented Hood
+40	Slow down with a golden parachute
+41	Smoke like snowflakes
+42	 (limited car, with reindeer)
+43	Tire smoke turns red
+44	Tire smoke turns gold
+45	Tire smoke turns blue
+46	Tire smoke turns black
+47	Diamond Calipers
+48	Pink heart-colored fireworks
+49	Rose Gold Chrome
+50	Fires confetti from the top of the car
+51	Galaxy Black
+52	Grip Compound
+53	Santa Claus's sleigh
+54	Swan-Neck Wing
+55	Finish a Time Attack
+56	Diamond Wing
+57	Diamond Trunk
+58	Diamond White
+59	Reindeer (sleigh only)
+60	A jet with pink flames
+61	, tuning parts 
+62	Bought songs 
+63	 (not ranking-eligible)
+64	Carbon Dish
+65	Candy Green
+66	Candy Purple
+67	Green Terminal
+68	Steering Kit
+69	Not enough diamonds
+70	Diamond Cut
+71	Diamond Neon
+72	Diamond Hall
+73	Diamond mark
+74	Diamond Race complete!
+75	Diamond Race start!
+76	Diamond Races (weekly 
+77	Deep Ocean
+78	Trumpet Horn
+79	Forest Green
+80	Full Aero Bumper
+81	White Classic
+82	Pure Gold Side Skirts
+83	 (added to garage)
+84	 obtained
+85	Afterburner
+86	Ion Thruster
+87	Ocean Blue
+88	Custom Items
+89	Candy Blue
+90	Candy Land
+91	Crystal Blue
+92	Green Flame
+93	Gold Wing
+94	Gold Chute
+95	Gold Jet
+96	Gold Smoke
+97	Gold Blades
+98	Gold Minimal
+99	Saturn Rocket
+100	Thunderstorm
+101	Silver Crown
+102	 in Time Attack
+103	Chest-exclusive songs
+104	Digital Grid
+105	Hyper Jump
+106	Purple Mesh
+107	Black Gold
+108	Black Smoke
+109	White Minimal
+110	Luxurious golden fireworks
+111	 deer, red-nosed leader)
+112	 (Diamond car)
+113	Ice White
+114	Extreme
+115	Aurora Ring
+116	Carbon Blue
+117	Chrome Blue
+118	Chrome Red
+119	Green Star
+120	Gold Neon
+121	Sunset Bar
+122	Sand Beige
+123	Shop-exclusive song
+124	Silver Star
+125	Snow Smoke
+126	Turbine Kit
+127	Diamond Shop
+128	Double Jump
+129	Chime Horn
+130	Twin Rocket
+131	Deep Blue
+132	Trunk Panel
+133	Trunk Lip
+134	Neon Jet
+135	Neon Mix
+136	Pearl Yellow
+137	Pearl Orange
+138	Pink Spokes
+139	Pink Smoke
+140	Blue Bolt
+141	Blue Smoke
+142	Blue Flame
+143	Blue Mesh
+144	Bronze Deep-Rim
+145	White Sakura
+146	White Deep-Rim
+147	Magenta Ring
+148	Matte Olive
+149	Matte White
+150	Mint Green
+151	Main menu
+152	Red Bolt
+153	Red Smoke
+154	Retro Orange
+155	Royal Palace
+156	Rose Gold
+157	 in one jump
+158	 units of explosive acceleration
+159	New items 
+160	General panel screen
+161	Pure Gold Full Aero
+162	Confetti Cannon
+163	 (JST) 
+164	Aquarium
+165	Extras 
+166	Gold Fireworks
+167	Santa's Sleigh
+168	Cyan Ring
+169	Sky Blue
+170	Stardust
+171	Tap to play
+172	Add diamonds
+173	Diamond Race
+174	Nitro Tank
+175	Neon Pink
+176	Neon Lime
+177	Violet
+178	Pink Star
+179	Pink Diamond
+180	Blue Metal
+181	Body Parts
+182	Midnight
+183	Ruby Night
+184	Red Heart
+185	Red Metal
+186	Wine Red
+187	 lap or faster
+188	Exhaust System
+189	 added (total 
+190	) completed
+191	Amethyst
+192	Arcade
+193	Sunrise
+194	Turquoise
+195	Chests 
+196	Charcoal
+197	Tuned
+198	Tropical
+199	Heart Fireworks
+200	Forest
+201	Lavender
+202	Red Rim
+203	, wheels 
+204	, meters 
+205	Intake Kit
+206	Light Panels
+207	Duplicate payout
+208	K Gold
+209	K Mesh
+210	Amber
+211	Aurora
+212	Chrome
+213	Copper
+214	Stealth
+215	Title
+216	Cherry
+217	Black
+218	Plasma
+219	Magenta
+220	Rocket
+221	, colors 
+222	, neon 
+223	 or more
+224	How to get
+225	Challenge
+226	Completed
+227	On (
+228	Ice
+229	Titanium
+230	Magma
+231	Map
+232	Mint
+233	Lime
+234	Ruby
+235	Rose
+236	Japanese
+237	Limited song
+238	 etc.
+239	Pro
+240	
+241	Pass King
+242	Whirlwind
+243	Song "
+244	Infinite
+245	Rampage
+246	Sprint
+247	 types)
+248	Crimson
+249	Pure gold
+250	Champion
+251	Language
+252	K"
+253	Flash
+254	Music
+255	Summit
+256	
+257	...
+258	
+259	 
+260	 songs
+261	

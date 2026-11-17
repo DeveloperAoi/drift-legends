@@ -1,0 +1,23 @@
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"])
+    ctx=b.new_context(viewport={'width':844,'height':390}, has_touch=True, is_mobile=True, device_scale_factor=2)
+    pg=ctx.new_page(); errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.goto('file:///home/claude/dl/dist/index.html'); pg.wait_for_timeout(600)
+    pg.tap('#btnStart'); pg.wait_for_timeout(400); pg.evaluate("document.querySelector('[data-a=closeModal]')?.click()")
+    pg.evaluate("window.__DL.UI.launch({mode:'free', mapId:'circuit', weather:'clear', time:'day', laps:1, carInst:window.__DL.SAVE.cur(), rivals:[]})")
+    pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
+    c=lambda sel: (lambda b: (b['x']+b['width']/2, b['y']+b['height']/2))(pg.locator(sel).bounding_box())
+    cdp=ctx.new_cdp_session(pg); T=lambda typ, pts: cdp.send('Input.dispatchTouchEvent', {'type':typ,'touchPoints':[{'x':x,'y':y,'id':i} for i,(x,y) in pts]})
+    gx,gy=c('#tGas'); lx,ly=c('#tLeft'); rx,ry=c('#tRight')
+    # also block pointer events entirely to simulate an environment where they get cancelled
+    pg.evaluate("for (const id of ['tGas','tLeft','tRight']) document.getElementById(id).addEventListener('pointerdown', e=>{ document.getElementById(id).dispatchEvent(new PointerEvent('pointercancel',{pointerId:e.pointerId,pointerType:'touch',bubbles:true})) })")
+    T('touchStart', [(1,(gx,gy))]); pg.wait_for_timeout(300)
+    T('touchStart', [(1,(gx,gy)),(2,(lx,ly))]); pg.wait_for_timeout(1500)
+    print('gas+left:', pg.evaluate("JSON.stringify(window.__DL.Input.touch)"), 'speed', round(pg.evaluate("window.__DL.game.veh.speed*3.6"),1), 'steer', round(pg.evaluate("window.__DL.game.veh.steer"),2))
+    T('touchMove', [(1,(gx,gy)),(2,(rx,ry))]); pg.wait_for_timeout(600)
+    print('slide to right:', pg.evaluate("JSON.stringify(window.__DL.Input.touch)"), 'steer', round(pg.evaluate("window.__DL.game.veh.steer"),2))
+    T('touchEnd', []); pg.wait_for_timeout(300)
+    print('released:', pg.evaluate("JSON.stringify(window.__DL.Input.touch)"))
+    ux,uy=c('#tCam'); T('touchStart', [(5,(ux,uy))]); T('touchEnd', []); pg.wait_for_timeout(300); print('cam mode', pg.evaluate("window.__DL.game.camMode"))
+    print('ERR', errs); b.close()

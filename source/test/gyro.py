@@ -1,0 +1,22 @@
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"])
+    ctx=b.new_context(viewport={'width':844,'height':390}, has_touch=True, is_mobile=True, device_scale_factor=2)
+    pg=ctx.new_page(); errs=[]; pg.on('pageerror', lambda e: errs.append(str(e))); pg.on('console', lambda m: errs.append(m.text) if m.type=='error' and 'ERR_TUNNEL' not in m.text else None)
+    pg.goto('file:///home/claude/dl/dist/index.html'); pg.wait_for_timeout(400); pg.click('#btnStart'); pg.evaluate("document.querySelector('[data-a=closeModal]')?.click()")
+    pg.evaluate("window.__DL.UI.launch({mode:'free', mapId:'circuit', weather:'clear', time:'day', laps:1, carInst:window.__DL.SAVE.cur(), rivals:[]})")
+    pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(800)
+    # 1) no sensor events -> should fail and revert
+    pg.tap('#tGyro'); pg.wait_for_timeout(2000)
+    print('no-sensor: body.gyro=', pg.evaluate("document.body.classList.contains('gyro')"), 'toast=', pg.evaluate("document.getElementById('toast').textContent"))
+    # 2) simulate sensor events (landscape angle=90 -> uses beta)
+    pg.evaluate("window.__gi=setInterval(()=>{const e=new Event('deviceorientation'); e.alpha=0; e.beta=window.__beta||0; e.gamma=0; window.dispatchEvent(e);},50)")
+    pg.tap('#tGyro'); pg.wait_for_timeout(2000)
+    print('sensor: body.gyro=', pg.evaluate("document.body.classList.contains('gyro')"), 'btn=', pg.evaluate("document.getElementById('tGyro').innerText"))
+    pg.evaluate("window.__beta=15"); pg.wait_for_timeout(300)
+    print('steer at tilt 15:', pg.evaluate("window.__DL.Input.read(window.__DL.SAVE.data.settings)"))
+    pg.screenshot(path='gyro_on.png')
+    pg.evaluate("window.__DL.UI.pause()"); pg.wait_for_timeout(300); pg.screenshot(path='gyro_pause.png')
+    pg.evaluate("document.querySelector('[data-a=gyroToggle]').click()"); pg.wait_for_timeout(300)
+    print('after pause toggle:', pg.evaluate("document.body.classList.contains('gyro')"))
+    print('ERR', errs); b.close()

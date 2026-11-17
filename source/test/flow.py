@@ -1,0 +1,60 @@
+from playwright.sync_api import sync_playwright
+def clk(pg, sel, wait=250):
+    pg.evaluate(f"(()=>{{const e=document.querySelector({sel!r}); if(!e) throw new Error('missing '+{sel!r}); e.click();}})()"); pg.wait_for_timeout(wait)
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"])
+    pg=b.new_page(viewport={'width':1280,'height':720}); errs=[]
+    pg.on('pageerror', lambda e: errs.append('PAGE '+str(e))); pg.on('console', lambda m: errs.append(m.text) if m.type=='error' and 'ERR_TUNNEL' not in m.text else None)
+    pg.goto('file:///home/claude/dl/dist/index.html'); pg.wait_for_timeout(400)
+    clk(pg,'#btnStart'); clk(pg,'[data-a=closeModal]')
+    pg.evaluate("window.__DL.SAVE.data.money=60000000; window.__DL.SAVE.data.xp=30000")
+    E=lambda js: pg.evaluate(js)
+    # shop buy
+    E("window.__DL.UI.open('shop')"); pg.wait_for_timeout(300)
+    clk(pg,'[data-a=shopTab][data-v=HOKUTO]'); clk(pg,'[data-a=selShop][data-v=hk_s3]'); clk(pg,'[data-a=buyCar]'); clk(pg,'[data-a=buyYes]')
+    print('cars', E("window.__DL.SAVE.data.cars.length"), 'money', E("window.__DL.SAVE.data.money"))
+    clk(pg,'[data-a=cmpShop]'); clk(pg,'[data-a=closeModal]')
+    # tuning
+    E("window.__DL.UI.open('tuning',{uid:window.__DL.SAVE.data.current})"); pg.wait_for_timeout(300)
+    hp0=E("Math.round(window.__DL.UI.instSpec(window.__DL.SAVE.cur()).hp)")
+    E("(()=>{const U=window.__DL.UI; U.a_tuneOpt('engine:bigturbo'); U.a_tuneLv('ecu:3'); U.a_tuneLv('susp:2'); U.a_tuneOpt('diff:2way'); U.a_tuneOpt('tire:drift'); U.a_lookOpt('wing:2'); U.a_lookPaint('pearl'); U.a_lookSet('color:#d01020'); U.a_lookLivery('stripe'); U.a_lookDecal('touge');})()")
+    pg.wait_for_timeout(800); pg.screenshot(path='flow_tuned.png')
+    hp1=E("Math.round(window.__DL.UI.instSpec(window.__DL.SAVE.cur()).hp)")
+    print('hp', hp0, '->', hp1, 'money', E("window.__DL.SAVE.data.money"), 'parts', E("window.__DL.SAVE.data.stats.parts"))
+    # garage: compare/fav/test drive
+    E("window.__DL.UI.open('garage')"); pg.wait_for_timeout(300)
+    clk(pg,'[data-a=compare]'); clk(pg,'[data-a=closeModal]'); clk(pg,'[data-a=favCar]')
+    clk(pg,'[data-a=testDrive]', 300); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
+    E("window.__DL.UI.pause()"); clk(pg,'[data-a=quit]', 600)
+    print('after test drive screen', E("window.__DL.UI.screen"))
+    # settings
+    E("window.__DL.UI.open('settings')")
+    for t in ['sound','control','graphics','data']: clk(pg,f'[data-a=setTab][data-v={t}]')
+    clk(pg,'[data-a=setTab][data-v=sound]'); clk(pg,'[data-a=mNext]'); clk(pg,'[data-a=setOpt][data-v="mute:true"]'); clk(pg,'[data-a=setOpt][data-v="mute:false"]')
+    clk(pg,'[data-a=setTab][data-v=control]'); clk(pg,'[data-a=setOpt][data-v="layout:B"]'); clk(pg,'[data-a=setOpt][data-v="assist:3"]')
+    # story chapter 1
+    E("window.__DL.UI.open('story')"); clk(pg,'[data-a=storyGo]', 600); pg.screenshot(path='flow_dialog.png')
+    clk(pg,'#dlgSkip', 400); pg.screenshot(path='flow_vs.png')
+    pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1000)
+    E("window.__DL.game.started=true; window.__DL.game.finish('goal')"); pg.wait_for_timeout(2600)
+    pg.screenshot(path='flow_result.png')
+    clk(pg,'[data-a=resNext]', 500); clk(pg,'#dlgSkip', 600)
+    print('story cleared', E("window.__DL.SAVE.data.story.cleared"), 'screen', E("window.__DL.UI.screen"))
+    # event touge
+    E("window.__DL.UI.open('events')"); clk(pg,'[data-a=evGo][data-v=x_drift]', 300); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
+    pg.screenshot(path='flow_xmas.png')
+    E("const g=window.__DL.game; g.started=true; g.drift.score=20000; g.finish('crash')"); pg.wait_for_timeout(2600)
+    pg.screenshot(path='flow_xresult.png')
+    clk(pg,'[data-a=resNext]', 500)
+    print('event done', E("window.__DL.SAVE.data.event"), 'cars', E("window.__DL.SAVE.data.cars.map(c=>c.id)"))
+    # xmas city ride screenshot
+    E("window.__DL.UI.launch({mode:'free', mapId:'x_city', weather:'snow', time:'night', laps:1, carInst:window.__DL.SAVE.cur(), rivals:[]})"); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(3000)
+    pg.screenshot(path='flow_xcity.png')
+    E("window.__DL.UI.launch({mode:'free', mapId:'harbor', weather:'clear', time:'evening', laps:1, carInst:window.__DL.SAVE.cur(), rivals:[]})"); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(3000)
+    pg.screenshot(path='flow_harbor.png')
+    E("window.__DL.UI.launch({mode:'free', mapId:'seaside', weather:'clear', time:'day', laps:1, carInst:window.__DL.SAVE.cur(), rivals:[]})"); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(3000)
+    pg.screenshot(path='flow_seaside.png')
+    E("window.__DL.UI.launch({mode:'free', mapId:'cloop', weather:'clear', time:'night', laps:1, carInst:window.__DL.SAVE.cur(), rivals:[]})"); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(3000)
+    pg.screenshot(path='flow_cloop.png')
+    print('ERRORS', errs[:20])
+    b.close()

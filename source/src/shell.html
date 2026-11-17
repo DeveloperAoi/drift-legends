@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>DRIFT LEGENDS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>/*CSS*/</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="ui">
+  <!-- タイトル -->
+  <section id="s-title" class="screen show">
+    <div class="title-wrap">
+      <div class="logo"><span class="l1">DRIFT</span><span class="l2">LEGENDS</span></div>
+      <div class="sub">峠ドリフト＆ストリートレーシング</div>
+      <button class="big-btn" id="btnStart">TAP TO START</button>
+      <div class="tiny">PC: キーボード / ゲームパッド対応 ・ スマホ: タッチ操作対応</div>
+    </div>
+  </section>
+  <!-- メインメニュー -->
+  <section id="s-menu" class="screen">
+    <div class="topbar"><div class="brand">DRIFT <b>LEGENDS</b></div><div class="spacer"></div><span class="savest" id="saveSt"></span><button class="chip" id="btnProfile"><span id="tbLevel">Lv.1</span><span class="xpbar"><i id="tbXp"></i></span></button><div class="tb-icons"><button class="tbi" id="btnGlv" aria-label="ガレージレベル"></button><button class="tbi" id="btnFriends" aria-label="フレンド"></button><button class="tbi" id="btnClan" aria-label="クラン"></button></div><div class="boostbar" id="boostBar"></div><div class="dia" id="tbDia">0</div><div class="money" id="tbMoney">¥0</div></div>
+    <div class="menu-col" id="menuList"></div>
+    <div class="menu-car"><div class="car-name" id="menuCarName"></div><div class="car-sub" id="menuCarSub"></div><div class="hint-rot">ドラッグで車両を回転</div></div>
+  </section>
+  <!-- 汎用パネル画面 -->
+  <section id="s-panel" class="screen">
+    <div class="topbar"><button class="back" id="btnBack">◀ BACK</button><div class="ptitle" id="panelTitle"></div><div class="spacer"></div><span class="savest" id="saveSt2"></span><div class="dia" id="tbDia2">0</div><div class="money" id="tbMoney2">¥0</div></div>
+    <div class="panel-wrap"><div class="panel" id="panelBody"></div><div class="stage" id="stage"><div class="stage-info" id="stageInfo"></div></div></div>
+  </section>
+  <!-- HUD -->
+  <section id="hud" class="hidden">
+    <canvas id="minimap"></canvas>
+    <div id="raceInfo"></div>
+    <div id="tougePanel" class="hidden"></div>
+    <div id="nextCorner"></div>
+    <div id="tachoWrap"><canvas id="tacho"></canvas><div id="nitroBar"><i></i></div><div id="damageBar" class="hidden"><i></i><span>DAMAGE</span></div></div>
+    <div id="center"><div id="cdText"></div><div id="flash"></div><div id="driftPop"></div><div id="cornerPop"></div><div id="splitPop"></div></div>
+    <div id="driftLive"></div>
+    <div id="hudBoost" class="boostbar hud"></div>
+    <button id="btnPause" aria-label="ポーズ">II</button>
+    <div id="fps" class="hidden"></div>
+  </section>
+  <section id="touch" class="hidden">
+    <div class="tbtn steer" id="tLeft"><span>◀</span></div><div class="tbtn steer" id="tRight"><span>▶</span></div>
+    <div class="tbtn pad" id="tPad"><span class="padlab">◀ スライド ▶</span><i id="tPadKnob"></i></div>
+    <div class="tbtn pedal" id="tBrake"><span>BRAKE</span></div><div class="tbtn pedal gas" id="tGas"><span>GAS</span></div>
+    <div class="tbtn small" id="tHand"><span>E-BRAKE</span></div><div class="tbtn small nitro" id="tNitro"><span>NITRO</span></div>
+    <div class="tbtn mini" id="tUp"><span>▲</span></div><div class="tbtn mini" id="tDown"><span>▼</span></div><div class="tbtn mini" id="tCam"><span>CAM</span></div><div class="tbtn mini" id="tGyro"><span>GYRO<br>OFF</span></div><div class="tbtn mini" id="tCal"><span>CENTER</span></div>
+  </section>
+  <div id="overlay" class="hidden"></div>
+  <div id="toast"></div>
+  <div id="musicToast"></div>
+  <div id="rotateHint" class="hidden"><div>📱↻ 横画面にするとプレイしやすくなります<br><button class="btn" id="btnRotOk">このまま続ける</button></div></div>
+  <div id="loading" class="hidden"><canvas id="loadBg"></canvas><div class="ld-shade"></div>
+    <div class="ld-mid"><div class="logo ld-logo"><span class="l1">DRIFT</span><span class="l2">LEGENDS</span></div><div id="loadScene" class="ld-scene"></div></div>
+    <div class="ld-bot"><div class="ld-tip"><b>TIPS:</b> <span id="loadTip"></span></div><div class="ld-bar"><i id="loadBar"></i></div><div id="loadText">LOADING</div></div></div>
+</div>
+<div id="fatal" class="hidden"></div>
+<script>/*JS*/</script>
+</body>
+</html>

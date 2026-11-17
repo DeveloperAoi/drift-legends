@@ -1,0 +1,400 @@
+400	Chests & Collection
+401	The daily chest is 
+402	Tap a decal to equip it
+403	 check it in Data)
+404	Complete Fuel System
+405	Music Player
+406	Merry Driftmas!
+407	, manual. All about skill
+408	・Touge Challenge: score 
+409	Car changed
+410	 mode: open everything)
+411	Checking connection...
+412	 characters, please
+413	 characters or more, please
+414	 it can be opened on that day
+415	The daily shop changes every day at 
+416	The last door is open!
+417	 December)
+418	 seconds, and when closing the app
+419	Background "Holy Night"
+420	Auto (brake to slow down)
+421	Test driving (end from pause)
+422	: The Mid-Engine of Autumn
+423	Snow Drift Challenge
+424	High-Efficiency Intercooler
+425	 (JST) reset
+426	 (purchases don't reduce money)
+427	 touge battles against rivals
+428	 to start
+429	 gas / brake, 
+430	Advent Calendar
+431	Illumination City
+432	Winter Legends
+433	Window / Plate
+434	Auto Handbrake
+435	Carbon supercar
+436	Candy Stripe
+437	Christmas Neon (red
+438	Christmas limited race
+439	Gyro fine settings
+440	Sky Ramp Park
+441	Supercharger
+442	Reset save data
+443	Double-Deck Wing
+444	Champion Gold
+445	Decals / Stickers
+446	Drag to rotate the car
+447	Drift King Apprentice
+448	High-Angle Knuckles
+449	High-Mount Wing
+450	Backfire Kit
+451	Big Diffuser
+452	Pistons / Conrods
+453	Brake caliper color
+454	Vented Hood
+455	Ho-ho! Splendid!
+456	Not enough points
+457	Matte Black Deep-Rim
+458	Midnight Purple
+459	Midnight Runner
+460	Merry Driftmas
+461	Make a random code
+462	Livery (pattern)
+463	・In this device's browser (
+464	Last week's ranking results
+465	-lap battle (first to finish wins)
+466	 free once.
+467	 units. Even stronger thrust
+468	Large Injectors
+469	Large Nitro System
+470	Reinforced Engine Mounts
+471	Couldn't connect
+472	Controls Update
+473	Numbers don't lie.
+474	Final Chapter: Legend of Tengu Pass
+475	Tokyo Bay Express
+476	Jet-black drift machine
+477	 points not reached
+478	Not beautiful enough.
+479	Auto (event period)
+480	: Monster of the Gale
+481	: Turnpike in the Fog
+482	Out of action (damage)
+483	-hairpin section is decisive.
+484	 in a row — our playground.
+485	View the weekly ranking
+486	Automatic saving of progress
+487	Developer menu added
+488	Open the developer menu
+489	Limited speedometer
+490	 on the Snowy Forest Lights Road
+491	 (JST) start
+492	 (used automatically on straights)
+493	) is unavailable.
+494	"Holy Night (聖夜)" sticker
+495	You: play time
+496	 has been added!
+497	 can be equipped.
+498	 please try with.
+499	 to go back.
+500	 or stop to end.
+501	Everyone's Play Stats
+502	Gas tap 
+503	Copy error info
+504	Over Fenders
+505	Carbon Monocoque
+506	Candy Apple
+507	Christmas Shop
+508	Christmas Points
+509	Gold Calipers
+510	Sunset Orange
+511	Santa Drifter
+512	New cars in the shop
+513	Silver Medalist
+514	Jump Thruster
+515	Studless Tires
+516	Center Stripe
+517	Time Attack records
+518	Touch button display
+519	Tap to change name
+520	Ducted Carbon
+521	Chests & Shop
+522	Titanium Exhaust
+523	Tuning Parts
+524	Reindeer Antlers + Red Nose
+525	Transmission
+526	Drift-focused (slide
+527	Drift chase camera
+528	Knuckles (steering angle)
+529	High-Grip Tires
+530	Backup code
+531	View backpack
+532	Parts & Extras
+533	Bolt-On Fenders
+534	Bronze Medalist
+535	Plasma Booster
+536	Bay Bridge Route
+537	White Racing
+538	Mid-engine turbo
+539	Music Horn
+540	Merry Christmas!
+541	Username set to "
+542	Slow down rivals
+543	Rally Dish
+544	Rainbow Smoke
+545	Legend Gold
+546	Legend Chest
+547	Legend Prism
+548	Racing Number
+549	Loading screen (logo, 
+550	Wide Body Kit
+551	・Time Attack: 
+552	Invalid characters (space
+553	Control / Fuel / Nitro
+554	Not enough money
+555	Owned items
+556	 can be opened from
+557	Export (copy)
+558	Futuristic hypercar
+559	 one at a time
+560	Kei car with cat-ear stickers
+561	Current version: 
+562	Set current tilt as center
+563	Holy-night tuned
+564	Try it in a test drive
+565	: Twins of the Switchbacks
+566	: White Flash of Kuremine
+567	Adjustable with coilovers or better
+568	Lightweight Flywheel
+569	Past updates
+570	Reset opened doors
+571	Snowy Forest Lights Road
+572	Snow drift course
+573	 (change in Garage)
+574	...Bring it on.
+575	. Easy on your fingers
+576	"Touge (峠)" sticker
+577	"
+578	 places, saved twice)
+579	 is unavailable
+580	Use this name
+581	 can you keep up?
+582	 race against your ghost
+583	 sell it for?
+584	 buy it for?
+585	 converted to money.
+586	 purchased!
+587	Gas (bottom right)
+588	Update Info
+589	Event reward exclusive
+590	Event exclusive car
+591	Intercooler
+592	Engine Swap
+593	Aurora Silver
+594	Garage (default)
+595	Candy Cane
+596	Close-Ratio Gearbox
+597	Chrome Deep
+598	Gamepad support
+599	Cockpit view
+600	Gold Chrome
+601	Gold Chest
+602	Gold Mesh
+603	 handbrake, 
+604	Silver Chest
+605	Single-Plate
+606	Jet Engine
+607	Gyro center calibration
+608	Steering sensitivity
+609	Street Tires
+610	Speed bonus
+611	Speedometer
+612	Sport Skirts
+613	Sport Turbine
+614	Race Number Plate
+615	Daily Chest
+616	Differential
+617	Drag Chute
+618	Drift assist
+619	Drift Knuckles
+620	License plate
+621	Steering via buttons
+622	Go to Parts Shop
+623	Big Throttle
+624	Fire Pattern
+625	Final gear ratio
+626	adjustable final drive
+627	Front Bumper
+628	Black Chrome
+629	Brakes / Weight
+630	Brake (bottom left)
+631	Bronze Chest
+632	New best record!
+633	Holy Green
+634	Rival's time
+635	In the ranking
+636	Not ranking-eligible
+637	Lip Spoiler
+638	Roof Spoiler
+639	Racing Tires
+640	Rocket Engine
+641	Rotary turbo
+642	・Advent exclusive
+643	, random background)
+644	Tilt (gyro)
+645	 cars added
+646	Touge Challenge records
+647	Disconnected
+648	About drop rates
+649	Control preset "
+650	New course unlocked
+651	Latest update
+652	European supercar
+653	Points every time
+654	Boxer engine
+655	Volcano Skyline
+656	 version).
+657	Checking...
+658	 types, body kits
+659	Hakoya Turnpike
+660	Holy-night limited super
+661	New personal best!
+662	Recorded errors
+663	Out of action (stopped)
+664	Wrong way!
+665	in the weekly ranking
+666	Developer testing (
+667	Demon rally machine
+668	 (decided by host)
+669	 (left/right steering)
+670	 (left-hand steering)
+671	) inside
+672	Online now
+673	Remove favorite
+674	 has left
+675	Continue anyway
+676	 is chosen.
+677	 during races
+678	 to activate.
+679	 converted to money.
+680	 equipped
+681	 purchased
+682	 added
+683	Underglow Neon
+684	Yellow Bulbs
+685	Window tint
+686	Wet Tires
+687	Air Cleaner
+688	Aero Bumper
+689	Online Battle
+690	Custom color
+691	Switch camera
+692	Carbon Panels
+693	Carbon Mirrors
+694	Carbon Race
+695	Gunmetal Deep-Rim
+696	Until Christmas
+697	Christmas (red
+698	Cross Mesh
+699	Gradient
+700	Copied
+701	Combo Master
+702	Course record
+703	Restore from code
+704	Copy code
+705	Gold Chrono
+706	Side Skirts
+707	Handbrake
+708	Cyberpunk
+709	Suspension
+710	Gyro steering 
+711	 on jump ramps
+712	Stabilizers
+713	Snowflake
+714	Specialty
+715	Sponsor logo
+716	A sports legend
+717	Sports sedan
+718	Sport Tires
+719	Sport Pads
+720	Smartphone
+721	Smoked Taillights
+722	Slick Tires
+723	Time Attack
+724	Touch control support
+725	Twin Jet
+726	Twin-Plate
+727	Max decals: 
+728	Total time
+729	Drift Tires
+730	Nitro System
+731	Neon Yellow
+732	Neon Green
+733	Neon / Roof
+734	Parts Shop
+735	Pearl White
+736	Flywheel
+737	Free Drive
+738	Full Carbon
+739	Black Cross
+740	Blood Red
+741	Best sector
+742	Wheel color
+743	Ho-ho-ho!
+744	Homologation sedan
+745	Home background set to "
+746	Holy Night
+747	Button size
+748	Hood view
+749	Pause menu
+750	Matte Black
+751	Back to menu
+752	Username
+753	Lightweight
+754	Gap to rival
+755	Rival strength
+756	Lime Green
+757	Rally homologation
+758	Roof Scoop
+759	Legendary
+760	Royal Blue
+761	Soul of the Rotary
+762	Wide Carbon
+763	Wide Skirts
+764	・Each day's door 
+765	Reset position
+766	Road to billionaire
+767	Glowing Plate "
+768	Reset complete
+769	Clear the previous chapter
+770	Change name
+771	 in Touge Challenge
+772	Performance (vs stock)
+773	You already had it, so
+774	Start over
+775	Terraced Downhill
+776	Change comparison
+777	One-Hand Easy
+778	 version.
+779	Error while checking
+780	Airport special course
+781	Auto-saved on device
+782	Drive beautifully.
+783	Holy Night Pass Drift
+784	Fireworks Launcher
+785	: Rumors of the Misty Pass
+786	Unlocked by clearing chapter
+787	On sale after clearing chapter
+788	Loaded
+789	Kei mid-engine
+790	Lightweight Battery
+791	Weekly Ranking
+792	Easier to Play
+793	Developer Menu
+794	Limited item "
+795	Snowy forest drift
+796	 (real date)
+797	"
+798	" sticker
+799	Money / Level

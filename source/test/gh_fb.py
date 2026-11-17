@@ -1,0 +1,47 @@
+import http.server, threading, functools, os
+from playwright.sync_api import sync_playwright
+os.makedirs('/tmp/ghsite', exist_ok=True)
+html=open('gh_out/index.html').read(); open('/tmp/ghsite/index.html','w').write(html)
+open('/tmp/ghsite/firebase-config.js','w').write('window.FIREBASE_CONFIG={apiKey:"x",authDomain:"x",databaseURL:"https://x.firebaseio.com",projectId:"x"};')
+H=functools.partial(http.server.SimpleHTTPRequestHandler, directory='/tmp/ghsite')
+H.log_message=lambda *a: None
+srv=http.server.ThreadingHTTPServer(('127.0.0.1',8765),H); threading.Thread(target=srv.serve_forever,daemon=True).start()
+MOCK=open('/tmp/fbmock/mock.js').read()
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"])
+    ctx=b.new_context(viewport={'width':1100,'height':620})
+    ctx.route("https://www.gstatic.com/**", lambda r: r.fulfill(status=200, content_type='application/javascript', body=MOCK if 'app-compat' in r.request.url else '/*noop*/'))
+    errs=[]
+    def page(nick):
+        pg=ctx.new_page(); pg.on('pageerror', lambda e: errs.append(nick+' PAGE '+str(e))); pg.on('console', lambda m: errs.append(nick+' '+m.text) if m.type=='error' else None)
+        pg.goto('http://127.0.0.1:8765/index.html'); pg.wait_for_timeout(3000)
+        pg.evaluate("document.getElementById('btnStart').click()"); pg.wait_for_timeout(300); pg.evaluate("window.__DL.UI.closeModal()")
+        pg.evaluate(f"window.__DL.SAVE.data.settings.nick='{nick}'")
+        return pg
+    A=page('Aoi'); E=lambda pg,js: pg.evaluate(js)
+    print('menu', E(A,"[...document.querySelectorAll('#menuList [data-m]')].map(b=>b.dataset.m).includes('online')"))
+    E(A,"window.__DL.SAVE.data.money=7777777; window.__DL.SAVE.save()"); A.wait_for_timeout(3500)
+    print('cloud state', E(A,"window.__DL.UI && document.getElementById('saveSt') ? document.getElementById('saveSt').textContent : ''"))
+    print('stored', E(A,"(()=>{const s=JSON.parse(localStorage.getItem('fbmock_store')); const u=Object.keys(s.users||{}); return u.length && JSON.parse(s.users[u[0]].save.json).money})()"))
+    # login google (link)
+    E(A,"window.__DL.UI.open('settings'); window.__DL.UI.a_setTab('data')"); A.wait_for_timeout(300)
+    E(A,"window.__DL.UI.a_fbLogin()"); A.wait_for_timeout(1500); A.screenshot(path='gh_acct.png')
+    print('label', E(A,"window.DL_FB.label()"))
+    # online
+    B=page('Ren')
+    for pg in (A,B): E(pg,"window.__DL.UI.open('online')"); pg.wait_for_timeout(1500)
+    E(A,"window.__DL.UI.netCodeDraft='touge86'; window.__DL.UI.a_netJoin()"); A.wait_for_timeout(1500)
+    E(B,"window.__DL.UI.netCodeDraft='touge86'; window.__DL.UI.a_netJoin()"); B.wait_for_timeout(2000)
+    print('peersA', E(A,"window.__DL.NET? 0 : 0"), E(A,"document.querySelectorAll('#panelBody .item').length"), E(B,"document.querySelectorAll('#panelBody .item').length"))
+    A.screenshot(path='gh_lobbyA.png'); B.screenshot(path='gh_lobbyB.png')
+    E(A,"window.__DL.UI.a_netReady()"); E(B,"window.__DL.UI.a_netReady()"); A.wait_for_timeout(1500)
+    E(A,"window.__DL.UI.a_netGo()")
+    for pg in (A,B): pg.wait_for_function("window.__DL.game.active", timeout=90000)
+    A.keyboard.down('w'); B.wait_for_timeout(9000)
+    print('dbg', E(B,"JSON.stringify(window.__DL.game.cfg.seq)"), E(B,"JSON.stringify((()=>{const s=JSON.parse(localStorage.getItem('fbmock_store')).rooms.touge86.peers; return Object.values(s).map(p=>[p.nm, p.race&&p.race.s, p.start&&p.start.seq, JSON.stringify(p.race&&p.race.p)])})())"))
+    print('B sees net rivals', E(B,"window.__DL.game.rivals.filter(r=>r.net).map(r=>[r.def.name, Math.round(r.x), Math.round(r.z)])"), 'A pos', E(A,"[Math.round(window.__DL.game.veh.x),Math.round(window.__DL.game.veh.z)]"))
+    B.screenshot(path='gh_raceB.png')
+    print('A nick', E(A,"window.__DL.SAVE.data.settings.nick"))
+    print('store peers', E(A,"JSON.stringify(JSON.parse(localStorage.getItem('fbmock_store')).rooms.touge86.peers).slice(0,600)"))
+    print(errs[:10])
+    srv.shutdown()

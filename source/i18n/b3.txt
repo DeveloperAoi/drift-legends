@@ -1,0 +1,400 @@
+800	 came out of 
+801	Today's door!
+802	 can be equipped)
+803	 reached
+804	 to return.
+805	Unlock all at once
+806	 also available)
+807	Ice Blue
+808	Gas Toggle
+809	Update
+810	Event limited
+811	Inferno
+812	Aero Mirrors
+813	Extras: 
+814	Engine Strengthening
+815	Engine type
+816	Engine
+817	Auto Nitro
+818	Open Diff
+819	Customize
+820	With Canards
+821	Camshaft
+822	Car Shop
+823	Carbon Doors
+824	Camber angle
+825	Gear down (
+826	Clear Taillights
+827	Graphics
+828	Gamepad
+829	Cockpit
+830	Collection
+831	Side Mirrors
+832	Side Line
+833	Sakura Pink
+834	Gyro sensitivity
+835	Gyro steering
+836	Standard
+837	Story chapter 
+838	Snow Star
+839	Slide steering
+840	Supercar
+841	Settings
+842	Race number
+843	Tire type
+844	Tachometer
+845	Tap to continue
+846	Turbo Kit
+847	Turbo coupe
+848	Turbo sedan
+849	Turbo Fan
+850	Ducktail
+851	Dam Lake Route
+852	Chest exclusive
+853	Titanium Blue
+854	Tuning
+855	Twin turbo
+856	Twin Bottles
+857	Taillights
+858	Reset data
+859	Reindeer Antlers
+860	Drift count
+861	Drift
+862	Drift chase
+863	Nickname
+864	Neutral
+865	Neon City
+866	Neon Ring
+867	Handling
+868	Backpack
+869	Bumper view
+870	 in the browser
+871	Headlights
+872	Best lap
+873	Hot hatch
+874	Button opacity
+875	Body color
+876	Body Kit
+877	Exhaust shape
+878	Mid-engine
+879	Rival car
+880	Rally Tires
+881	Rally hatch
+882	Rankings 
+883	Rear Wing
+884	Rear Bumper
+885	Reset in
+886	Roof Vent
+887	Red Star
+888	Race Cam
+889	 rock arrangement)
+890	Back to lobby
+891	Roadster
+892	, minimap
+893	Saved
+894	Glowing Plate
+895	First Release
+896	First-clear reward
+897	Beginner Mark
+898	Intake / Exhaust / Boost
+899	Wall bonus
+900	Sold
+901	Large Bottle
+902	Big Rotors
+903	Test drive on a pass
+904	Touge Challenge
+905	Left stick
+906	Restored
+907	Hold
+908	Assists
+909	Longest Jump
+910	Coastal Route
+911	Open for free
+912	 max per item 
+913	 types (duplicates shown as
+914	Stock Engine
+915	Stock Steel
+916	Equipped
+917	: Rain on the Narrow Road
+918	Loading...
+919	Placement
+920	Purchased
+921	Unlocked with coilovers
+922	Room codes 
+923	Forged Pistons
+924	Can open
+925	Developer mode
+926	Limited items
+927	Limited Tune
+928	Limited decal
+929	Limited wheels
+930	Limited livery
+931	 Total cost
+932	"Tap 
+933	Favorite
+934	Add money
+935	Try now
+936	 login
+937	Hard
+938	Welcome, 
+939	Tap 
+940	Account
+941	Advent
+942	American
+943	Uncommon
+944	Intake
+945	Window
+946	Extras
+947	Emerald
+948	Error info
+949	Ocean
+950	To garage
+951	Gunmetal
+952	Calipers
+953	Cancel
+954	Keyboard
+955	Gear up
+956	Classic
+957	Christmas
+958	Collector
+959	Compact
+960	Combo achieved
+961	Course loading
+962	Corners
+963	Golden
+964	Sub color
+965	Sunset
+966	Circuit
+967	Street
+968	Straight
+969	Story
+970	Tower Bar
+971	Turbo lag
+972	Checker
+973	Titanium Bullet
+974	Tuner
+975	Nitro duration
+976	Infinite Nitro
+977	steer, 
+978	Steer left
+979	Start Battle
+980	Bar Graph
+981	Full Intake/Exhaust
+982	Boost (
+983	Players
+984	Plays
+985	Play time
+986	Best record
+987	Home Background
+988	 button also
+989	Hood
+990	Manual
+991	Mini Tree
+992	Minimap
+993	Metallic
+994	To menu
+995	Meter "
+996	Monster
+997	Rally pedigree
+998	Ranking
+999	Restart
+1000	Roof accessories
+1001	Layout
+1002	Rainbow
+1003	Racing
+1004	 also during races
+1005	Races
+1006	Race settings
+1007	Start race
+1008	Log out
+1009	Rotary
+1010	Third-person view
+1011	Tsuzuraori Pass
+1012	Save now
+1013	Low (light)
+1014	e.g. TougeDragon
+1015	Last week's results
+1016	Interior Stripping
+1017	Reconnecting...
+1018	Reload
+1019	Default camera
+1020	Reset
+1021	Danger zone
+1022	Steer right
+1023	Paint type
+1024	City at night
+1025	At night, total 
+1026	Big Turbo
+1027	Ruler of the Pass
+1028	Touge Drift
+1029	Steer left
+1030	Performance up
+1031	 until the 
+1032	Downtown by day
+1033	Max combo
+1034	Final score
+1035	 spokes
+1036	 blades
+1037	 max
+1038	Next door in 
+1039	Harbor area
+1040	slide
+1041	Infinite Money
+1042	History
+1043	 types, tires 
+1044	Auto save
+1045	Unlock / Get
+1046	Purchased parts
+1047	Out of action!
+1048	To car select
+1049	Join room
+1050	Room code
+1051	Inner Loop
+1052	Limited colors
+1053	 (hairpin
+1054	 (host)
+1055	 (off-season)
+1056	 (limited car)
+1057	) / duplicate: 
+1058	" obtained
+1059	You are 
+1060	Notice
+1061	Easy
+1062	this device
+1063	 only
+1064	)
+1065	When on, 
+1066	Start
+1067	Easy
+1068	Items
+1069	Gas
+1070	Assist
+1071	Analog
+1072	Yellow
+1073	Lightning
+1074	Events
+1075	Wing
+1076	Epic
+1077	Engine
+1078	Orange
+1079	Automatic
+1080	Custom
+1081	camera, 
+1082	Carbon
+1083	Garage
+1084	Crown
+1085	Clutch
+1086	Quad
+1087	Grip
+1088	Green
+1089	Corner
+1090	Ghost
+1091	Gold
+1092	Sound
+1093	Sub-Computer
+1094	Santa Hat
+1095	Jet
+1096	Start
+1097	Steel
+1098	Stage 
+1099	Space
+1100	Spokes
+1101	Sport
+1102	Smoke
+1103	Slide
+1104	Super
+1105	Solid
+1106	Tire width
+1107	Tap to 
+1108	turbos and 
+1109	Chest
+1110	Tune
+1111	Two-Tone
+1112	Decals
+1113	Digital
+1114	Dual
+1115	Trunk
+1116	Drift
+1117	Plate
+1118	nitro, 
+1119	High Cam
+1120	Hyper
+1121	Steering
+1122	Bumper
+1123	parts 
+1124	Purple
+1125	Fine
+1126	Full-Computer
+1127	Flame
+1128	Front
+1129	Brake
+1130	Bronze
+1131	Platinum
+1132	Plate
+1133	Hairpin
+1134	Paint
+1135	Wheels
+1136	White
+1137	button 
+1138	pause.
+1139	Muffler
+1140	Minimal
+1141	Mute
+1142	Mesh
+1143	Menu
+1144	User
+1145	Rival
+1146	Reset
+1147	Retry
+1148	Livery
+1149	In race
+1150	Races
+1151	Race
+1152	Login
+1153	Rotor
+1154	, deep rim
+1155	Current name
+1156	 (in Settings 
+1157	Use
+1158	Car used
+1159	Saving...
+1160	Saved
+1161	Tilt Control
+1162	Front/back
+1163	Players (
+1164	Participation prize: 
+1165	Claimed
+1166	Intake / Exhaust
+1167	Sell
+1168	Night driving
+1169	Unrivaled
+1170	Achievement unlocked
+1171	Legend of the Pass
+1172	Night View of the Pass
+1173	Touge race
+1174	Industrial zone
+1175	Left/right
+1176	Always show
+1177	Restore
+1178	Owned
+1179	Cars owned
+1180	Money 
+1181	Connecting...
+1182	Controls
+1183	, every day 
+1184	Daily
+1185	Change song
+1186	Top speed
+1187	Default weather
+1188	Distance left
+1189	Every Monday
+1190	Slide characteristics
+1191	Prize money
+1192	Survival time
+1193	 added
+1194	Autumn Valley
+1195	Reason
+1196	 on Holy Night Pass
+1197	Test drive over
+1198	 chapters cleared
+1199	Total cost

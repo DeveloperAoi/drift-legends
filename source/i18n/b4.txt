@@ -1,0 +1,346 @@
+1200	Buy
+1201	Purchased
+1202	Distance
+1203	Sell car
+1204	Compare cars
+1205	Buy car
+1206	Weight
+1207	Gold medal
+1208	Silver medal
+1209	Bronze medal
+1210	Starts in 
+1211	Limited car
+1212	Snowman
+1213	Drizzle Forest Road
+1214	The Sound Barrier
+1215	Drivetrain
+1216	) button
+1217	You
+1218	Other
+1219	 done
+1220	 can, 
+1221	 unlocks
+1222	 on sale
+1223	 etc.)
+1224	 set
+1225	 converted to money
+1226	's car
+1227	Normal
+1228	Cancel
+1229	 inch
+1230	Error
+1231	Camera
+1232	Gears
+1233	Coupe
+1234	Kenta
+1235	Guest
+1236	Common
+1237	Course
+1238	Size
+1239	Side
+1240	Sakura
+1241	Cyan
+1242	Shift
+1243	Phone
+1244	Sedan
+1245	Souma
+1246	Tight
+1247	Time
+1248	Tires
+1249	Turbo
+1250	Diamond
+1251	Down
+1252	Team
+1253	Data
+1254	Torque
+1255	Toe angle
+1256	Nitro
+1257	Neon
+1258	Hatch
+1259	Heart
+1260	Panda
+1261	Parts
+1262	Pearl
+1263	Pink
+1264	Blue
+1265	Buttons
+1266	Pause
+1267	Matte
+1268	Mark
+1269	Medium
+1270	Medals
+1271	Rally
+1272	Ryu
+1273	Roof
+1274	Red
+1275	Retro
+1276	Level
+1277	Race
+1278	Nanamagari
+1279	Third person
+1280	Crescent
+1281	Pro
+1282	 players).
+1283	Legendary 
+1284	In use
+1285	 bought
+1286	Everyone 
+1287	Retry
+1288	Reconnect
+1289	Recheck
+1290	Steering angle
+1291	First Win
+1292	Front-mount
+1293	Sound effects
+1294	Participation prize
+1295	 owned
+1296	Right side
+1297	Laps
+1298	 free
+1299	Size
+1300	Large
+1301	Tengu Pass
+1302	Touge Fanatic
+1303	Left side
+1304	Belongings
+1305	Money
+1306	 mode)
+1307	Rising Sun
+1308	 day: 
+1309	Rising Dragon
+1310	Time of day
+1311	updated!
+1312	Latest 
+1313	Top speed
+1314	Not owned
+1315	Not connected
+1316	 equipped
+1317	Harukaze Pass
+1318	Deep rim
+1319	Getting ready
+1320	 points or more
+1321	Fuel System
+1322	Hayate Pass
+1323	Checking
+1324	Akigiri Pass
+1325	 types (
+1326	Window accessories
+1327	Kuremine Pass
+1328	Hosomichi Pass
+1329	XP
+1330	Holy Night Pass
+1331	Background "
+1332	Show (
+1333	Equipped
+1334	Looks
+1335	Adjustable
+1336	Racing
+1337	Chassis
+1338	Coilovers
+1339	Weight Reduction
+1340	 in a row.
+1341	Golden 
+1342	Close
+1343	Open
+1344	Live
+1345	Developer
+1346	Difficulty
+1347	Yukimi Pass
+1348	Hide
+1349	Drivetrain
+1350	Elevation
+1351	High RPM
+1352	 (total 
+1353	 (left 
+1354	 (duplicate
+1355	" is
+1356	 
+1357	this 
+1358	!
+1359	
+1360	None
+1361	 wall
+1362	 week
+1363	again 
+1364	Kai
+1365	Gear
+1366	Jin
+1367	Manifold
+1368	Mio
+1369	Yu
+1370	Lag
+1371	Rear
+1372	Rare
+1373	Rei
+1374	List
+1375	This week
+1376	Legend
+1377	Stop
+1378	Brothers
+1379	Last week
+1380	Publish
+1381	Resume
+1382	Power
+1383	First
+1384	Reached
+1385	Ahead
+1386	Acceleration
+1387	Effect
+1388	Win
+1389	Hokuto
+1390	Join
+1391	Reverse
+1392	 car
+1393	Name
+1394	Lap
+1395	Rotation
+1396	 times (
+1397	Unranked
+1398	Dojima
+1399	Reward
+1400	Sell
+1401	Change
+1402	Shift
+1403	Evening
+1404	Exterior
+1405	Yasha
+1406	Night Sakura
+1407	Weather
+1408	Amagi
+1409	Achievements
+1410	Left/right
+1411	Upgrade
+1412	Type
+1413	Behind
+1414	Back
+1415	Owned
+1416	Skill
+1417	Challenge
+1418	Controls
+1419	Defeat
+1420	New songs
+1421	 ~ 
+1422	 day
+1423	 day)
+1424	Tomorrow
+1425	Nebula
+1426	Hours
+1427	:00)
+1428	Clear
+1429	Update
+1430	Enabled
+1431	Period
+1432	Today
+1433	Tojo
+1434	.
+1435	Standard
+1436	Next
+1437	Europe
+1438	Daily
+1439	Compare
+1440	Himuro
+1441	Erase
+1442	Sparks
+1443	Physics
+1444	Status
+1445	Current
+1446	Quality
+1447	Gale
+1448	Shiraishi
+1449	B/W
+1450	Goal
+1451	Bullet
+1452	Kagura
+1453	Kamikaze
+1454	 s)
+1455	Autumn Leaves
+1456	Stock
+1457	 green)
+1458	Holy Night
+1459	Paw
+1460	Auto
+1461	Show
+1462	Remove
+1463	Settings
+1464	Test drive
+1465	: 
+1466	Buy
+1467	Driving
+1468	Distance
+1469	car 
+1470	Car
+1471	Ride height
+1472	Leave
+1473	Normal
+1474	Done
+1475	Duplicate
+1476	Weight
+1477	Limited
+1478	Snowfield
+1479	Volume
+1480	Fujin
+1481	Horsepower
+1482	Height
+1483	High speed
+1484	Onizuka
+1485	Phoenix
+1486	Kurosawa
+1487	).
+1488	 
+1489	, 
+1490	. 
+1491	"
+1492	"
+1493	~
+1494	a
+1495	 to 
+1496	 
+1497	 / 
+1498	 
+1499	 more
+1500	 place
+1501	e.g.
+1502	Samurai
+1503	Older brother
+1504	 min
+1505	 
+1506	Right
+1507	 lap
+1508	 
+1509	Night
+1510	 chars
+1511	Pass
+1512	Left
+1513	Younger brother
+1514	Low
+1515	High
+1516	Ninja
+1517	Count
+1518	 d
+1519	Star
+1520	Day
+1521	Dawn
+1522	Moon
+1523	 
+1524	Willow
+1525	Sakura
+1526	 pts
+1527	 version
+1528	No. 
+1529	approx. 
+1530	Wing
+1531	 chapter
+1532	Run
+1533	Speed
+1534	Rain
+1535	Snow
+1536	Thunder
+1537	Fog
+1538	Summit
+1539	High
+1540	Soul
+1541	Dragon
+1542	 (
+1543	)
+1544	+
+1545	: 
