@@ -71,7 +71,7 @@ Object.assign(UI, {
   a_goAch() { this.open('ach'); }, a_goInvTitle() { this.invCat = 'title'; this.invOwn = 'own'; this.open('bag'); this.tab = 'items'; this.render(); }
 });
 // HOME・GARAGE にレベル表示
-{ const _ms = UI.menuStatsHTML; UI.menuStatsHTML = function () { return lvBarHTML('lvbH') + (_ms ? _ms.call(this) : ''); };
+{ const _ms = UI.menuStatsHTML; UI.menuStatsHTML = function () { document.querySelectorAll('#lvbH').forEach(e => e.remove()); return lvBarHTML('lvbH') + (_ms ? _ms.call(this) : ''); };
   const _g = UI.r_garage; UI.r_garage = function (a) { return lvBarHTML('lvbG') + _g.call(this, a); };
   const _rt = UI.refreshTop; UI.refreshTop = function () { _rt.call(this); try { const I = lvInfo(SAVE.data.xp); $('tbLevel').textContent = 'Lv.' + I.lv; $('tbXp').style.width = (I.cur / I.need * 100) + '%'; const g = document.getElementById('btnGlv'); if (g) g.dataset.lv = 'Lv.' + garageLevel(SAVE.data).lv; } catch (e) { } }; }
 // 実績の報酬にXPを付ける（未設定なら +150 XP）
