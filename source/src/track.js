@@ -157,6 +157,9 @@ class Track {
     // 内側（中心側）判定
     this.innerRight = new Int8Array(this.n);
     for (let i = 0; i < this.n; i++) this.innerRight[i] = (-this.X[i] * this.RX[i] - this.Z[i] * this.RZ[i]) > 0 ? 1 : 0;
+    // 区間リストで作った峠（明神峠など）：中心方向ではなく「カーブの内側」を山側（岩壁）にする
+    if (this.def.ctrl && e === 'mountain') { const n = this.n, W = 70; let acc = 0; for (let k = -W; k <= W; k++) acc += this.K[(k + n) % n];
+      for (let i = 0; i < n; i++) { if (Math.abs(acc) > 1e-4) this.innerRight[i] = acc < 0 ? 1 : 0; else this.innerRight[i] = i ? this.innerRight[i - 1] : 0; acc += this.K[(i + W + 1) % n] - this.K[(i - W + n) % n]; } }
   }
   findCorners() {
     const n = this.n, K = this.K, th = 1 / 350; const cs = [];
@@ -455,11 +458,18 @@ function buildWorld(track, R, opts) {
         const yaw = track.HD[i]; const p = P(i, 0, 0); g.box(p[0], p[1] + 9, p[2], def.width + 14, 6, 2, [0.55, 0.53, 0.5], yaw);
         for (const s of [-1, 1]) { const q = P(i, s * (wallOff + 4), 0); g.box(q[0], q[1] + 4, q[2], 7, 9, 2, [0.55, 0.53, 0.5], yaw); }
         // 山の盛り上がり
-        const hill = P(i, 0, 0); if (env !== 'highway') G.cylY(hill[0], hill[1] - 2, hill[2], 40, 8, 22, 8, vary(grass, 0.1));
+        if (env !== 'highway') { const out = !track.tunnel[(i - 1 + n) % n] ? -1 : 1; for (const s of [-1, 1]) { const q = P(i, s * (wallOff + 9), 0); g.box(q[0], q[1] + 6, q[2], 14, 14, 3, rock, yaw); } const tp = P(i, 0, 12.5); g.box(tp[0], tp[1], tp[2], def.width + 34, 5, 3, rock, yaw); }
       }
     }
   }
 
+  // トンネルの上の山（坑口をふさがないよう、トンネル区間の上だけに盛る）
+  if (track.hasTunnel && env !== 'highway') for (let i = 0; i < n; i += 2) {
+    const j = (i + 2) % n; if (!track.tunnel[i] || !track.tunnel[j]) continue; const g = ch(i).scene;
+    const prof = [[-(wallOff + 60), -14], [-(wallOff + 22), 6], [-(wallOff + 4), 13], [0, 16], [wallOff + 4, 13], [wallOff + 22, 6], [wallOff + 60, -14]];
+    for (let k = 0; k < prof.length - 1; k++) { const [l0, h0] = prof[k], [l1, h1] = prof[k + 1]; g.quad(P(i, l0, h0), P(i, l1, h1), P(j, l1, h1), P(j, l0, h0), k === 0 || k === prof.length - 2 ? vary(grass, 0.1) : vary(mixc(grass, rock, 0.3), 0.08)); }
+    if (rng() < 0.5 * dens) { const lat = (rng() - 0.5) * 2 * (wallOff + 18); const q = P(i, lat, 16 - Math.abs(lat) * 0.15); tree(g, q[0], q[1], q[2], 0.8 + rng() * 0.5); }
+  }
   // コーナー警告標識
   if (env === 'mountain' || env === 'coast' || env === 'highway') {
     for (const c of track.corners) {

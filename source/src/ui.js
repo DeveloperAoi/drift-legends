@@ -442,17 +442,21 @@ const UI = {
   r_maps(arg) {
     const mode = arg.mode; $('panelTitle').textContent = { time: 'TIME ATTACK', touge: 'DRIFT CHALLENGE', free: 'FREE RUN', race: 'RACE', event: 'EVENT' }[mode];
     $('panelBody').classList.add('wide'); this.show.active = false;
-    const maps = MAPS.filter(m => (mode === 'free' || m.cat !== 'free') && m.cat !== 'drag' && m.cat !== 'event' && (m.cat !== 'xmas' || eventActive()));
+    const all = MAPS.filter(m => (mode === 'free' || m.cat !== 'free') && m.cat !== 'drag' && m.cat !== 'event' && (m.cat !== 'xmas' || eventActive()));
+    const MCAT = { all: [() => true, 'すべて'], new: [m => !!m.isNew, 'NEW'], touge: [m => m.env === 'mountain' && m.cat !== 'xmas', '峠'], highway: [m => m.env === 'highway', '高速道路'], city: [m => ['city', 'port', 'industrial', 'coast'].includes(m.env), '市街地・海沿い'], circuit: [m => m.env === 'circuit' || m.env === 'lot', 'サーキット・広場'], xmas: [m => m.cat === 'xmas', 'クリスマス'] };
+    if (!this.mapCat || !MCAT[this.mapCat]) this.mapCat = 'all'; if (!this.mapSort) this.mapSort = 'new';
+    let maps = all.filter(MCAT[this.mapCat][0]); if (!maps.length) { this.mapCat = 'all'; maps = all.slice(); }
+    const idx = m => MAPS.indexOf(m); maps.sort(this.mapSort === 'new' ? (a, b) => idx(b) - idx(a) : this.mapSort === 'diff' ? (a, b) => a.diff - b.diff || idx(b) - idx(a) : this.mapSort === 'len' ? (a, b) => getTrack(b.id).length - getTrack(a.id).length : (a, b) => a.name.localeCompare(b.name));
     if (!this.sel || !maps.find(m => m.id === this.sel)) this.sel = maps.find(mapUnlocked).id;
     const m = MAP_BY_ID[this.sel];
     if (!this.mopt || this.mopt.map !== m.id) this.mopt = { map: m.id, weather: m.weather, time: m.time, laps: 3 };
     const tr = getTrack(m.id); const rec = SAVE.data.records;
     const best = mode === 'time' ? (rec.ta[m.id] ? fmtTime(rec.ta[m.id].best) : '--') : mode === 'touge' ? (rec.touge[m.id] ? rec.touge[m.id].best.toLocaleString() + ' pts' : '--') : '';
     const wx = { clear: ICO('sun', '#ffcf3d', 14) + ' 晴れ', rain: ICO('rain', '#9ad0ff', 14) + ' 雨', snow: ICO('snow', '#fff', 14) + ' 雪', fog: ICO('fog', '#aaa', 14) + ' 霧' }, tm = { day: '昼', evening: '夕方', night: '夜' };
-    let html = `<div class="mode-tabs">${[['free', 'FREE RUN', 'フリー走行'], ['time', 'TIME ATTACK', 'タイムアタック'], ['race', 'RACE', 'ライバルと対戦'], ['touge', 'DRIFT CHALLENGE', '峠チャレンジ']].map(([k, a, b]) => `<button class="${k === mode ? 'on' : ''}" data-a="mapMode" data-v="${k}"><b>${a}</b><small>${b}</small></button>`).join('')}</div><div style="display:flex;gap:12px;flex-wrap:wrap"><div style="flex:2 1 320px;min-width:0"><div class="mapgrid">`;
+    let html = `<div class="mode-tabs">${[['free', 'FREE RUN', 'フリー走行'], ['time', 'TIME ATTACK', 'タイムアタック'], ['race', 'RACE', 'ライバルと対戦'], ['touge', 'DRIFT CHALLENGE', '峠チャレンジ']].map(([k, a, b]) => `<button class="${k === mode ? 'on' : ''}" data-a="mapMode" data-v="${k}"><b>${a}</b><small>${b}</small></button>`).join('')}</div><div class="map-filter"><div class="mf-cats">${Object.entries(MCAT).filter(([k, v]) => all.some(v[0])).map(([k, v]) => `<button class="${this.mapCat === k ? 'on' : ''}" data-a="mapCat" data-v="${k}">${v[1]} <i>${all.filter(v[0]).length}</i></button>`).join('')}</div><div class="mf-sort">${[['new', '新しい順'], ['diff', '難易度順'], ['len', '距離が長い順'], ['name', '名前順']].map(([k, l]) => `<button class="${this.mapSort === k ? 'on' : ''}" data-a="mapSort" data-v="${k}">${l}</button>`).join('')}</div></div><div style="display:flex;gap:12px;flex-wrap:wrap"><div style="flex:2 1 320px;min-width:0"><div class="mapgrid">`;
     for (const mp of maps) {
       const un = mapUnlocked(mp); const t = TRACK_CACHE[mp.id];
-      html += `<button class="mapcard ${mp.id === this.sel ? 'sel' : ''}" data-a="selMap" data-v="${mp.id}"><canvas width="160" height="120" data-thumb="${mp.id}"></canvas>${mp.isNew ? '<i class="map-new">NEW</i>' : ''}<div class="mn">${mp.jp}</div><div class="me">${mp.name}</div><div class="stars">${'★'.repeat(mp.diff)}${'☆'.repeat(5 - mp.diff)}</div>${un ? '' : `<div class="lock">${ICO('lock', '#fff', 26)}<br>${mapLockText(mp)}</div>`}</button>`;
+      html += `<button class="mapcard ${mp.id === this.sel ? 'sel' : ''}" data-a="selMap" data-v="${mp.id}"><canvas width="160" height="120" data-thumb="${mp.id}"></canvas>${mp.isNew ? '<i class="map-new">NEW</i>' : ''}<span class="map-env">${{ mountain: '峠', highway: '高速', city: '市街地', port: '港', industrial: '工業', coast: '海沿い', circuit: 'サーキット', lot: '広場' }[mp.env] || ''}</span><div class="mn">${mp.jp}</div><div class="me">${mp.name}</div><div class="stars">${'★'.repeat(mp.diff)}${'☆'.repeat(5 - mp.diff)}</div>${un ? '' : `<div class="lock">${ICO('lock', '#fff', 26)}<br>${mapLockText(mp)}</div>`}</button>`;
     }
     html += `</div></div><div style="flex:1 1 260px;min-width:240px"><div class="h3">${m.jp} / ${m.name}</div><div class="note">${m.desc}</div>
       <div class="kv" style="margin:8px 0"><div>難易度</div><div class="stars">${'★'.repeat(m.diff)}${'☆'.repeat(5 - m.diff)}</div><div>距離</div><div>${(tr.length / 1000).toFixed(2)} km</div><div>コーナー数</div><div>${tr.corners.length}（ヘアピン ${tr.corners.filter(c => c.type === 'ヘアピン').length}）</div><div>標準天候</div><div>${wx[m.weather]} / ${tm[m.time]}</div><div>高低差</div><div>${Math.round(tr.maxY - tr.minY)} m</div>${best ? `<div>ベスト記録</div><div>${best}</div>` : ''}${mode === 'time' ? `<div>コースレコード</div><div>${fmtTime(Math.min(recordFor(m.id), rec.ta[m.id] ? rec.ta[m.id].best : 1e9))}</div>` : ''}</div>`;
@@ -491,6 +495,8 @@ const UI = {
   a_selMap(v) { this.sel = v; this.render(); },
   a_mopt(v) { const [k, val] = v.split(':'); this.mopt[k] = k === 'laps' ? +val : val; this.render(); },
   a_mapMode(v) { this.arg.mode = v; this.render(); },
+  a_mapCat(v) { this.mapCat = v; AUDIO.nav && AUDIO.nav(); this.render(); },
+  a_mapSort(v) { this.mapSort = v; AUDIO.nav && AUDIO.nav(); this.render(); },
   a_toCarSel() { this.open('carsel', { mode: this.arg.mode, mapId: this.sel, weather: this.mopt.weather, time: this.mopt.time, laps: this.mopt.laps }); },
   // ---------------- 車両選択 ----------------
   r_carsel(cfg) {

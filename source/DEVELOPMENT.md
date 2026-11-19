@@ -27,6 +27,8 @@ build.py の `order` の順に1つの即時関数へ連結される。
 - `progress.js` v2.8 レベル（最大200）・XP・プロフィール・実績XP
 - `events.js` v2.9 期間限定イベント（EVENTS：xmas2026 / nye2026 / ny2027）・年越し演出 NYFX
 - `final.js` v3.0 最終統合：車カード（CAR_CARDS、type 'carcard'）と新車 hk_van（carmodel の 'van' ボディ）、リザルト仕上げ（_runId で二重受取防止）、下部ナビ #bnav、メニューBGM（music/ の menu*.mp3）、スマホ標準レイアウト C、開発者パネル r_devPanel・告知/メンテ ADM（Firebase admin/*）
+- `v31.js` プロフィール（d.prof：icon/frame/effect/banner/bio）・プロフィール用アイテム78種・専用パック（carpack/profpack）・限定車（戦車/フォーミュラ/ブロックの車）
+- `v32.js` 軽トラ＋フルチューン版・フルチューンチケット（d.tickets）・ストーリーのレース中セリフ（TALK）・湾岸風の車選択・エンジン音の強化（排気共鳴）
 - `physics.js` 車の物理・スペック計算（computeSpec、defaultLook、defaultTune）
 - `track.js` コース生成（def.ctrl があればその制御点を使う）と景観
 - `carmodel.js` 車の3Dモデル（BODY_TYPES の形状プロファイル、エアロ、ライト、運転席、バス／そり専用モデル）
