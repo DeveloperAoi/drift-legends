@@ -3178,5 +3178,8 @@
 "限定車のカードだけが入っています": "Contains only limited car cards",
 "クリスマス限定車のカードと限定アイテム": "Christmas car cards and limited items",
 "本日は受取済み": "Already claimed today",
-"重複したアイテムはレア度に応じたお金に変換されます（車カードは枚数が増えます）": "Duplicate items convert to money by rarity (car cards stack)"
+"重複したアイテムはレア度に応じたお金に変換されます（車カードは枚数が増えます）": "Duplicate items convert to money by rarity (car cards stack)",
+"集めたアイテム": "Items collected",
+"メインメニュー（ガレージ）の背景を変更。限定背景はカードパックや日替わりショップで入手できます": "Change the main menu (garage) background. Limited backgrounds come from card packs and the daily shop",
+"毎日 0:00（日本時間）に6つの品揃えが入れ替わります": "Six items rotate every day at 0:00 JST"
 }
