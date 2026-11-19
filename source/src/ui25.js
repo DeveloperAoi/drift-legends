@@ -29,8 +29,8 @@ function grantReward(r) {
   SAVE.save(); UI.refreshTop(); return out.join('、');
 }
 function grantBonus(b) { return grantReward(b.t === 'dia' ? { dia: b.v } : b.t === 'item' ? { item: b.v } : b.t === 'chest' ? { chest: b.v } : b.t === 'car' ? { car: b.v } : { money: b.v }); }
-function bonusLabel(b) { if (!b) return ''; if (b.t === 'dia') return 'ダイヤ ' + b.v; if (b.t === 'chest') { const c = CHESTS.find(x => x.id === b.v); return (c ? c.name : 'チェスト') + 'の中身 1つ'; } if (b.t === 'item') return ITEM_BY_ID[b.v] ? ITEM_BY_ID[b.v].name : 'アイテム'; if (b.t === 'car') return b.name || (CAR_BY_ID[b.v] ? CAR_BY_ID[b.v].name : '車'); return yen(b.v); }
-function rewardLabel(r) { const a = []; if (r.money) a.push(yen(r.money)); if (r.dia) a.push(ICO('gem', '#9ad8ff', 12) + ' ' + r.dia); if (r.chest) { const c = CHESTS.find(x => x.id === r.chest); a.push(c ? c.name : 'チェスト'); } if (r.cons) a.push(Object.entries(r.cons).map(([id, n]) => (CONS_BY_ID[id] ? CONS_BY_ID[id].name : id) + '×' + n).join('・')); if (r.randItem) a.push('ランダムなアイテム'); if (r.item && ITEM_BY_ID[r.item]) a.push(ITEM_BY_ID[r.item].name); return a.join(' ＋ '); }
+function bonusLabel(b) { if (!b) return ''; if (b.t === 'dia') return 'ダイヤ ' + b.v; if (b.t === 'chest') { const c = CHESTS.find(x => x.id === b.v); return (c ? c.name : 'カードパック') + 'の中身 1つ'; } if (b.t === 'item') return ITEM_BY_ID[b.v] ? ITEM_BY_ID[b.v].name : 'アイテム'; if (b.t === 'car') return b.name || (CAR_BY_ID[b.v] ? CAR_BY_ID[b.v].name : '車'); return yen(b.v); }
+function rewardLabel(r) { const a = []; if (r.money) a.push(yen(r.money)); if (r.dia) a.push(ICO('gem', '#9ad8ff', 12) + ' ' + r.dia); if (r.chest) { const c = CHESTS.find(x => x.id === r.chest); a.push(c ? c.name : 'カードパック'); } if (r.cons) a.push(Object.entries(r.cons).map(([id, n]) => (CONS_BY_ID[id] ? CONS_BY_ID[id].name : id) + '×' + n).join('・')); if (r.randItem) a.push('ランダムなアイテム'); if (r.item && ITEM_BY_ID[r.item]) a.push(ITEM_BY_ID[r.item].name); return a.join(' ＋ '); }
 
 // ---- 実績 ----
 function achProgress(a, d) { if (!a.get) return d.ach[a.id] ? [1, 1] : [0, 1]; const cur = Math.max(0, +a.get(d) || 0); return [Math.min(cur, a.goal), a.goal]; }

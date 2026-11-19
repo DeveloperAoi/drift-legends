@@ -1,5 +1,5 @@
 // =====================================================================
-// items.js — チェスト／日替わりショップのアイテム（114種）
+// items.js — カードパック／日替わりショップのアイテム（114種）
 // レア度: コモン / アンコモン / レア / エピック / レジェンダリー
 // =====================================================================
 const RARITY = {
@@ -76,7 +76,7 @@ const BG_THEMES = {
   ['autumn', '紅葉', 'C', { floor: [0.12, 0.07, 0.04], wall: [0.1, 0.05, 0.03], strip: [[1, 0.45, 0.1]], zen: [0.7, 0.45, 0.3], hor: [0.35, 0.18, 0.1], fog: [0.1, 0.05, 0.03], fx: 'leaf', prop: 'trees' }]
 ].forEach(([key, nm, r, th]) => { BG_THEMES[key] = Object.assign({ name: nm }, th); addItem({ id: 'bg_' + key, type: 'bg', name: '背景「' + nm + '」', rarity: r, bg: key }); });
 
-// ---- 限定車両 6種（チェスト限定） ----
+// ---- 限定車両 6種（カードパック限定） ----
 addItem({ id: 'car_lg_kiri', type: 'car', name: 'KIRI GT-APEX "LEGEND"', rarity: 'L', car: 'lg_kiri' });
 addItem({ id: 'car_lg_raijin', type: 'car', name: 'RAIJIN Mk.IV "GOLD"', rarity: 'E', car: 'lg_raijin' });
 addItem({ id: 'car_lg_aurora', type: 'car', name: 'AURORA HYPER X', rarity: 'L', car: 'lg_aurora' });
@@ -94,7 +94,7 @@ CAR_ROWS.push(
   ['lg_neko', 'LEGEND', 'KOGARASU "NEKO"', '猫耳ステッカーの軽MR', 'MR', 160, 190, 780, 200, 6, 9000, 1, 96, 88, 76, 0, 'kei', 3.39, 1.47, 1.18, '#ff4fa0', 0, 'i4', 2.28, 0.45, { chest: 1 }]
 );
 for (const r of CAR_ROWS.slice(-7)) { const c = { id: r[0], maker: r[1], name: r[2], era: r[3], drive: r[4], hp: r[5], torque: r[6], kg: r[7], top: r[8], gears: r[9], redline: r[10], turbo: !!r[11], handling: r[12], drift: r[13], brake: r[14], price: r[15], body: r[16], L: r[17], W: r[18], H: r[19], color: r[20], popup: !!r[21], sound: r[22], wb: r[23], fb: r[24], unlock: r[25] }; if (!CAR_BY_ID[c.id]) { CARS.push(c); CAR_BY_ID[c.id] = c; } }
-MAKERS.LEGEND = { jp: '伝説', color: '#ffb300', desc: 'チェスト限定' };
+MAKERS.LEGEND = { jp: '伝説', color: '#ffb300', desc: 'カードパック限定' };
 // ---- スピードメーター（デザインは meters.js） ----
 [['mt_classic', 'クラシック', 'U'], ['mt_carbon', 'カーボンレース', 'R'], ['mt_neon', 'ネオンリング', 'R'], ['mt_gold', 'ゴールドクロノ', 'E'], ['mt_sakura', 'サクラ', 'U'], ['mt_legend', 'レジェンドプリズム', 'L'],
  ['mt_lcd', 'グリーンLCD', 'C'], ['mt_bar', 'バーグラフ', 'U'], ['mt_retro', 'レトロ80s', 'R'], ['mt_cyber', 'サイバーパンク', 'E'], ['mt_minimal', 'ミニマル', 'C']]
@@ -102,7 +102,7 @@ MAKERS.LEGEND = { jp: '伝説', color: '#ffb300', desc: 'チェスト限定' };
 // ---- 光るナンバー（ナンバープレートのネオン） ----
 [['ホワイト', [1, 1, 1], 'C'], ['ブルー', [0.2, 0.55, 1], 'U'], ['レッド', [1, 0.12, 0.1], 'U'], ['グリーン', [0.15, 1, 0.4], 'U'], ['パープル', [0.7, 0.25, 1], 'R'], ['ゴールド', [1, 0.78, 0.25], 'R'], ['レインボー', [1, 1, 1], 'E', 1]]
   .forEach(([nm, rgb, r, rb], i) => addItem({ id: 'pl_' + i, type: 'plate', name: '光るナンバー「' + nm + '」', rarity: r, rgb, rainbow: !!rb }));
-// ---- アドベントカレンダー限定（チェスト・ショップには出ない） ----
+// ---- アドベントカレンダー限定（カードパック・ショップには出ない） ----
 addItem({ id: 'dc_adv1', type: 'decal', name: '「HOLY NIGHT」ステッカー', rarity: 'E', kind: 'text', text: 'HOLY NIGHT', bg: '#0b3d2a', fg: '#ffd76a', font: 'Arial', lim: 'advent' });
 addItem({ id: 'dc_adv2', type: 'decal', name: '「聖夜」ステッカー', rarity: 'R', kind: 'text', text: '聖夜', bg: '#b0001a', fg: '#fff', font: 'serif', lim: 'advent' });
 addItem({ id: 'pt_adv', type: 'paint', name: 'ホーリーグリーン', rarity: 'R', color: '#0b5d3b', paint: 'pearl', lim: 'advent' });
@@ -113,7 +113,7 @@ addItem({ id: 'mt_holy', type: 'meter', name: 'メーター「ホーリーナイ
 BG_THEMES.holynight = { name: 'ホーリーナイト', floor: [0.06, 0.08, 0.12], wall: [0.04, 0.05, 0.1], strip: [[1, 0.15, 0.15], [0.15, 0.9, 0.35]], zen: [0.18, 0.22, 0.42], hor: [0.08, 0.1, 0.2], fog: [0.03, 0.04, 0.08], fx: 'snow', prop: 'trees', pine: 1 };
 addItem({ id: 'bg_holynight', type: 'bg', name: '背景「ホーリーナイト」', rarity: 'L', bg: 'holynight', lim: 'advent' });
 addItem({ id: 'car_lg_santa', type: 'car', name: 'SANTA EXPRESS（限定車）', rarity: 'L', car: 'lg_santa', lim: 'advent' });
-// ---- ランキング上位の限定報酬（チェスト・ショップには出ない） ----
+// ---- ランキング上位の限定報酬（カードパック・ショップには出ない） ----
 addItem({ id: 'dc_champ', type: 'decal', name: '「CHAMPION」ステッカー', rarity: 'L', kind: 'text', text: 'CHAMPION', bg: '#111', fg: '#ffd700', font: 'Arial', lim: 'rank' });
 addItem({ id: 'mt_champ', type: 'meter', name: 'メーター「チャンピオン」', rarity: 'L', meter: 'mt_champ', lim: 'rank' });
 addItem({ id: 'pl_champ', type: 'plate', name: '光るナンバー「チャンピオンゴールド」', rarity: 'L', rgb: [1, 0.84, 0.2], lim: 'rank' });
@@ -124,18 +124,18 @@ addItem({ id: 'dc_rank3', type: 'decal', name: '「PODIUM」ステッカー', ra
 addItem({ id: 'pt_rank3', type: 'paint', name: 'ブロンズメダリスト', rarity: 'R', color: '#b87333', paint: 'metallic', lim: 'rank' });
 const RANK_POOLS = { 1: ['dc_champ', 'mt_champ', 'pl_champ', 'wh_champ'], 2: ['dc_rank2', 'pt_rank2'], 3: ['dc_rank3', 'pt_rank3'] };
 const ITEM_BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
-// チェスト限定ホイールを WHEEL_STYLES に登録
+// カードパック限定ホイールを WHEEL_STYLES に登録
 for (const it of ITEMS.filter(i => i.type === 'wheel')) WHEEL_STYLES.push({ id: it.id, name: it.name, price: 0, spokes: it.spokes, deep: it.deep, rim: it.rim, chest: 1 });
-// チェスト限定デカールを DECALS に登録
+// カードパック限定デカールを DECALS に登録
 for (const it of ITEMS.filter(i => i.type === 'decal')) DECALS.push({ id: it.id, name: it.name, price: 0, chest: 1 });
 
-// ---- チェスト ----
+// ---- カードパック ----
 const CHESTS = [
-  { id: 'free', name: 'デイリーチェスト', price: 0, daily: 1, odds: { C: 70, U: 22, R: 7, E: 1, L: 0 }, color: '#2fdc7a' },
-  { id: 'bronze', name: 'ブロンズチェスト', price: 300000, odds: { C: 60, U: 28, R: 10, E: 2, L: 0 }, color: '#c07a3a' },
-  { id: 'silver', name: 'シルバーチェスト', price: 900000, odds: { C: 35, U: 35, R: 22, E: 7, L: 1 }, color: '#c8ccd4' },
-  { id: 'gold', name: 'ゴールドチェスト', price: 2500000, odds: { C: 0, U: 30, R: 45, E: 20, L: 5 }, color: '#ffc83d' },
-  { id: 'legend', name: 'レジェンドチェスト', price: 8000000, odds: { C: 0, U: 0, R: 50, E: 38, L: 12 }, color: '#b04dff' }
+  { id: 'free', name: 'デイリーカードパック', price: 0, daily: 1, odds: { C: 70, U: 22, R: 7, E: 1, L: 0 }, color: '#2fdc7a' },
+  { id: 'bronze', name: 'ブロンズカードパック', price: 300000, odds: { C: 60, U: 28, R: 10, E: 2, L: 0 }, color: '#c07a3a' },
+  { id: 'silver', name: 'シルバーカードパック', price: 900000, odds: { C: 35, U: 35, R: 22, E: 7, L: 1 }, color: '#c8ccd4' },
+  { id: 'gold', name: 'ゴールドカードパック', price: 2500000, odds: { C: 0, U: 30, R: 45, E: 20, L: 5 }, color: '#ffc83d' },
+  { id: 'legend', name: 'レジェンドカードパック', price: 8000000, odds: { C: 0, U: 0, R: 50, E: 38, L: 12 }, color: '#b04dff' }
 ];
 function rollChest(chest, rnd = Math.random) {
   let x = rnd() * 100, rar = 'C';

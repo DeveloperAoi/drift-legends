@@ -7,7 +7,7 @@ const fmtJst = t => { const j = new Date(t + 9 * 3600000); const p = n => String
 const fmtLeft2 = ms => { ms = Math.max(0, ms); const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60, p = n => String(n).padStart(2, '0'); return (d ? d + '日 ' : '') + `${p(h)}:${p(m)}:${p(s)}`; };
 const NY_MIDNIGHT = JST('2027-01-01T00:00:00');
 
-// ---- 限定アイテム（イベント報酬専用：チェストには出ない） ----
+// ---- 限定アイテム（イベント報酬専用：カードパックには出ない） ----
 [{ id: 'ev_nye_dc', type: 'decal', name: '「LAST DRIVE 2026」ステッカー', en: '"LAST DRIVE 2026" sticker', rarity: 'E', kind: 'text', text: 'LAST DRIVE 2026', bg: '#05051a', fg: '#ffd76a', font: 'Arial' },
  { id: 'ev_nye_ne', type: 'neon', name: 'カウントダウンネオン', en: 'Countdown Neon', rarity: 'E', rgb: [1, 0.8, 0.3], rainbow: true },
  { id: 'ev_nye_tt', type: 'title', name: '称号「2026 ラストドライバー」', en: 'Title "2026 Last Driver"', rarity: 'E', title: '2026 ラストドライバー', titleEn: '2026 Last Driver' },

@@ -65,7 +65,7 @@ KIT_SLOTS.forEach(([slot, nm, en, shape], si) => KIT_FIN.forEach(([fj, fe, col],
  ['storm', 'サンダーストーム', 'Thunderstorm', 'E', { floor: [0.05, 0.05, 0.07], wall: [0.04, 0.04, 0.06], strip: [[0.6, 0.7, 1]], zen: [0.2, 0.22, 0.3], hor: [0.08, 0.08, 0.12], fog: [0.04, 0.04, 0.06], fx: 'snow' }],
  ['royal', 'ロイヤルパレス', 'Royal Palace', 'L', { floor: [0.2, 0.05, 0.25], wall: [0.15, 0.03, 0.2], strip: [[1, 0.8, 0.3], [0.8, 0.4, 1]], zen: [0.7, 0.4, 0.9], hor: [0.35, 0.15, 0.45], fog: [0.15, 0.04, 0.2], fx: 'confetti' }]]
   .forEach(([key, nm, en, r, th]) => { BG_THEMES[key] = Object.assign({ name: nm }, th); addItem({ id: 'bg_' + key, type: 'bg', name: '背景「' + nm + '」', en: 'Background "' + en + '"', rarity: r, bg: key }); });
-// ---- 音楽（チェスト限定・ショップ販売） ----
+// ---- 音楽（カードパック限定・ショップ販売） ----
 const BONUS_TRACKS = [
   ['tb1', 'CRYSTAL DRIFT', 154, 52, 1, 201, [0, 5, 3, 4], 'chest', 'E'], ['tb2', 'GOLDEN APEX', 158, 55, 1, 211, [5, 3, 0, 4], 'chest', 'L'], ['tb3', 'NEON SAMURAI', 160, 50, 1, 223, [0, 6, 5, 4], 'chest', 'R'], ['tb4', 'LUNAR COUNTERSTEER', 148, 57, 1, 233, [0, 3, 6, 4], 'chest', 'E'],
   ['tb5', 'MIDNIGHT EXPRESS', 156, 54, 1, 241, [0, 5, 6, 4], 'shop', 'R'], ['tb6', 'SUNRISE HIGHWAY', 150, 60, 0, 251, [0, 4, 5, 3], 'shop', 'U'], ['tb7', 'VELVET THUNDER', 162, 53, 1, 263, [5, 6, 0, 4], 'shop', 'R'], ['tb8', 'DIAMOND RUSH', 164, 58, 1, 271, [0, 5, 3, 6], 'diamond', 'L']

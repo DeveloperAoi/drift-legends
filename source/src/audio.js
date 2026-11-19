@@ -75,7 +75,7 @@ class AudioSys {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7); n.connect(f); f.connect(g); g.connect(this.sfxBus); n.start(t); n.stop(t + 0.75);
     this.tone(70, 0.35, 'sine', 0.45, 0, 0.5); this.tone(140, 0.25, 'sawtooth', 0.12, 0.02, 2.2);
   }
-  chestOpen(rar) { this.duckMusic(0.35, 2.2); // チェストを開ける音：きしみ→ガタガタ→開く→レア度に応じたきらめき
+  chestOpen(rar) { this.duckMusic(0.35, 2.2); // カードパックを開ける音：きしみ→ガタガタ→開く→レア度に応じたきらめき
     if (!this.ok) return; const c = this.ctx, t = c.currentTime;
     for (let k = 0; k < 4; k++) this.noiseBurst(0.07, 300 + k * 60, 1.2, 0.18, k * 0.16, 'bandpass');
     this.tone(90, 0.12, 'square', 0.12, 0.65, 0.6); this.noiseBurst(0.35, 1800, 0.6, 0.18, 0.7, 'bandpass');

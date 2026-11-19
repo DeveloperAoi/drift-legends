@@ -47,7 +47,7 @@ function ICO(name, color, size = 22, extra = '') {
   const p = ICO_PATHS[name] || ICO_PATHS.gem;
   return `<svg class="ico" viewBox="0 0 48 48" width="${size}" height="${size}" style="color:${color || 'currentColor'};vertical-align:middle;flex:0 0 auto${extra}" aria-hidden="true">${p}</svg>`;
 }
-// 宝箱（チェスト）アイコン：色ごとにグラデーションと宝石
+// 宝箱（カードパック）アイコン：色ごとにグラデーションと宝石
 function chestIcon(c, size = 44) {
   const id = 'cg' + (++_icoN), col = c.color, gem = { free: '#7dffb0', bronze: '#ff9a4a', silver: '#9ad0ff', gold: '#ff3a3a', legend: '#ffd400' }[c.id] || '#fff';
   return `<svg class="ico" viewBox="0 0 64 64" width="${size}" height="${size}" style="flex:0 0 auto"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient>

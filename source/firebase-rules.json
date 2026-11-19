@@ -157,23 +157,23 @@
         ],
         "$id": {
           ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
-          ".validate": "newData.child('title').isString() && newData.child('title').val().length <= 80 && newData.child('msg').isString() && newData.child('msg').val().length <= 600 && newData.child('type').val().matches(/^(normal|important|emergency|update)$/) && newData.child('end').isNumber()"
+          ".validate": "newData.hasChildren(['title','msg','type','end'])"
         }
       },
       "maint": {
         ".read": true,
         ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
-        ".validate": "newData.child('on').isBoolean()"
+        ".validate": "newData.hasChildren(['on'])"
       },
       "reset": {
         ".read": true,
         ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
-        ".validate": "newData.child('state').val().matches(/^(scheduled|cancelled|done)$/) && newData.child('at').isNumber()"
+        ".validate": "newData.hasChildren(['state','at'])"
       },
       "update": {
         ".read": true,
         ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
-        ".validate": "newData.child('version').isString() && newData.child('version').val().length <= 12"
+        ".validate": "newData.hasChildren(['version'])"
       },
       "log": {
         ".read": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",

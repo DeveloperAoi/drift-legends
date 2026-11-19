@@ -58,7 +58,7 @@
     .forEach(([slot, shape, nm, en], i) => { const [fj, fe, col] = KIT_FIN[(i * 3) % KIT_FIN.length]; addItem({ id: 'kit3_' + i, type: 'kit', name: fj + nm, en: fe + ' ' + en, rarity: R3[(i + 7) % 10], slot, shape, fin: col, chrome: (i * 3) % KIT_FIN.length < 2 }); });
 }
 // ---- v2.3 新車 ----
-addCar(['ev_bus', 'EVENT', 'MIKAZUKI CITY LINER', 'チェスト限定・路線バス（ディーゼル）', 'FR', 320, 1100, 3200, 140, 6, 3200, 1, 52, 70, 50, 0, 'bus', 8.2, 2.4, 2.95, '#f2f2ee', 0, 'diesel', 4.6, 0.55, { chest: 1 }]);
+addCar(['ev_bus', 'EVENT', 'MIKAZUKI CITY LINER', 'カードパック限定・路線バス（ディーゼル）', 'FR', 320, 1100, 3200, 140, 6, 3200, 1, 52, 70, 50, 0, 'bus', 8.2, 2.4, 2.95, '#f2f2ee', 0, 'diesel', 4.6, 0.55, { chest: 1 }]);
 addCar(['eu_toro', 'EUROPA', 'TORO VELENO V12', '2020 V12ミッドシップ・スーパーカー', 'MR', 770, 720, 1525, 350, 7, 8500, 0, 88, 84, 94, 32000000, 'wedge', 4.8, 2.03, 1.13, '#7adf20', 0, 'v12', 2.7, 0.43, null]);
 addCar(['eu_torino', 'EUROPA', 'TORO DIABOLO SV', '1997 V12ミッドシップ・リトラ', 'MR', 520, 580, 1450, 325, 5, 7500, 0, 80, 86, 82, 14000000, 'wedge', 4.47, 2.04, 1.11, '#ff7a00', 1, 'v12', 2.65, 0.42, null]);
 addItem({ id: 'car_ev_bus', type: 'car', name: 'MIKAZUKI CITY LINER（バス）', en: 'MIKAZUKI CITY LINER (Bus)', rarity: 'L', car: 'ev_bus' });

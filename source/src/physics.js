@@ -82,7 +82,7 @@ function computeSpec(car, tune) {
     downF: pick([0, 0.08, 0.14, 0.2, 0.26, 0.05, 0.16, 0.24, 0.32, 0.06, 0.04, 0.1, 0.2, 0, 0.04], look.front) + ((look.side || 0) ? 0.03 : 0), downR: pick([0, 0.15, 0.42, 0.68, 0.85, 0.95, 1.02, 0.3, 0.2, 0.95, 0.8, 0.6, 0.25, 0.7, 1.1, 0.12, 0.5, 1.0, 0.9], look.wing) + pick([0, 0.04, 0.08], look.rear),
     sound, muffler: tune.muffler, rotary: sound === 'rotary', yawDamp: 0.1 + (tune.toeR > 0 ? tune.toeR * 0.4 : tune.toeR * 0.6)
   };
-  // チェスト限定チューニングパーツの効果
+  // カードパック限定チューニングパーツの効果
   const SP = typeof ITEM_BY_ID !== 'undefined' && tune.special ? ITEM_BY_ID[tune.special] : null;
   if (SP && SP.fx) { const f = SP.fx;
     if (f.hp) { spec.hp *= f.hp; spec.P *= f.hp; spec.Tpeak *= f.hp; spec.torqueDisp *= f.hp; }

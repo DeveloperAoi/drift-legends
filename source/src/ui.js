@@ -93,7 +93,7 @@ function saveLabel() {
 function mapUnlocked(m) { const u = m.unlock; if (!u) return true; const d = SAVE.data; if (u.story) return d.story.cleared.includes(u.story); if (u.level) return SAVE.level() >= u.level; if (u.event) return eventActive(); return true; }
 function mapLockText(m) { const u = m.unlock; if (!u) return ''; if (u.story) return `ストーリー第${u.story}話クリアで解放`; if (u.level) return `Lv.${u.level}で解放`; if (u.event) return 'クリスマスイベント期間限定'; return ''; }
 function carBuyable(c) { const u = c.unlock; if (!u) return true; if (u.event || u.chest) return false; if (u.story) return SAVE.data.story.cleared.includes(u.story); if (u.level) return SAVE.level() >= u.level; return true; }
-function carLockText(c) { const u = c.unlock; if (!u) return ''; if (u.chest) return 'チェスト限定'; if (u.event) return 'イベント報酬限定'; if (u.story) return `ストーリー第${u.story}話クリアで販売`; if (u.level) return `Lv.${u.level}で販売`; return ''; }
+function carLockText(c) { const u = c.unlock; if (!u) return ''; if (u.chest) return 'カードパック限定'; if (u.event) return 'イベント報酬限定'; if (u.story) return `ストーリー第${u.story}話クリアで販売`; if (u.level) return `Lv.${u.level}で販売`; return ''; }
 function eventActive() { if (typeof DEV !== 'undefined' && DEV.owner && SAVE.data && SAVE.data.settings.devEvent) return true; const now = new Date(); const s = new Date(XMAS_EVENT.start + 'T00:00:00+09:00'), e = new Date(XMAS_EVENT.end + 'T23:59:59+09:00'); return now >= s && now <= e; }
 function xmasThemeOn() { const t = SAVE.data.settings.xmasTheme; return t === 'on' || (t === 'auto' && eventActive()); }
 const TRACK_CACHE = {};
@@ -131,7 +131,7 @@ function grantChestItem(it) { // 新規なら付与、重複なら¥に換金
 
 // ---------------- ロード画面 ----------------
 const LOADER = {
-  tips: ['コーナー手前でサイドブレーキを一瞬引くと、きっかけを作りやすい。', 'ドリフト中はアクセルを抜きすぎないこと。角度はアクセルで、向きはハンドルで調整。', 'ニトロはコーナー立ち上がりで使うと最も効果的。', 'チェストで出る限定チューンは、1台に1つだけ装着できる。', '日替わりショップは毎日0:00（日本時間）に入れ替わる。', 'デイリーチェストは毎日1回無料で開けられる。', 'デカールは「貼り付け位置」で位置・大きさ・回転を自由に変えられる。', 'ホーム背景はチェスト画面の「ホーム背景」タブから変更できる。', '重複したアイテムはレア度に応じて¥に換金される。', 'LSDを強めると、ドリフトの維持がしやすくなる。', '雪や雨の日はグリップが落ちる。早めのブレーキを。', '峠チャレンジは路肩に触れずに走り切るとボーナス。', 'オンライン対戦は友達と同じ部屋コードを入力するだけ。', 'スマホならジャイロ操作も使える（設定から）。', 'ウイングを付けると高速コーナーで安定する。', 'データは自動で保存される。', 'ドリフトアシストは設定で強さを変えられる。慣れたら弱めてみよう。', 'カメラ切替でボンネット視点や車内視点も楽しめる。'],
+  tips: ['コーナー手前でサイドブレーキを一瞬引くと、きっかけを作りやすい。', 'ドリフト中はアクセルを抜きすぎないこと。角度はアクセルで、向きはハンドルで調整。', 'ニトロはコーナー立ち上がりで使うと最も効果的。', 'カードパックで出る限定チューンは、1台に1つだけ装着できる。', '日替わりショップは毎日0:00（日本時間）に入れ替わる。', 'デイリーカードパックは毎日1回無料で開けられる。', 'デカールは「貼り付け位置」で位置・大きさ・回転を自由に変えられる。', 'ホーム背景はカードパック画面の「ホーム背景」タブから変更できる。', '重複したアイテムはレア度に応じて¥に換金される。', 'LSDを強めると、ドリフトの維持がしやすくなる。', '雪や雨の日はグリップが落ちる。早めのブレーキを。', '峠チャレンジは路肩に触れずに走り切るとボーナス。', 'オンライン対戦は友達と同じ部屋コードを入力するだけ。', 'スマホならジャイロ操作も使える（設定から）。', 'ウイングを付けると高速コーナーで安定する。', 'データは自動で保存される。', 'ドリフトアシストは設定で強さを変えられる。慣れたら弱めてみよう。', 'カメラ切替でボンネット視点や車内視点も楽しめる。'],
   scenes: ['night', 'sunset', 'snow', 'neon', 'sakura', 'dawn'],
   draw(cv, sc) {
     const W = cv.width = cv.clientWidth * Math.min(2, devicePixelRatio || 1) || 800, H = cv.height = cv.clientHeight * Math.min(2, devicePixelRatio || 1) || 450; const g = cv.getContext('2d'); const r = mulberry32((Math.random() * 1e9) | 0);
@@ -182,7 +182,7 @@ function adventCountdown() {
   if (A.M === 12 && A.D <= 25) { const nx = A.D < 25 ? `次の扉まで ${fmtLeft(jstMidnight(A.Y, 12, A.D + 1) - now)}` : '最後の扉が開きました！'; return `<span>${nx}</span><span>${A.D < 25 ? `クリスマスまで あと <b>${25 - A.D}</b>日` : '<b>メリークリスマス！</b>'}</span>`; }
   const y = A.M === 12 ? A.Y + 1 : A.Y; return `<span>開始まで ${fmtLeft(jstMidnight(y, 12, 1) - now)}</span><span>12/1 0:00（日本時間）スタート</span>`;
 }
-function adventRewardLabel(rw, long) { if (!rw) return ''; if (rw.t === 'money') return yen(rw.v); if (rw.t === 'pts') return 'クリスマスポイント ' + rw.v.toLocaleString() + 'pt'; if (rw.t === 'chest') return (CHESTS.find(c => c.id === rw.v) || {}).name || 'チェスト'; const it = ITEM_BY_ID[rw.v]; return it ? it.name : rw.v; }
+function adventRewardLabel(rw, long) { if (!rw) return ''; if (rw.t === 'money') return yen(rw.v); if (rw.t === 'pts') return 'クリスマスポイント ' + rw.v.toLocaleString() + 'pt'; if (rw.t === 'chest') return (CHESTS.find(c => c.id === rw.v) || {}).name || 'カードパック'; const it = ITEM_BY_ID[rw.v]; return it ? it.name : rw.v; }
 function adventRewardIcon(rw, size) { if (rw.t === 'money') return ICO('coin', '#ffcf3d', size); if (rw.t === 'pts') return ICO('tree', '#2fdc7a', size); if (rw.t === 'chest') return chestIcon(CHESTS.find(c => c.id === rw.v), size); return itemIconSvg(ITEM_BY_ID[rw.v], size); }
 // ---- 週間ランキングの種目 ----
 const LB_BOARDS = [
@@ -354,7 +354,7 @@ const UI = {
     if (!window.DL_STANDALONE) h += T('online', 'globe', 'オンライン対戦', 'ONLINE BATTLE', { col: '#5ad1ff' });
     if (window.DL_FB) h += T('ranking', 'trophy', '週間ランキング', 'WEEKLY RANKING', { col: '#ffcf3d', badge: 'NEW' });
     h += `</div><div class="mm-sec">CAR</div><div class="mm-grid">`;
-    h += T('garage', 'garage', 'ガレージ', 'GARAGE') + T('tuning', 'wrench', 'チューニング', 'TUNING & CUSTOM') + T('shop', 'shop', 'カーショップ', 'CAR SHOP') + T('pshop', 'gear', 'パーツショップ', 'PARTS & EXTRAS', { badge: 'NEW' }) + T('diamond', 'gem', 'ダイヤ', 'DIAMOND SHOP & RACES', { col: '#9ad8ff', badge: diaRaces().some(c => !SAVE.data.diaCh[c.id]) ? 'RACE' : '' }) + T('bag', 'collection', 'バックパック', 'BACKPACK', { badge: (SAVE.data.medals.g + SAVE.data.medals.s + SAVE.data.medals.b) ? 'MEDAL' : '', bdc: 'g' }) + T('chest', 'gift', 'チェスト・ショップ', 'CHESTS & SHOP', { badge: freeChest ? 'FREE' : '', bdc: 'g' });
+    h += T('garage', 'garage', 'ガレージ', 'GARAGE') + T('tuning', 'wrench', 'チューニング', 'TUNING & CUSTOM') + T('shop', 'shop', 'カーショップ', 'CAR SHOP') + T('pshop', 'gear', 'パーツショップ', 'PARTS & EXTRAS', { badge: 'NEW' }) + T('diamond', 'gem', 'ダイヤ', 'DIAMOND SHOP & RACES', { col: '#9ad8ff', badge: diaRaces().some(c => !SAVE.data.diaCh[c.id]) ? 'RACE' : '' }) + T('bag', 'collection', 'バックパック', 'BACKPACK', { badge: (SAVE.data.medals.g + SAVE.data.medals.s + SAVE.data.medals.b) ? 'MEDAL' : '', bdc: 'g' }) + T('chest', 'gift', 'カードパック・ショップ', 'CARD PACKS & SHOP', { badge: freeChest ? 'FREE' : '', bdc: 'g' });
     h += `</div><div class="mm-sec">EVENT</div><div class="mm-grid">`;
     h += T('events', 'tree', 'イベント', 'EVENTS', { col: '#2fdc7a', badge: xm ? '開催中' : '' , bdc: 'g' }) + T('advent', 'calendar', 'アドベント', 'ADVENT CALENDAR', { col: '#ffd76a', badge: advOpen ? 'OPEN' : '' });
     h += T('ach', 'medal2', '実績', 'ACHIEVEMENTS', { col: '#ffcf3d', badge: achClaimable() ? '受取' : '' }) + T('codes', 'code', 'コード入力', 'REDEEM CODE', { col: '#9ad8ff' }) + T('tutorial', 'book', 'チュートリアル', 'HOW TO PLAY', { col: '#aab' });
@@ -528,15 +528,15 @@ const UI = {
     }, 120);
   },
 
-  // ---------------- チェスト・日替わりショップ ----------------
+  // ---------------- カードパック・日替わりショップ ----------------
   r_chest() {
-    $('panelTitle').textContent = 'CHESTS & SHOP'; const d = SAVE.data; if (!this.tab) this.tab = 'chest'; this.show.setCar(SAVE.cur());
-    const tabs = [['chest', ICO('gift', '#ffcf3d', 16) + ' チェスト'], ['shop', ICO('shop', '#ffcf3d', 16) + ' 日替わり'], ['col', ICO('collection', '#ffcf3d', 16) + ' コレクション'], ['bg', ICO('image', '#ffcf3d', 16) + ' ホーム背景']];
+    $('panelTitle').textContent = 'CARD PACKS & SHOP'; const d = SAVE.data; if (!this.tab) this.tab = 'chest'; this.show.setCar(SAVE.cur());
+    const tabs = [['chest', ICO('gift', '#ffcf3d', 16) + ' カードパック'], ['shop', ICO('shop', '#ffcf3d', 16) + ' 日替わり'], ['col', ICO('collection', '#ffcf3d', 16) + ' コレクション'], ['bg', ICO('image', '#ffcf3d', 16) + ' ホーム背景']];
     let html = `<div class="tabs">${tabs.map(([k, n]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${n}</button>`).join('')}</div>`;
     const rb = r => `<span class="rar" style="background:${RARITY[r].color}">${RARITY[r].name}</span>`;
     if (this.tab === 'chest') { html += this.packChestHTML(); } if (false) {
       const today = jstDateKey(); const freeOk = d.chest.freeDate !== today;
-      html += `<div class="note">チェストを開けると、限定のデカール・カラー・ホイール・ネオン・キャリパー・チューニングパーツ・ホーム背景・特別な限定車のどれか1つが出ます。すでに持っているアイテムが出た場合はレア度に応じて¥に換金されます。</div>`;
+      html += `<div class="note">カードパックを開けると、限定のデカール・カラー・ホイール・ネオン・キャリパー・チューニングパーツ・ホーム背景・特別な限定車のどれか1つが出ます。すでに持っているアイテムが出た場合はレア度に応じて¥に換金されます。</div>`;
       for (const c of CHESTS) {
         const can = c.daily ? freeOk : true;
         html += `<div class="chest" style="--cc:${c.color}"><div class="ch-top"><div class="ch-ic">${chestIcon(c, 50)}</div><div class="ch-nm">${c.name}<small>${c.daily ? (freeOk ? '本日 1回無料' : '明日 0:00（日本時間）に再び開けられます') : yen(c.price)}</small></div>
@@ -544,7 +544,7 @@ const UI = {
           <table class="odds"><tr>${RAR_ORDER.map(r => `<th style="color:${RARITY[r].color}">${RARITY[r].name}</th>`).join('')}</tr><tr>${RAR_ORDER.map(r => `<td>${c.odds[r] || 0}%</td>`).join('')}</tr></table></div>`;
       }
       const cnt = {}; ITEMS.forEach(i => cnt[i.rarity] = (cnt[i.rarity] || 0) + 1);
-      html += `<div class="h3">提供割合について</div><div class="note">上の表は各チェストでそのレア度が出る確率です。レア度が決まった後、そのレア度のアイテムの中から均等な確率で1つ選ばれます。<br>${RAR_ORDER.map(r => `${RARITY[r].name}: ${cnt[r]}種類（1種あたり最大 ${(Math.max(...CHESTS.map(c => c.odds[r] || 0)) / cnt[r]).toFixed(2)}%）・重複時 ${yen(RARITY[r].dup)}`).join('<br>')}</div>`;
+      html += `<div class="h3">提供割合について</div><div class="note">上の表は各カードパックでそのレア度が出る確率です。レア度が決まった後、そのレア度のアイテムの中から均等な確率で1つ選ばれます。<br>${RAR_ORDER.map(r => `${RARITY[r].name}: ${cnt[r]}種類（1種あたり最大 ${(Math.max(...CHESTS.map(c => c.odds[r] || 0)) / cnt[r]).toFixed(2)}%）・重複時 ${yen(RARITY[r].dup)}`).join('<br>')}</div>`;
     }
     if (this.tab === 'shop') {
       const key = srvDateKey(); if (d.shopBuy.date !== key) { d.shopBuy = { date: key, ids: [] }; }
@@ -562,7 +562,7 @@ const UI = {
     }
     if (this.tab === 'bg') {
       const cur = d.settings.bg || 'garage';
-      html += `<div class="note">ホーム画面（ガレージ）の背景を変更できます。限定背景はチェストや日替わりショップで入手できます。</div><div class="opt-row">`;
+      html += `<div class="note">ホーム画面（ガレージ）の背景を変更できます。限定背景はカードパックや日替わりショップで入手できます。</div><div class="opt-row">`;
       html += Object.keys(BG_THEMES).map(k => { const it = ITEM_BY_ID['bg_' + k]; const h = k === 'garage' || (it && invHas(it.id)); return `<button class="opt ${cur === k ? 'on' : ''}" data-a="setBg" data-v="${k}" ${h ? '' : 'disabled'}>${it ? bgIcon(it, 30) : bgIcon({ bg: 'garage' }, 30)} ${h ? '' : ICO('lock', '#888', 14)}${BG_THEMES[k].name || 'ガレージ'}${it ? `<span class="pr" style="color:${RARITY[it.rarity].color}">${RARITY[it.rarity].name}</span>` : '<span class="pr">標準</span>'}</button>`; }).join('');
       html += `</div>`;
     }
@@ -573,7 +573,7 @@ const UI = {
   },
   a_openChest(v) {
     const [id, ns] = String(v).split(':'); const n = Math.max(1, Math.min(10, +ns || 1)); const c = CHESTS.find(x => x.id === id); const d = SAVE.data; if (!c) return;
-    if (c.daily) { if (d.chest.freeDate === jstDateKey()) return this.toast('本日の無料チェストは受取済みです'); d.chest.freeDate = jstDateKey(); }
+    if (c.daily) { if (d.chest.freeDate === jstDateKey()) return this.toast('本日の無料カードパックは受取済みです'); d.chest.freeDate = jstDateKey(); }
     else if (!SAVE.spend(c.price * n)) return;
     const res = [], bonus = []; d.boosts = d.boosts || {}; for (let k = 0; k < (c.daily ? 1 : n); k++) { let cc = c; if (d.boosts.luck > 0) { d.boosts.luck--; const o = Object.assign({}, c.odds); const take = (o.C || 0) * 0.5 + (o.U || 0) * 0.3; o.C = (o.C || 0) * 0.5; o.U = (o.U || 0) * 0.7; const hiSum = RAR_ORDER.filter(r => r !== 'C' && r !== 'U').reduce((s, r) => s + (o[r] || 0), 0) || 1; for (const r of RAR_ORDER) if (r !== 'C' && r !== 'U') o[r] = (o[r] || 0) + take * (o[r] || 0) / hiSum; cc = Object.assign({}, c, { odds: o }); } const it = rollChest(cc); res.push({ it, g: grantChestItem(it) }); if (c.daily || Math.random() < 0.2) { const cn = randCons(Math.random, !!c.daily); giveCons(cn.id); bonus.push(cn); } }
     if (bonus.length) setTimeout(() => this.toast('おまけ：' + bonus.map(b => b.name).join('・') + ' をバックパックに追加'), 1600);
@@ -602,7 +602,7 @@ const UI = {
     if (this.tab === 'wheel') {
       const ws = WHEEL_STYLES.filter(w => !w.xmas && !w.chest && (!w.only || car.series === w.only));
       h += `<div class="pgrid">${ws.map(w => card(lk.wheel === w.id, lk.owned.wheel.includes(w.id), wheelIcon({ spokes: w.spokes || 5, rim: w.rim || '#c8c8cc', deep: w.deep }, 40), w.name, (w.spokes ? w.spokes + '本スポーク' : 'スチール') + (w.deep ? '・深リム' : ''), w.price, 'lookWheel', w.id)).join('')}</div>`;
-      h += `<div class="note">ホイールの色はカスタマイズ画面で変えられます。限定ホイールはチェスト・イベントで手に入ります。</div>`;
+      h += `<div class="note">ホイールの色はカスタマイズ画面で変えられます。限定ホイールはカードパック・イベントで手に入ります。</div>`;
     }
     if (this.tab === 'tire') {
       h += `<div class="pgrid">${PARTS.tire.opts.map(o => card(t.tire === o.id, t.owned.tire.includes(o.id), ICO('tire', '#ffcf3d', 36), o.name, `グリップ ${Math.round(o.mu * 100)} ・ 滑りやすさ ${Math.round(o.slide * 100)} ・ 雨 ${Math.round(o.wet * 100)} ・ 雪 ${Math.round(o.snow * 100)}`, o.price, 'tuneOpt', 'tire:' + o.id)).join('')}</div>`;
@@ -629,11 +629,11 @@ const UI = {
       const types = ['kit', 'wheel', 'neon', 'paint', 'decal', 'meter', 'plate', 'caliper']; if (!this.psType || !types.includes(this.psType)) this.psType = 'kit';
       h += `<div class="opt-row">${types.map(t => `<button class="opt ${this.psType === t ? 'on' : ''}" data-a="psType" data-v="${t}">${ITEM_TYPES[t]}</button>`).join('')}</div>`;
       const list = ITEMS.filter(i => i.type === this.psType && !i.lim).sort((a, b) => RAR_ORDER.indexOf(a.rarity) - RAR_ORDER.indexOf(b.rarity));
-      h += `<div class="note">ショップで買ったアイテムはカスタマイズ画面で装着できます（チェストからも出ます）。</div><div class="pgrid">${list.map(i => { const own = invHas(i.id); return `<button class="pcard ${own ? 'on' : ''}" data-a="${own ? 'noop' : 'buyItem'}" data-v="${i.id}"><span class="pc-ic">${this.itemIcon(i, 38)}</span><span class="pc-tx"><b>${esc(i.name)}</b><small style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}${i.desc ? ' ・ ' + esc(i.desc) : ''}</small></span><span class="pc-pr">${own ? '所持済み' : yen(Math.round(RARITY[i.rarity].shop * 0.9))}</span></button>`; }).join('')}</div>`;
+      h += `<div class="note">ショップで買ったアイテムはカスタマイズ画面で装着できます（カードパックからも出ます）。</div><div class="pgrid">${list.map(i => { const own = invHas(i.id); return `<button class="pcard ${own ? 'on' : ''}" data-a="${own ? 'noop' : 'buyItem'}" data-v="${i.id}"><span class="pc-ic">${this.itemIcon(i, 38)}</span><span class="pc-tx"><b>${esc(i.name)}</b><small style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}${i.desc ? ' ・ ' + esc(i.desc) : ''}</small></span><span class="pc-pr">${own ? '所持済み' : yen(Math.round(RARITY[i.rarity].shop * 0.9))}</span></button>`; }).join('')}</div>`;
     }
     if (this.tab === 'music') {
-      h += `<div class="note">買った曲はレース中のBGMに加わり、ミュージックプレイヤー（設定 → サウンド）で選べます。チェスト限定・ダイヤ限定の曲もあります。</div><div class="pgrid">${MUSIC_SHOP.map(([id, pr]) => { const it = ITEM_BY_ID[id], own = invHas(id); return `<button class="pcard ${own ? 'on' : ''}" data-a="${own ? 'playItemMusic' : 'buyMusic'}" data-v="${id}"><span class="pc-ic">${ICO('music', '#ff8ad8', 34)}</span><span class="pc-tx"><b>${esc(it.name)}</b><small>${own ? 'タップで再生' : 'ショップ限定曲'}</small></span><span class="pc-pr">${own ? '所持済み' : yen(pr)}</span></button>`; }).join('')}</div>`;
-      const ch = ITEMS.filter(i => i.type === 'music' && !i.lim); h += `<div class="h3">チェスト限定の曲</div><div class="pgrid">${ch.map(i => `<div class="pcard ${invHas(i.id) ? 'on' : ''}"><span class="pc-ic">${ICO('gift', '#ffcf3d', 30)}</span><span class="pc-tx"><b>${esc(i.name)}</b><small style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}</small></span><span class="pc-pr">${invHas(i.id) ? '所持済み' : 'チェスト限定'}</span></div>`).join('')}</div>`;
+      h += `<div class="note">買った曲はレース中のBGMに加わり、ミュージックプレイヤー（設定 → サウンド）で選べます。カードパック限定・ダイヤ限定の曲もあります。</div><div class="pgrid">${MUSIC_SHOP.map(([id, pr]) => { const it = ITEM_BY_ID[id], own = invHas(id); return `<button class="pcard ${own ? 'on' : ''}" data-a="${own ? 'playItemMusic' : 'buyMusic'}" data-v="${id}"><span class="pc-ic">${ICO('music', '#ff8ad8', 34)}</span><span class="pc-tx"><b>${esc(it.name)}</b><small>${own ? 'タップで再生' : 'ショップ限定曲'}</small></span><span class="pc-pr">${own ? '所持済み' : yen(pr)}</span></button>`; }).join('')}</div>`;
+      const ch = ITEMS.filter(i => i.type === 'music' && !i.lim); h += `<div class="h3">カードパック限定の曲</div><div class="pgrid">${ch.map(i => `<div class="pcard ${invHas(i.id) ? 'on' : ''}"><span class="pc-ic">${ICO('gift', '#ffcf3d', 30)}</span><span class="pc-tx"><b>${esc(i.name)}</b><small style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}</small></span><span class="pc-pr">${invHas(i.id) ? '所持済み' : 'カードパック限定'}</span></div>`).join('')}</div>`;
     }
     this.stageInfo(`<div class="car-name">${car.name}</div><div class="car-sub">${[lk.extra, SAVE.data.exSlot2 ? lk.extra2 : ''].filter(x => x && EXTRA_BY_ID[x]).map(x => EXTRA_BY_ID[x].name).join(' ＋ ') ? 'エキストラ: ' + [lk.extra, SAVE.data.exSlot2 ? lk.extra2 : ''].filter(x => x && EXTRA_BY_ID[x]).map(x => EXTRA_BY_ID[x].name).join(' ＋ ') : ''}</div>`);
     return h;
@@ -664,7 +664,7 @@ const UI = {
     if (this.tab === 'cons') {
       const ch = boostChips(); h += `<div class="h3">使用中のブースト</div>` + (ch ? `<div class="boostbar big">${ch}</div>` : `<div class="note">使用中のブーストはありません。</div>`);
       const own = CONSUMABLES.filter(c => (d.cons || {})[c.id] > 0);
-      h += `<div class="h3">持っている消費アイテム</div>` + (own.length ? `<div class="pgrid">${own.map(c => `<div class="pcard"><span class="pc-ic">${consIcon(c, 40)}</span><span class="pc-tx"><b>${esc(c.name)} ×${d.cons[c.id]}</b><small>${esc(c.desc)}</small></span><button class="btn pri" data-a="useCons" data-v="${c.id}">使う</button></div>`).join('')}</div>` : `<div class="note">パーツショップ・ダイヤショップ・チェストのおまけ・毎日の無料チェスト・ダイヤレースで手に入ります。</div>`);
+      h += `<div class="h3">持っている消費アイテム</div>` + (own.length ? `<div class="pgrid">${own.map(c => `<div class="pcard"><span class="pc-ic">${consIcon(c, 40)}</span><span class="pc-tx"><b>${esc(c.name)} ×${d.cons[c.id]}</b><small>${esc(c.desc)}</small></span><button class="btn pri" data-a="useCons" data-v="${c.id}">使う</button></div>`).join('')}</div>` : `<div class="note">パーツショップ・ダイヤショップ・カードパックのおまけ・毎日の無料カードパック・ダイヤレースで手に入ります。</div>`);
       h += `<div class="note">同じ効果のアイテムを使うと時間が延長されます（最大3時間）。時間はゲームを閉じていても進みます。ランキングのスコアには影響しません。</div>`;
     }
     if (this.tab === 'items') h += this.invHTML();
@@ -674,7 +674,7 @@ const UI = {
       h += `<div class="note">持っているアイテム ${own.length}種類（重複は ×数 で表示）</div>`;
       for (const ty of Object.keys(ITEM_TYPES)) { const list = own.filter(i => i.type === ty); if (!list.length) continue;
         h += `<div class="h3">${ITEM_TYPES[ty]}（${list.length}）</div><div class="col-grid">${list.map(i => `<div class="citem" style="border-color:${RARITY[i.rarity].color}"><div class="si-ic">${this.itemIcon(i, 36)}</div><div class="ci-nm">${esc(i.name)}${(d.inv[i.id] || 1) > 1 ? ' ×' + d.inv[i.id] : ''}</div></div>`).join('')}</div>`; }
-      if (!own.length) h += `<div class="note">チェストやアドベントカレンダー、ランキングの報酬で手に入ります。</div>`;
+      if (!own.length) h += `<div class="note">カードパックやアドベントカレンダー、ランキングの報酬で手に入ります。</div>`;
     }
     if (this.tab === 'extra') {
       const list = EXTRAS.filter(e => d.extras.includes(e.id));
@@ -826,7 +826,7 @@ const UI = {
       const icon = opened ? adventRewardIcon(rw, 34) : can ? ICO('gift', today ? '#ffd76a' : '#ff9a9a', 30) : ICO('lock', '#666', 22);
       html += `<button class="door ${k === 25 ? 'big' : ''} ${opened ? 'opened' : ''} ${can ? 'can' : ''} ${today ? 'today' : ''}" data-a="${can ? 'advOpen' : 'advPeek'}" data-v="${k}"><span class="dn">${k}</span><span class="di">${icon}</span><span class="dl">${opened ? esc(adventRewardLabel(rw, true)) : can ? (today ? 'きょうの扉！' : '開けられます') : '12/' + k}</span></button>`;
     }
-    html += `</div><div class="note">・その日の扉は12/25まで開けられます（開け忘れた扉も25日までならOK）。<br>・アドベント限定アイテムは、チェストや日替わりショップには出ません。<br>・12/25の扉には特別な限定車が入っています。</div>`;
+    html += `</div><div class="note">・その日の扉は12/25まで開けられます（開け忘れた扉も25日までならOK）。<br>・アドベント限定アイテムは、カードパックや日替わりショップには出ません。<br>・12/25の扉には特別な限定車が入っています。</div>`;
     clearInterval(this._advT); this._advT = setInterval(() => { if (this.screen !== 'advent') return clearInterval(this._advT); const e = $('advCd'); if (e) e.innerHTML = adventCountdown(); if (adventInfo().day !== A.day) this.render(); }, 1000);
     return html;
   },
@@ -870,7 +870,7 @@ const UI = {
     if (this.tab === 'unlock') {
       const ownItems = ITEMS.filter(i => invHas(i.id)).length, carsAll = CARS.length, carsOwn = new Set(d.cars.map(c => c.id)).size;
       h += `<div class="dv-stat"><span>アイテム</span><b>${ownItems} / ${ITEMS.length}</b><span>車両</span><b>${carsOwn} / ${carsAll}</b><span>ストーリー</span><b>${d.story.cleared.length} / ${STORY.length}</b></div>`;
-      h += `<div class="h3">まとめて解放</div><div class="btns">${bt('devStory', 'ストーリー全話クリア扱い（コース・車も解放）')}</div><div class="btns">${bt('devAllItems', 'チェスト・アドベントのアイテムを全部入手', undefined, 'gold')}</div><div class="btns">${bt('devAllXmas', 'クリスマスショップのアイテムを全部入手')}</div><div class="btns">${bt('devAllCars', '全車両をガレージに追加（限定車も）', undefined, 'gold')}</div>`;
+      h += `<div class="h3">まとめて解放</div><div class="btns">${bt('devStory', 'ストーリー全話クリア扱い（コース・車も解放）')}</div><div class="btns">${bt('devAllItems', 'カードパック・アドベントのアイテムを全部入手', undefined, 'gold')}</div><div class="btns">${bt('devAllXmas', 'クリスマスショップのアイテムを全部入手')}</div><div class="btns">${bt('devAllCars', '全車両をガレージに追加（限定車も）', undefined, 'gold')}</div>`;
       h += `<div class="note">全車両を追加すると、ガレージの台数がかなり増えます。</div>`;
     }
     if (this.tab === 'event') {
@@ -878,7 +878,7 @@ const UI = {
       h += tg('devAdvent', 'アドベントカレンダーのテスト', '12/25扱いで全部の扉を開けられます（本番の12月には持ち越しません）');
       h += `<div class="btns">${bt('devAdvReset', 'アドベントの開けた扉をリセット')}</div>`;
       h += `<div class="h3">クリスマスポイント</div><div class="btns">${[1000, 10000, 100000].map(n => bt('devPts', '+' + n.toLocaleString() + 'pt', n)).join('')}</div>`;
-      h += `<div class="h3">チェスト・ショップ</div><div class="btns">${bt('devFreeChest', 'デイリーチェストをもう一度無料にする')}${bt('devShopReset', '日替わりショップの購入をリセット')}</div>`;
+      h += `<div class="h3">カードパック・ショップ</div><div class="btns">${bt('devFreeChest', 'デイリーカードパックをもう一度無料にする')}${bt('devShopReset', '日替わりショップの購入をリセット')}</div>`;
     }
     if (this.tab === 'race') {
       h += tg('devNitro', 'ニトロ無限', 'レース中ニトロが減りません');
@@ -891,7 +891,7 @@ const UI = {
       h += `<div class="h3">エラー情報</div><div class="note">記録されたエラー: ${(d.errLog || []).length}件（設定 → データで確認できます）</div>`;
       h += `<div class="h3">危険な操作</div><div class="btns">${bt('devWipe', 'セーブデータを最初からにする', undefined, 'danger')}</div>`;
     }
-    if (this.tab === 'codes') { h += `<div class="note">ここで作ったコードはオンライン（GitHub版）の全プレイヤーが使えます。1人1回まで。</div><div class="clan-form"><input id="dcCode" placeholder="コード（英数字・例 SUMMER2027）" maxlength="24"><input id="dcMoney" type="number" placeholder="お金（例 1000000）"><input id="dcDia" type="number" placeholder="ダイヤ（例 50）"><input id="dcChest" placeholder="チェスト（bronze/silver/gold/legend・空欄可）"><input id="dcUntil" placeholder="有効期限（例 2027-01-31・空欄なら無期限）"><input id="dcNote" placeholder="メッセージ（例 いつも遊んでくれてありがとう！）" maxlength="40"><button class="btn pri big" data-a="devMakeCode">コードを作成</button></div><div class="h3">ゲーム内に最初からあるコード</div><div class="note">${Object.keys(REDEEM_CODES).join(' / ')}</div>`; }
+    if (this.tab === 'codes') { h += `<div class="note">ここで作ったコードはオンライン（GitHub版）の全プレイヤーが使えます。1人1回まで。</div><div class="clan-form"><input id="dcCode" placeholder="コード（英数字・例 SUMMER2027）" maxlength="24"><input id="dcMoney" type="number" placeholder="お金（例 1000000）"><input id="dcDia" type="number" placeholder="ダイヤ（例 50）"><input id="dcChest" placeholder="カードパック（bronze/silver/gold/legend・空欄可）"><input id="dcUntil" placeholder="有効期限（例 2027-01-31・空欄なら無期限）"><input id="dcNote" placeholder="メッセージ（例 いつも遊んでくれてありがとう！）" maxlength="40"><button class="btn pri big" data-a="devMakeCode">コードを作成</button></div><div class="h3">ゲーム内に最初からあるコード</div><div class="note">${Object.keys(REDEEM_CODES).join(' / ')}</div>`; }
     return h;
   },
   a_devToggle(k) { if (!DEV.owner) return; const s = SAVE.data.settings; s[k] = !s[k]; SAVE.save(); if (k === 'showFps') $('fps').classList.toggle('hidden', !s[k]); if (k === 'devEvent') this.show.rebuildStudio(); this.refreshTop(); this.render(); },
@@ -902,7 +902,7 @@ const UI = {
   a_devAllItems() { if (!DEV.owner) return; let k = 0; for (const it of ITEMS) { if (it.type === 'car') continue; if (!invHas(it.id)) { SAVE.data.inv[it.id] = 1; k++; } } SAVE.save(); this.toast(k + '個のアイテムを入手しました'); this.render(); },
   a_devAllXmas() { if (!DEV.owner) return; for (const it of XMAS_SHOP) grantItem(it.item); SAVE.save(); this.toast('クリスマスショップのアイテムを全部入手しました'); this.render(); },
   a_devAllCars() { if (!DEV.owner) return; const d = SAVE.data; let k = 0; for (const c of CARS) if (!d.cars.some(x => x.id === c.id)) { const n = SAVE.newCar(c.id); n.paid = c.price || 0; d.cars.push(n); k++; } SAVE.save(); this.toast(k + '台を追加しました'); this.render(); },
-  a_devFreeChest() { if (!DEV.owner) return; SAVE.data.chest.freeDate = ''; SAVE.save(); this.toast('デイリーチェストをもう一度開けられます'); },
+  a_devFreeChest() { if (!DEV.owner) return; SAVE.data.chest.freeDate = ''; SAVE.save(); this.toast('デイリーカードパックをもう一度開けられます'); },
   a_devShopReset() { if (!DEV.owner) return; SAVE.data.shopBuy = { date: '', ids: [] }; SAVE.save(); this.toast('日替わりショップの購入をリセットしました'); },
   a_devTest(map) { if (!DEV.owner) return; this.launch({ mode: 'free', mapId: map, weather: 'clear', time: 'evening', laps: 1, carInst: SAVE.cur(), rivals: [] }); },
   a_devExport() { const t = $('devSave'); t.value = JSON.stringify(SAVE.data); t.select(); try { navigator.clipboard.writeText(t.value).then(() => this.toast('コピーしました'), () => this.toast('選択しました。手動でコピーしてください')); } catch (e) { this.toast('選択しました。手動でコピーしてください'); } },
@@ -1017,12 +1017,12 @@ const UI = {
       if (accs.length > 1) html += `<div class="h3">ルーフ飾り（クリスマス限定）</div><div class="opt-row">${accs.map(([id, nm]) => `<button class="opt ${(lk.acc || 'none') === id ? 'on' : ''}" data-a="lookSet" data-v="acc:${id}">${nm}</button>`).join('')}</div>`;
       if (CAR_BY_ID[inst.id] && CAR_BY_ID[inst.id].body === 'sleigh') html += `<div class="h3">トナカイ（そり専用）</div><div class="opt-row">${[['on', 'あり（5頭・先頭は赤鼻）'], ['off', 'なし']].map(([v, nm]) => `<button class="opt ${(lk.reindeer || 'on') === v ? 'on' : ''}" data-a="lookSet" data-v="reindeer:${v}">${nm}</button>`).join('')}</div>`;
       { const kits = ITEMS.filter(i => i.type === 'kit' && invHas(i.id)); lk.kit = lk.kit || {};
-        html += `<div class="h3">ボディパーツ（仕上げ色つき）</div>` + (kits.length ? ['wing', 'front', 'rear', 'side', 'hood', 'roof', 'trunk'].map(sl => { const ks = kits.filter(k => k.slot === sl); if (!ks.length) return ''; return `<div class="note" style="margin-top:6px">${AERO[sl].label}</div><div class="opt-row"><button class="opt ${!lk.kit[sl] ? 'on' : ''}" data-a="unequipKit" data-v="${sl}">なし</button>${ks.map(k => `<button class="opt ${lk.kit[sl] === k.id ? 'on' : ''}" data-a="equipKit" data-v="${k.id}"><span style="display:inline-block;width:12px;height:12px;background:rgb(${k.fin.map(v => Math.round(v * 255)).join(',')});border:1px solid #fff;margin-right:4px;vertical-align:middle"></span>${esc(k.name)}</button>`).join('')}</div>`; }).join('') : `<div class="note">パーツショップ（カスタムアイテム）・チェスト・ダイヤショップで手に入ります。</div>`); }
+        html += `<div class="h3">ボディパーツ（仕上げ色つき）</div>` + (kits.length ? ['wing', 'front', 'rear', 'side', 'hood', 'roof', 'trunk'].map(sl => { const ks = kits.filter(k => k.slot === sl); if (!ks.length) return ''; return `<div class="note" style="margin-top:6px">${AERO[sl].label}</div><div class="opt-row"><button class="opt ${!lk.kit[sl] ? 'on' : ''}" data-a="unequipKit" data-v="${sl}">なし</button>${ks.map(k => `<button class="opt ${lk.kit[sl] === k.id ? 'on' : ''}" data-a="equipKit" data-v="${k.id}"><span style="display:inline-block;width:12px;height:12px;background:rgb(${k.fin.map(v => Math.round(v * 255)).join(',')});border:1px solid #fff;margin-right:4px;vertical-align:middle"></span>${esc(k.name)}</button>`).join('')}</div>`; }).join('') : `<div class="note">パーツショップ（カスタムアイテム）・カードパック・ダイヤショップで手に入ります。</div>`); }
       if (hasItem('wacc:antler')) html += `<div class="h3">窓飾り（クリスマス限定）</div><div class="opt-row">${[['none', 'なし'], ['antler', 'トナカイの角（左右の窓）']].map(([id, nm]) => `<button class="opt ${(lk.wacc || 'none') === id ? 'on' : ''}" data-a="lookSet" data-v="wacc:${id}">${nm}</button>`).join('')}</div>`;
       { const pls = [['none', 'なし', null]].concat(hasItem('pglow:xmas') ? [['xmas', 'クリスマス（赤×緑）', 'E']] : []).concat(ITEMS.filter(i => i.type === 'plate' && invHas(i.id)).map(i => [i.id, i.name.replace(/^光るナンバー「|」$/g, ''), i.rarity]));
-        html += `<div class="h3">光るナンバー</div>` + `<div class="opt-row">${pls.map(([id, nm, r]) => `<button class="opt ${(lk.plateGlow || 'none') === id ? 'on' : ''}" data-a="lookSet" data-v="plateGlow:${id}">${id !== 'none' && id !== 'xmas' ? plateIcon(ITEM_BY_ID[id], 22) + ' ' : ''}${nm}${r ? `<span class="pr" style="color:${RARITY[r].color}">${RARITY[r].name}</span>` : ''}</button>`).join('')}</div>` + (pls.length < 2 ? `<div class="note">チェスト・日替わりショップ・クリスマスショップで入手できます。</div>` : ''); }
+        html += `<div class="h3">光るナンバー</div>` + `<div class="opt-row">${pls.map(([id, nm, r]) => `<button class="opt ${(lk.plateGlow || 'none') === id ? 'on' : ''}" data-a="lookSet" data-v="plateGlow:${id}">${id !== 'none' && id !== 'xmas' ? plateIcon(ITEM_BY_ID[id], 22) + ' ' : ''}${nm}${r ? `<span class="pr" style="color:${RARITY[r].color}">${RARITY[r].name}</span>` : ''}</button>`).join('')}</div>` + (pls.length < 2 ? `<div class="note">カードパック・日替わりショップ・クリスマスショップで入手できます。</div>` : ''); }
       { const cur = lk.meter || 'std'; const ms = Object.keys(METER_STYLES).filter(meterOwned);
-        html += `<div class="h3">スピードメーター</div><div class="note">レース中に表示されるメーターのデザイン（この車に設定されます）。チェスト・日替わりショップ・イベントで種類が増えます（所持 ${ms.length} / ${Object.keys(METER_STYLES).length}）。</div><div class="meter-grid">${Object.keys(METER_STYLES).map(id => { const M = METER_STYLES[id], own = meterOwned(id), r = meterRarity(id); return `<button class="mcard ${cur === id ? 'on' : ''} ${own ? '' : 'lock'}" data-a="${own ? 'setMeter' : 'noop'}" data-v="${id}">${own ? meterPreview(id, 64) : ICO('lock', '#555', 30)}<b>${esc(M.name)}</b><small>${M.kind === 'digital' ? 'デジタル' : 'アナログ'}${r ? ` ・ <span style="color:${RARITY[r].color}">${RARITY[r].name}</span>` : ' ・ 標準'}</small></button>`; }).join('')}</div>`; }
+        html += `<div class="h3">スピードメーター</div><div class="note">レース中に表示されるメーターのデザイン（この車に設定されます）。カードパック・日替わりショップ・イベントで種類が増えます（所持 ${ms.length} / ${Object.keys(METER_STYLES).length}）。</div><div class="meter-grid">${Object.keys(METER_STYLES).map(id => { const M = METER_STYLES[id], own = meterOwned(id), r = meterRarity(id); return `<button class="mcard ${cur === id ? 'on' : ''} ${own ? '' : 'lock'}" data-a="${own ? 'setMeter' : 'noop'}" data-v="${id}">${own ? meterPreview(id, 64) : ICO('lock', '#555', 30)}<b>${esc(M.name)}</b><small>${M.kind === 'digital' ? 'デジタル' : 'アナログ'}${r ? ` ・ <span style="color:${RARITY[r].color}">${RARITY[r].name}</span>` : ' ・ 標準'}</small></button>`; }).join('')}</div>`; }
       html += `<div class="h3">ウィンドウ / ナンバー</div><div class="row"><label>ウィンドウの色</label><input type="range" min="0" max="0.95" step="0.05" value="${lk.tint}" data-in="lookTint"><span class="val">${Math.round(lk.tint * 100)}%</span></div><div class="row"><label>ナンバープレート</label><input type="text" maxlength="12" value="${esc(lk.plate)}" data-in="lookPlate"></div>`;
       html += `<div class="note">ウイング・エアロは高速域のダウンフォース（グリップ）を増やし、わずかに空気抵抗が増えます。カーボンボンネットは軽量化。</div>`;
     }
@@ -1033,9 +1033,9 @@ const UI = {
       html += `<div class="h3">リバリー（パターン）</div><div class="opt-row">${LIVERIES.filter(l => !l.xmas || hasItem('livery:' + l.id)).map(l => `<button class="opt ${lk.livery === l.id ? 'on' : ''}" data-a="lookLivery" data-v="${l.id}">${l.name}${priceTag(lk.owned.livery.includes(l.id), l.price)}</button>`).join('')}</div>`;
       html += `<div class="h3">サブカラー</div><div class="swatches">${pal.map(c => `<button class="sw ${lk.color2 === c ? 'on' : ''}" style="background:${c}" data-a="lookSet" data-v="color2:${c}"></button>`).join('')}</div><div class="row"><label>ゼッケン番号</label><input type="number" min="0" max="999" value="${lk.number}" data-in="lookNum"></div>`;
       html += `<div class="h3">デカール・ステッカー</div><div class="opt-row">${DECALS.filter(d => (!d.xmas || hasItem('decal:' + d.id)) && (!d.chest || invHas(d.id))).map(d => `<button class="opt ${lk.decals.includes(d.id) ? 'on' : ''}" data-a="lookDecal" data-v="${d.id}">${d.name}${priceTag(lk.owned.decals.includes(d.id), d.price)}</button>`).join('')}</div><div class="note">デカールはタップで装着/取り外し（購入済みは無料）。最大3枚。</div>`;
-      // 限定カラー（チェスト）
+      // 限定カラー（カードパック）
       const cps = ITEMS.filter(i => i.type === 'paint' && invHas(i.id));
-      html += `<div class="h3">限定カラー</div>` + (cps.length ? `<div class="opt-row">${cps.map(i => `<button class="opt ${lk.color === i.color && lk.paint === i.paint ? 'on' : ''}" data-a="lookChestPaint" data-v="${i.id}"><span style="display:inline-block;width:14px;height:14px;background:${i.color};border:1px solid #fff;vertical-align:middle;margin-right:4px"></span>${i.name}<span class="pr" style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}</span></button>`).join('')}</div>` : `<div class="note">チェストや日替わりショップで手に入る特別なカラーです。</div>`);
+      html += `<div class="h3">限定カラー</div>` + (cps.length ? `<div class="opt-row">${cps.map(i => `<button class="opt ${lk.color === i.color && lk.paint === i.paint ? 'on' : ''}" data-a="lookChestPaint" data-v="${i.id}"><span style="display:inline-block;width:14px;height:14px;background:${i.color};border:1px solid #fff;vertical-align:middle;margin-right:4px"></span>${i.name}<span class="pr" style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}</span></button>`).join('')}</div>` : `<div class="note">カードパックや日替わりショップで手に入る特別なカラーです。</div>`);
       // デカールの貼り付け位置
       html += `<div class="h3">貼り付け位置</div>` + (lk.decals.length ? lk.decals.map((id, di) => { const d = DECALS.find(x => x.id === id) || { name: id }; const ps = Object.assign({ f: 'L', x: 0.2 + di * 0.18, y: 0.55, s: 1, r: 0 }, (lk.decalPos || {})[id] || {});
         const sl = (k, lab, min, max, step, val, f) => `<div class="row"><label>${lab}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" data-in="decalPos" data-id="${id}" data-k="${k}"><span class="val">${f(val)}</span></div>`;
@@ -1044,7 +1044,7 @@ const UI = {
     }
     if (this.tab === 'engine') {
       const sps = ITEMS.filter(i => i.type === 'tune' && invHas(i.id)); const cur = inst.tune.special || '';
-      html += `<div class="h3">限定チューン</div><div class="note">チェスト限定の特別なパーツ（1台に1つ装着可能）</div>` + `<div class="opt-row"><button class="opt ${!cur ? 'on' : ''}" data-a="setSpecial" data-v="">なし</button>${sps.map(i => `<button class="opt ${cur === i.id ? 'on' : ''}" data-a="setSpecial" data-v="${i.id}">${i.name}<span class="pr" style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}・${i.desc}</span></button>`).join('')}</div>` + (sps.length ? '' : `<div class="note">チェストや日替わりショップで入手できます。</div>`);
+      html += `<div class="h3">限定チューン</div><div class="note">カードパック限定の特別なパーツ（1台に1つ装着可能）</div>` + `<div class="opt-row"><button class="opt ${!cur ? 'on' : ''}" data-a="setSpecial" data-v="">なし</button>${sps.map(i => `<button class="opt ${cur === i.id ? 'on' : ''}" data-a="setSpecial" data-v="${i.id}">${i.name}<span class="pr" style="color:${RARITY[i.rarity].color}">${RARITY[i.rarity].name}・${i.desc}</span></button>`).join('')}</div>` + (sps.length ? '' : `<div class="note">カードパックや日替わりショップで入手できます。</div>`);
     }
     html += `<div class="h3">性能（純正比）</div>${this.statBars(spec, this.baseSpec)}`;
     this.stageInfo(`<div class="car-name">${car.name}</div><div class="car-sub">${Math.round(spec.hp)}PS ・ ${spec.stats.top}km/h ・ ${spec.stats.accel.toFixed(1)}s</div>`);
@@ -1217,7 +1217,7 @@ const UI = {
     return html;
   },
   musicPlayerHTML() {
-    const tr = AUDIO.music.track; return `<div class="h3">ミュージックプレイヤー</div><div class="player"><button class="btn" data-a="mPrev">⏮</button><button class="btn" data-a="mPlay">${AUDIO.music.paused || !AUDIO.music.playing ? '▶' : '❚❚'}</button><button class="btn" data-a="mNext">⏭</button><div class="nm">♪ ${tr ? tr.name : '---'}</div></div><div class="note" style="font-size:11px">${TRACKS.filter(t => !AUDIO.unlocked(t)).length ? ICO('lock', '#888', 12) + ' チェスト・ショップで手に入る曲：あと' + TRACKS.filter(t => !AUDIO.unlocked(t)).length + '曲' : ''}</div><div class="list">${TRACKS.filter(t => AUDIO.unlocked(t)).map(t => `<button class="item ${tr && tr.id === t.id ? 'sel' : ''}" data-a="mSel" data-v="${t.id}"><div class="grow"><div class="t">${t.name}</div><div class="s">${t.lock ? '限定曲' : { race: '峠レース', menu: 'メニュー', garage: 'ガレージ', story: 'ストーリー', xmas: 'クリスマス' }[t.cat]} ・ ${t.bpm} BPM</div></div></button>`).join('')}</div>`;
+    const tr = AUDIO.music.track; return `<div class="h3">ミュージックプレイヤー</div><div class="player"><button class="btn" data-a="mPrev">⏮</button><button class="btn" data-a="mPlay">${AUDIO.music.paused || !AUDIO.music.playing ? '▶' : '❚❚'}</button><button class="btn" data-a="mNext">⏭</button><div class="nm">♪ ${tr ? tr.name : '---'}</div></div><div class="note" style="font-size:11px">${TRACKS.filter(t => !AUDIO.unlocked(t)).length ? ICO('lock', '#888', 12) + ' カードパック・ショップで手に入る曲：あと' + TRACKS.filter(t => !AUDIO.unlocked(t)).length + '曲' : ''}</div><div class="list">${TRACKS.filter(t => AUDIO.unlocked(t)).map(t => `<button class="item ${tr && tr.id === t.id ? 'sel' : ''}" data-a="mSel" data-v="${t.id}"><div class="grow"><div class="t">${t.name}</div><div class="s">${t.lock ? '限定曲' : { race: '峠レース', menu: 'メニュー', garage: 'ガレージ', story: 'ストーリー', xmas: 'クリスマス' }[t.cat]} ・ ${t.bpm} BPM</div></div></button>`).join('')}</div>`;
   },
   a_setTab(v) { this.clearBuy(); this.tab = v; this.render(); },
   a_setLang(v) { const s = SAVE.data.settings; if ((s.lang || 'ja') === v) return; s.lang = v; SAVE.save(); try { CLOUD.flush(); } catch (e) { } this.toast(v === 'en' ? 'Switching to English…' : '日本語に切り替えています…'); setTimeout(() => location.reload(), 400); },

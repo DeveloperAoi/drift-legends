@@ -115,7 +115,7 @@ const PACKFX = {
 addEventListener('resize', () => { if (PACKFX.cv && PACKFX.o && PACKFX.o.classList.contains('show')) PACKFX.fit(); });
 
 Object.assign(UI, {
-  // ---- チェスト → カードパック（報酬は演出の前に確定・保存） ----
+  // ---- カードパック → カードパック（報酬は演出の前に確定・保存） ----
   a_openChest(v) {
     const [id, ns] = String(v).split(':'); const n = Math.max(1, Math.min(10, +ns || 1)); const c = CHESTS.find(x => x.id === id); const d = SAVE.data; if (!c) return;
     if (PACKFX.o && PACKFX.o.classList.contains('show')) return; // 開封中の二重操作を防止
@@ -135,7 +135,7 @@ Object.assign(UI, {
   packChestHTML() {
     const d = SAVE.data, today = srvDateKey(), freeOk = d.chest.freeDate !== today; let h = `<div class="note">カードパックを開けると、車・ホイール・エアロパーツ・スポイラー・ボンネット・マフラー・デカール・限定カラー・ガレージ装飾・称号などが出ます。結果は開封前に確定・保存されるので、演出をスキップしても受け取れます。</div><div class="pack-grid">`;
     for (const c of CHESTS) { const can = c.daily ? freeOk : true;
-      h += `<div class="pack-card" style="--pa:${(PACK_ART[c.id] || {}).a};--pb:${(PACK_ART[c.id] || {}).b}">${packHTML(c, 0.62)}<div class="pc-info"><b>${c.name.replace('チェスト', 'パック')}</b><small>${c.daily ? (freeOk ? '本日 1回無料' : '明日 0:00 に再び開けられます') : yen(c.price) + ' / 1パック'}</small>
+      h += `<div class="pack-card" style="--pa:${(PACK_ART[c.id] || {}).a};--pb:${(PACK_ART[c.id] || {}).b}">${packHTML(c, 0.62)}<div class="pc-info"><b>${c.name.replace('カードパック', 'パック')}</b><small>${c.daily ? (freeOk ? '本日 1回無料' : '明日 0:00 に再び開けられます') : yen(c.price) + ' / 1パック'}</small>
         <table class="odds"><tr>${RAR_ORDER.map(r => `<th style="color:${RARITY[r].color}">${RARITY[r].name}</th>`).join('')}</tr><tr>${RAR_ORDER.map(r => `<td>${c.odds[r] || 0}%</td>`).join('')}</tr></table>
         ${c.daily ? `<button class="btn pri" data-a="openChest" data-v="${c.id}:1" ${can ? '' : 'disabled'}>${freeOk ? '無料で開ける' : '受取済み'}</button>` : `<div class="ch-multi">${[1, 3, 5, 10].map(n => `<button class="btn ${n === 1 ? 'pri' : ''}" data-a="openChest" data-v="${c.id}:${n}">×${n}<small>${yen(c.price * n)}</small></button>`).join('')}</div>`}</div></div>`; }
     h += `</div><div class="h3">提供割合・重複のルール</div><div class="note">表の確率でレア度が決まり、そのレア度のアイテムから均等に1つ選ばれます。すでに持っているアイテムが出た場合は、レア度に応じたお金に変換されます：${RAR_ORDER.map(r => `<b style="color:${RARITY[r].color}">${RARITY[r].name}</b> ${yen(RARITY[r].dup)}`).join(' ／ ')}（所持数は増えます）。</div>`;
