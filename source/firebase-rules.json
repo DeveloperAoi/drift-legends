@@ -1,29 +1,186 @@
 {
   "rules": {
-    "users": { "$uid": { ".read": "auth != null && auth.uid == $uid", ".write": "auth != null && auth.uid == $uid" } },
-    "rooms": { ".read": "auth != null", "$code": { ".write": "auth != null" } },
-    "stats": { ".read": true, ".write": "auth != null" },
-    "online": { ".read": true, "$uid": { ".write": "auth != null && auth.uid == $uid" } },
-    "profiles": { ".read": "auth != null", "$uid": { ".write": "auth != null && auth.uid == $uid" } },
-    "unames": { ".read": "auth != null", "$name": { ".write": "auth != null && (!data.exists() || data.val() == auth.uid)" } },
-    "lb": { ".read": true, "$week": { "$board": { ".indexOn": ["v"], "$uid": { ".write": "auth != null && auth.uid == $uid" } } } },
-    "friends": { "$uid": { ".read": "auth != null && auth.uid == $uid", "$f": { ".write": "auth != null && (auth.uid == $uid || auth.uid == $f)" } } },
-    "freq": { "$uid": { ".read": "auth != null && auth.uid == $uid", "$f": { ".write": "auth != null && (auth.uid == $uid || auth.uid == $f)" } } },
-    "ftask": { "$pair": { ".read": "auth != null && $pair.contains(auth.uid)", "$week": { "$uid": { ".write": "auth != null && auth.uid == $uid" } } } },
-    "clans": { ".read": "auth != null", ".indexOn": ["open"],
-      "$cid": { ".write": "auth != null && (!data.exists() || data.child('owner').val() == auth.uid)",
-        "members": { "$uid": { ".write": "auth != null && auth.uid == $uid" } } } },
-    "clanNames": { ".read": "auth != null", "$n": { ".write": "auth != null" } },
-    "clanCodes": { ".read": "auth != null", "$c": { ".write": "auth != null" } },
-    "clanOf": { "$uid": { ".read": "auth != null", ".write": "auth != null && auth.uid == $uid" } },
-    "clanChat": { "$cid": {
-      ".read": "auth != null && root.child('clans/' + $cid + '/members/' + auth.uid).exists()",
-      ".write": "auth != null && root.child('clans/' + $cid + '/owner').val() == auth.uid",
-      "$m": { ".write": "auth != null && root.child('clans/' + $cid + '/members/' + auth.uid).exists()" } } },
-    "trades": { "$tid": {
-      ".read": "auth != null && (!data.exists() || data.child('a').val() == auth.uid || data.child('b').val() == auth.uid)",
-      ".write": "auth != null && ((!data.exists() && newData.child('a').val() == auth.uid) || data.child('a').val() == auth.uid || data.child('b').val() == auth.uid)" } },
-    "tradeInv": { "$uid": { ".read": "auth != null && auth.uid == $uid", "$tid": { ".write": "auth != null" } } },
-    "codes": { ".read": "auth != null", "$code": { ".write": "auth != null && auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2'" } }
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "rooms": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && (root.child('admin/maint/on').val() != true || (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true))"
+      }
+    },
+    "stats": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "online": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "profiles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "unames": {
+      ".read": "auth != null",
+      "$name": {
+        ".write": "auth != null && (!data.exists() || data.val() == auth.uid)"
+      }
+    },
+    "lb": {
+      ".read": true,
+      "$week": {
+        "$board": {
+          ".indexOn": [
+            "v"
+          ],
+          "$uid": {
+            ".write": "auth != null && auth.uid == $uid"
+          }
+        }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        "$f": {
+          ".write": "auth != null && (auth.uid == $uid || auth.uid == $f)"
+        }
+      }
+    },
+    "freq": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        "$f": {
+          ".write": "auth != null && (auth.uid == $uid || auth.uid == $f)"
+        }
+      }
+    },
+    "ftask": {
+      "$pair": {
+        ".read": "auth != null && $pair.contains(auth.uid)",
+        "$week": {
+          "$uid": {
+            ".write": "auth != null && auth.uid == $uid"
+          }
+        }
+      }
+    },
+    "clans": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "open"
+      ],
+      "$cid": {
+        ".write": "auth != null && (!data.exists() || data.child('owner').val() == auth.uid)",
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid == $uid"
+          }
+        }
+      }
+    },
+    "clanNames": {
+      ".read": "auth != null",
+      "$n": {
+        ".write": "auth != null"
+      }
+    },
+    "clanCodes": {
+      ".read": "auth != null",
+      "$c": {
+        ".write": "auth != null"
+      }
+    },
+    "clanOf": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "clanChat": {
+      "$cid": {
+        ".read": "auth != null && root.child('clans/' + $cid + '/members/' + auth.uid).exists()",
+        ".write": "auth != null && root.child('clans/' + $cid + '/owner').val() == auth.uid",
+        "$m": {
+          ".write": "auth != null && root.child('clans/' + $cid + '/members/' + auth.uid).exists()"
+        }
+      }
+    },
+    "trades": {
+      "$tid": {
+        ".read": "auth != null && (!data.exists() || data.child('a').val() == auth.uid || data.child('b').val() == auth.uid)",
+        ".write": "auth != null && ((!data.exists() && newData.child('a').val() == auth.uid) || data.child('a').val() == auth.uid || data.child('b').val() == auth.uid)"
+      }
+    },
+    "tradeInv": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        "$tid": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "codes": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null && auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2'"
+      }
+    },
+    "packs": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        "$pid": {
+          ".write": "auth != null && auth.uid == $uid && !data.exists()"
+        }
+      }
+    },
+    "admins": {
+      ".read": false,
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": false
+      }
+    },
+    "admin": {
+      "announce": {
+        ".read": true,
+        ".indexOn": [
+          "start"
+        ],
+        "$id": {
+          ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+          ".validate": "newData.child('title').isString() && newData.child('title').val().length <= 80 && newData.child('msg').isString() && newData.child('msg').val().length <= 600 && newData.child('type').val().matches(/^(normal|important|emergency|update)$/) && newData.child('end').isNumber()"
+        }
+      },
+      "maint": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+        ".validate": "newData.child('on').isBoolean()"
+      },
+      "reset": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+        ".validate": "newData.child('state').val().matches(/^(scheduled|cancelled|done)$/) && newData.child('at').isNumber()"
+      },
+      "update": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+        ".validate": "newData.child('version').isString() && newData.child('version').val().length <= 12"
+      },
+      "log": {
+        ".read": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+        "$id": {
+          ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true) && !data.exists()"
+        }
+      }
+    }
   }
 }

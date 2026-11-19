@@ -5,7 +5,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errs.append('PAGE '+str(e)))
     pg.goto('file:///home/claude/dl/dist/index.html'); pg.wait_for_timeout(500); pg.click('#btnStart')
     pg.evaluate("window.__DL.UI.open('maps',{mode:'free'})"); pg.wait_for_timeout(300)
-    ids=pg.evaluate("Array.from(document.querySelectorAll('[data-a=selMap]')).map(e=>e.dataset.v)")
+    ids=['myojin','metrox','akigiri','cloop','circuit']
     pg.evaluate("window.__DL.UI.goMenu()")
     bad=pg.evaluate("""(ids)=>{const D=window.__DL,out=[]; for(const m of ids) for(const w of ['clear','rain','snow','fog']) for(const t of ['day','night']) for (const q of [0,2]) { D.SAVE.data.settings.quality=q;
       try{ D.game.start({mode:'touge',mapId:m,weather:w,time:t,laps:1,carInst:D.SAVE.cur(),rivals:[]}); for(let k=0;k<3;k++){D.game.update(1/60);D.game.render(1/60);} D.game.exit(); } catch(e){ out.push(m+' '+w+' '+t+' q'+q+': '+e.message+' @ '+(e.stack||'').split('\\n').slice(1,3).join(' ')); try{D.game.exit()}catch(x){} } } return out;}""", ids)

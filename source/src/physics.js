@@ -8,16 +8,16 @@ const GRAV = 9.81;
 function defaultTune(car) {
   return {
     engine: 'stock', ecu: 0, intercooler: 0, intake: 0, muffler: 0, reinforce: 0, susp: 0, brake: 0, diff: 'open', trans: 0, final: 1.0,
-    tire: 'street', tireW: 0, wheelIn: 17, height: 0, camber: -1.0, toeF: 0, toeR: 0.1,
+    tire: 'street', tireW: 0, track: 0, wheelIn: 17, height: 0, camber: -1.0, toeF: 0, toeR: 0.1,
     cam: 0, piston: 0, fuel: 0, flywheel: 0, clutch: 0, nos: 0, stab: 0, strut: 0, knuckle: 0, weight: 0,
     owned: { engine: ['stock'], diff: ['open'], tire: ['street'], ecu: 0, intercooler: 0, intake: 0, muffler: 0, reinforce: 0, susp: 0, brake: 0, trans: 0, cam: 0, piston: 0, fuel: 0, flywheel: 0, clutch: 0, nos: 0, stab: 0, strut: 0, knuckle: 0, weight: 0 }
   };
 }
 function defaultLook(car) {
   return {
-    color: car.color, paint: 'metallic', color2: '#111114', wheel: 'stock', wheelColor: '#c8c8cc', tint: 0.35,
+    color: car.color, paint: 'metallic', color2: '#111114', wheel: car.stockWheel || 'stock', wheelColor: '#c8c8cc', tint: 0.35,
     front: 0, rear: 0, side: 0, wing: car.body === 'rally' ? 2 : 0, hood: 0, exhaust: 0, fender: 0, mirror: 0, roof: 0, head: 0, tail: 0, acc: 'none', glow: 'none', caliper: '#cc1010', livery: 'none', number: 86, decals: [], plate: '峠 ' + String(Math.floor(10 + (car.id.length * 7) % 89)) + '-' + String(1000 + car.hp * 3).slice(-4),
-    owned: { paint: ['metallic', 'gloss'], wheel: ['stock'], front: [0], rear: [0], side: [0], wing: [0, car.body === 'rally' ? 2 : 0], hood: [0], exhaust: [0], fender: [0], mirror: [0], roof: [0], head: [0], tail: [0], glow: ['none'], livery: ['none'], decals: [] }
+    owned: { paint: ['metallic', 'gloss'], wheel: ['stock'].concat(car.stockWheel ? [car.stockWheel] : []), front: [0], rear: [0], side: [0], wing: [0, car.body === 'rally' ? 2 : 0], hood: [0], exhaust: [0], fender: [0], mirror: [0], roof: [0], head: [0], tail: [0], glow: ['none'], livery: ['none'], decals: [] }
   };
 }
 function tireOpt(id) { return PARTS.tire.opts.find(o => o.id === id) || PARTS.tire.opts[0]; }
@@ -62,7 +62,7 @@ function computeSpec(car, tune) {
   const latCam = 1 + 0.022 * Math.min(cam, 2.5) - 0.035 * Math.max(0, cam - 2.5);
   const lonCam = 1 - 0.012 * cam;
   const susp = tune.susp;
-  let mu = tire.mu * wfac * (1 + pick([0, 1, 2, 2.6, 2, 2.9, 0, 1.4], look.fender || 0) * 0.018);
+  let mu = tire.mu * wfac * (1 + pick([0, 1, 2, 2.6, 2, 2.9, 0, 1.4], look.fender || 0) * 0.018) * (1 + (tune.track || 0) * 0.004);
   const fb = car.fb, wb = car.wb; const a = wb * (1 - fb), b = wb * fb; // a: CG→前軸, b: CG→後軸
   const cgH = 0.5 - (-tune.height) * 0.0012 - susp * 0.01;
   const diffLsd = { open: car.drift >= 84 ? 0.45 : 0.22, '1way': 0.62, '15way': 0.76, '2way': 0.9 }[tune.diff] ?? 0.3;

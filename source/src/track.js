@@ -12,10 +12,12 @@ class Track {
     for (let attempt = 0; attempt < 14 && !ok; attempt++) {
       const ctrl = this.controlPoints(scale);
       const pts = relaxCurvature(sampleCR(ctrl, STEP), 12);
-      if (this.validate(pts)) { this.finalize(pts); ok = true; } else scale *= 0.86;
+      if (this.validate(pts)) { this.finalize(pts); ok = true; this.attempts = attempt + 1; } else scale *= 0.86;
     }
+    this.fallback = !ok;
     if (!ok) { const ctrl = []; for (let i = 0; i < 32; i++) { const t = i / 32 * TAU; ctrl.push([Math.cos(t) * this.def.R, 0, Math.sin(t) * this.def.R]); } this.finalize(sampleCR(ctrl, STEP)); }
     this.setupWalls(); this.findCorners(); this.speedProfile();
+    this.jcts = (def.jct || []).map(j => { const i = Math.floor(j.at * this.n); return Object.assign({ i, side: this.innerRight[i] ? -1 : 1 }, j); });
     if (def.jumps) this.setupRamps();
   }
   // ---- ジャンプ台 ----
@@ -127,7 +129,8 @@ class Track {
     let mn = 1e9, mx = -1e9, minR = 1e9, maxR = 0; for (let i = 0; i < n; i++) { mn = Math.min(mn, Y[i]); mx = Math.max(mx, Y[i]); const r = Math.hypot(X[i], Z[i]); minR = Math.min(minR, r); maxR = Math.max(maxR, r); }
     this.minY = mn; this.maxY = mx; this.minR = minR; this.maxR = maxR;
     this.tunnel = new Uint8Array(n);
-    if (this.def.tunnel) { const s = Math.floor(this.def.tunnel[0] * n), c = Math.floor(this.def.tunnel[1] / STEP); for (let k = 0; k < c; k++) this.tunnel[(s + k) % n] = 1; }
+    for (const tu of (this.def.tunnels || (this.def.tunnel ? [this.def.tunnel] : []))) { const s = Math.floor(tu[0] * n), c = Math.floor(tu[1] / STEP); for (let k = 0; k < c; k++) this.tunnel[(s + k) % n] = 1; }
+    this.hasTunnel = this.tunnel.some(v => v);
     // 左右の空き距離（地形の張り出し制限）
     this.clearL = new Float32Array(n).fill(200); this.clearR = new Float32Array(n).fill(200);
     const cell = 50, grid = new Map(); const key = (a, b) => (a + 5000) * 10000 + (b + 5000);
@@ -270,7 +273,7 @@ function windowTexture(R) {
 
 function buildWorld(track, R, opts) {
   const def = track.def, env = def.env, n = track.n, hw = track.halfW, rng = mulberry32(def.seed * 7 + 3);
-  const { X, Y, Z, RX, RZ } = track; const snow = opts.weather === 'snow', wet = opts.weather === 'rain', night = opts.time === 'night', xmas = !!def.xmas;
+  const { X, Y, Z, RX, RZ } = track; const snow = opts.weather === 'snow', wet = opts.weather === 'rain', night = opts.time === 'night', xmas = !!def.xmas || !!def.illum;
   const quality = opts.quality || 2; const dens = quality === 0 ? 0.45 : quality === 1 ? 0.7 : 1;
   const nch = Math.ceil(n / CHUNK);
   const chunks = []; for (let c = 0; c < nch; c++) chunks.push({ road: new GB(), scene: new GB(), bld: new GB() });
@@ -372,7 +375,7 @@ function buildWorld(track, R, opts) {
           if (side > 0) g.quad(A[k], A[k + 1], B[k + 1], B[k], col); else g.quad(A[k + 1], A[k], B[k], B[k + 1], col);
         }
         // 木
-        if (rng() < 0.62 * dens) {
+        if (rng() < (def.pass ? 0.85 : 0.62) * dens && !(def.park && side === (track.innerRight[i] ? -1 : 1) && ((i - Math.floor(def.park[0] * n) + n) % n) < def.park[1] / STEP + 8)) {
           const k = 1 + Math.floor(rng() * 2.6); const t = rng(); const a = A[k], b = A[Math.min(k + 1, offs.length - 1)];
           const p = [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
           const latp = Math.abs((p[0] - X[i]) * RX[i] + (p[2] - Z[i]) * RZ[i]);
@@ -439,7 +442,7 @@ function buildWorld(track, R, opts) {
   }
 
   // トンネル
-  if (def.tunnel) {
+  if (track.hasTunnel) {
     let started = -1;
     for (let i = 0; i < n; i++) {
       if (!track.tunnel[i]) continue;
@@ -563,6 +566,7 @@ function buildWorld(track, R, opts) {
     for (let i = 60; i < n; i += 160) { // 光のアーチ
       const g = ch(i).scene; for (let k = 0; k <= 24; k++) { const a = k / 24 * PI; const lat = Math.cos(a) * (wallOff + 0.5), h = Math.sin(a) * 6.5; const p = P(i, lat, h); g.e = 1; g.box(p[0], p[1], p[2], 0.3, 0.3, 0.3, cols[k % cols.length], track.HD[i]); g.e = 0; addGlow(p, 1.4, cols[k % cols.length], 1); }
     }
+    if (def.xmas) {
     // 巨大クリスマスツリー
     const ti = Math.floor(n * 0.04); const side = track.innerRight[ti] ? -1 : 1; const tp = P(ti, side * (wallOff + 26), 0);
     const tg = G; tg.cylY(tp[0], tp[1] - 0.5, tp[2], 1.4, 1.2, 4, 8, [0.35, 0.22, 0.12]);
@@ -572,6 +576,135 @@ function buildWorld(track, R, opts) {
     lamps.push({ p: [tp[0], tp[1] + 10, tp[2]], c: [1, 0.7, 0.4] });
     // 雪だるま
     for (let k = 0; k < 6; k++) { const i = Math.floor(rng() * n); const s = track.innerRight[i] ? 1 : -1; const p = P(i, s * (wallOff + 3), 0); const g = ch(i).scene; g.sphere(p[0], p[1] + 0.7, p[2], 0.75, [0.95, 0.95, 0.98], 5); g.sphere(p[0], p[1] + 1.8, p[2], 0.5, [0.95, 0.95, 0.98], 5); g.box(p[0], p[1] + 1.8, p[2], 0.1, 0.1, 1.08, [1, 0.5, 0.1]); }
+    }
+  }
+
+  // ================= v3.0 新マップ専用の景観 =================
+  const yawAt = i => track.HD[((i % n) + n) % n];
+  const outSide = i => track.innerRight[((i % n) + n) % n] ? -1 : 1;
+  const sgn = (g, i, side, lat, h, w, hh, col, e = 0) => { const p = P(i, side * lat, h); g.e = e; g.box(p[0], p[1], p[2], w, hh, 0.06, col, yawAt(i) + PI); g.e = 0; return p; };
+  if (def.pass) {
+    // カーブミラー（タイトコーナーの外側、頂点の少し手前）
+    for (const c of track.corners) {
+      if (c.R > 75) continue; const i = (c.apex - 5 + n) % n; if (track.tunnel[i]) continue;
+      const side = c.dir > 0 ? 1 : -1, g = ch(i).scene, b = P(i, side * (wallOff + 1.1), 0);
+      g.cylY(b[0], b[1], b[2], 0.06, 0.06, 2.9, 5, [0.95, 0.45, 0.08], false);
+      const yaw = yawAt(i) + PI - side * 0.6, f = [Math.sin(yaw) * 0.05, Math.cos(yaw) * 0.05];
+      g.box(b[0], b[1] + 3.2, b[2], 0.95, 0.95, 0.08, [0.95, 0.45, 0.08], yaw);
+      g.e = 0.35; g.box(b[0] + f[0], b[1] + 3.2, b[2] + f[1], 0.78, 0.78, 0.04, [0.62, 0.72, 0.8], yaw); g.e = 0;
+      if (c.type === 'ヘアピン' && rng() < 0.6) { const b2 = P(c.apex + 4, side * (wallOff + 1.1), 0); g.cylY(b2[0], b2[1], b2[2], 0.06, 0.06, 2.9, 5, [0.95, 0.45, 0.08], false); g.box(b2[0], b2[1] + 3.2, b2[2], 0.95, 0.95, 0.08, [0.95, 0.45, 0.08], yawAt(c.apex + 4) + PI + side * 0.6); }
+    }
+    // 矢印板（ヘアピン・タイトコーナーの外側）
+    for (const c of track.corners) {
+      if (c.R > 50) continue; const side = c.dir > 0 ? 1 : -1;
+      for (let i = c.start; ; i = (i + 5) % n) {
+        if (!track.tunnel[i]) { const g = ch(i).scene, p = P(i, side * (wallOff + 0.35), 0), yaw = yawAt(i) + PI;
+          g.box(p[0], p[1] + 0.55, p[2], 0.07, 1.1, 0.07, [0.55, 0.56, 0.58], yaw);
+          g.e = night ? 0.45 : 0.1; g.box(p[0], p[1] + 1.35, p[2], 0.75, 0.55, 0.05, [0.08, 0.22, 0.7], yaw);
+          const f = [Math.sin(yaw) * 0.04, Math.cos(yaw) * 0.04], cx = Math.cos(yaw), cz = -Math.sin(yaw);
+          for (const o of [-0.16, 0.12]) { const q = [p[0] + f[0] + cx * o * side * -1, p[1] + 1.35, p[2] + f[1] + cz * o * side * -1]; g.box(q[0], q[1] + 0.1, q[2], 0.07, 0.26, 0.02, [0.95, 0.95, 0.95], yaw, null); g.box(q[0], q[1] - 0.1, q[2], 0.07, 0.26, 0.02, [0.95, 0.95, 0.95], yaw); }
+          g.e = 0; }
+        if (((c.end - i + n) % n) < 5) break;
+      }
+    }
+    // スタート/ゴール：計測小屋・のぼり旗
+    { const s = outSide(10), g = ch(10).scene; const b = P(14, s * (wallOff + 5), 0); g.box(b[0], b[1] + 1.4, b[2], 3.2, 2.8, 4, [0.85, 0.85, 0.82], yawAt(14)); g.box(b[0], b[1] + 2.95, b[2], 3.8, 0.3, 4.6, [0.25, 0.27, 0.3], yawAt(14));
+      const w = P(14, s * (wallOff + 3.35), 1.7); g.e = 1; g.box(w[0], w[1], w[2], 0.05, 0.8, 2.6, [1, 0.9, 0.6], yawAt(14)); g.e = 0; addGlow(w, 3, [1, 0.85, 0.5], 0.6); lamps.push({ p: [w[0], w[1] + 1, w[2]], c: [1, 0.85, 0.6] });
+      for (let k = -14; k <= 30; k += 6) for (const sd of [-1, 1]) { const q = P(k, sd * (wallOff + 1.6), 0); g.cylY(q[0], q[1], q[2], 0.04, 0.04, 3.4, 4, [0.6, 0.6, 0.6], false); const fl = P(k, sd * (wallOff + 1.6) , 2.6); g.box(fl[0], fl[1], fl[2], 0.03, 1.5, 0.6, (k / 6) % 2 ? [0.9, 0.12, 0.12] : [0.95, 0.95, 0.95], yawAt(k)); } }
+    // 駐車場・展望台
+    if (def.park) {
+      const i0 = Math.floor(def.park[0] * n), m = Math.floor(def.park[1] / STEP), side = outSide(i0 + (m >> 1)); const L0 = wallOff + 0.5, L1 = wallOff + 24;
+      track.parkZone = { i0, m, side };
+      for (let k = 0; k < m; k += 2) {
+        const i = i0 + k, j = i + 2, g = ch(i).scene; const a = side > 0 ? [L0, L1] : [-L1, -L0];
+        g.quad(P(i, a[0], -0.05), P(i, a[1], -0.05), P(j, a[1], -0.05), P(j, a[0], -0.05), [0.2, 0.2, 0.22]);
+        const e0 = P(i, side * L1, -0.05), e1 = P(j, side * L1, -0.05); g.quad(e0, e1, [e1[0], e1[1] - 7, e1[2]], [e0[0], e0[1] - 7, e0[2]], [0.45, 0.43, 0.4]);
+        if (k > 4 && k < m - 6 && k % 4 === 0) { const c0 = P(i, side * (L0 + 4), 0.0), c1 = P(i, side * (L0 + 10), 0.0); g.quad([c0[0], c0[1] + 0.01, c0[2]], [c1[0], c1[1] + 0.01, c1[2]], [c1[0] + track.TX[i % n] * 0.15, c1[1] + 0.01, c1[2] + track.TZ[i % n] * 0.15], [c0[0] + track.TX[i % n] * 0.15, c0[1] + 0.01, c0[2] + track.TZ[i % n] * 0.15], white); }
+        // 手すり（外周）
+        const h0 = P(i, side * (L1 - 0.3), 1.0), h1 = P(j, side * (L1 - 0.3), 1.0); g.quad(h0, h1, [h1[0], h1[1] + 0.08, h1[2]], [h0[0], h0[1] + 0.08, h0[2]], [0.75, 0.75, 0.72]);
+        if (k % 4 === 0) { const q = P(i, side * (L1 - 0.3), 0); g.box(q[0], q[1] + 0.5, q[2], 0.08, 1.0, 0.08, [0.6, 0.6, 0.6], yawAt(i)); }
+      }
+      const mid = i0 + (m >> 1), g = ch(mid).scene, yaw = yawAt(mid);
+      // 休憩所・自販機
+      const hut = P(i0 + 8, side * (wallOff + 17), 0); g.box(hut[0], hut[1] + 1.6, hut[2], 6, 3.2, 9, [0.72, 0.66, 0.56], yaw); g.box(hut[0], hut[1] + 3.35, hut[2], 7, 0.35, 10, [0.3, 0.22, 0.18], yaw);
+      for (let v = 0; v < 3; v++) { const q = P(i0 + 14 + v * 0.7, side * (wallOff + 14.5), 0); const col = [[0.9, 0.1, 0.12], [0.1, 0.35, 0.85], [0.95, 0.95, 0.95]][v]; g.box(q[0], q[1] + 0.95, q[2], 0.9, 1.9, 0.8, col, yaw); const fq = P(i0 + 14 + v * 0.7, side * (wallOff + 14.05), 1.2); g.e = 1; g.box(fq[0], fq[1], fq[2], 0.05, 0.9, 0.6, [0.95, 0.97, 1], yaw); g.e = 0; addGlow(fq, 2.2, [0.85, 0.92, 1], 0.7); }
+      // 展望デッキ・望遠鏡・案内板
+      const dk = P(i0 + m - 10, side * (L1 - 3), 0); g.box(dk[0], dk[1] + 0.1, dk[2], 7, 0.2, 9, [0.48, 0.34, 0.22], yaw);
+      for (const o of [-2, 2]) { const t = P(i0 + m - 10 + o, side * (L1 - 1.6), 0); g.cylY(t[0], t[1], t[2], 0.08, 0.08, 1.1, 5, [0.4, 0.4, 0.42], false); g.box(t[0], t[1] + 1.25, t[2], 0.25, 0.25, 0.6, [0.2, 0.45, 0.3], yaw + side * PI / 2); }
+      const bd = P(i0 + 3, side * (wallOff + 2.5), 0); g.cylY(bd[0], bd[1], bd[2], 0.07, 0.07, 2.2, 4, [0.5, 0.5, 0.5], false); g.box(bd[0], bd[1] + 2.4, bd[2], 1.6, 1.0, 0.06, [0.1, 0.3, 0.8], yawAt(i0 + 3) + PI); g.e = 0.6; g.box(bd[0] + Math.sin(yawAt(i0 + 3) + PI) * 0.04, bd[1] + 2.4, bd[2] + Math.cos(yawAt(i0 + 3) + PI) * 0.04, 0.6, 0.6, 0.02, [0.95, 0.95, 0.95], yawAt(i0 + 3) + PI); g.e = 0;
+      for (const k of [6, m - 16]) { const b = P(i0 + k, side * (wallOff + 9), 0); g.cylY(b[0], b[1], b[2], 0.12, 0.09, 7, 6, [0.4, 0.42, 0.45], true); const lp = [b[0], b[1] + 7, b[2]]; g.e = 1; g.box(lp[0], lp[1], lp[2], 0.5, 0.2, 0.5, [1, 0.9, 0.7], yaw); g.e = 0; addGlow(lp, 6, [1, 0.85, 0.6], 0.85); lamps.push({ p: [lp[0], lp[1] - 0.4, lp[2]], c: [1, 0.85, 0.6] }); }
+    }
+  }
+  if (def.metro) {
+    const inR = (i, rs) => rs && rs.some(r => { const f = i / n; return r[0] <= r[1] ? f >= r[0] && f <= r[1] : f >= r[0] || f <= r[1]; });
+    // 遮音壁
+    for (let i = 0; i < n; i += 2) {
+      if (!inR(i, def.walls) || track.tunnel[i]) continue; const j = (i + 2) % n, g = ch(i).scene;
+      for (const s of [-1, 1]) { const l = s * (wallOff + 0.15); g.quad(P(i, l, 1.1), P(j, l, 1.1), P(j, l + s * 0.25, 4.4), P(i, l + s * 0.25, 4.4), [0.52, 0.6, 0.64]); g.quad(P(i, l + s * 0.25, 4.4), P(j, l + s * 0.25, 4.4), P(j, l + s * 0.45, 4.5), P(i, l + s * 0.45, 4.5), [0.4, 0.42, 0.45]);
+        if (i % 8 === 0) { const q = P(i, l + s * 0.12, 0); g.box(q[0], q[1] + 2.4, q[2], 0.22, 4.6, 0.22, [0.35, 0.36, 0.38], yawAt(i)); } }
+    }
+    // ゲート（料金所風）
+    for (const gf of def.gates || []) {
+      const i0 = Math.floor(gf * n), g = ch(i0).scene, yaw = yawAt(i0); const W = 2 * wallOff + 22; const c = P(i0, 0, 7.4);
+      g.box(c[0], c[1], c[2], W, 0.9, 16, [0.82, 0.83, 0.85], yaw); g.box(c[0], c[1] + 0.6, c[2], W - 1, 0.3, 15, [0.3, 0.55, 0.85], yaw);
+      g.e = 1; for (let k = -6; k <= 6; k += 3) { const q = P(i0 + k, 0, 6.9); g.box(q[0], q[1], q[2], W - 4, 0.08, 0.4, [0.95, 0.97, 1], yaw); addGlow(q, 7, [0.9, 0.95, 1], 0.5); } g.e = 0;
+      for (const s of [-1, 1]) for (const k of [-6, 6]) { const q = P(i0 + k, s * (wallOff + 2), 0); g.box(q[0], q[1] + 3.5, q[2], 0.9, 7, 0.9, [0.7, 0.7, 0.72], yaw); }
+      for (const s of [-1, 1]) for (const d of [5, 9.5]) { const q = P(i0, s * (wallOff + d), 0); g.box(q[0], q[1] + 1.3, q[2], 2.2, 2.6, 5.5, [0.88, 0.88, 0.86], yaw); const w = P(i0, s * (wallOff + d - 1.12), 1.6); g.e = 1; g.box(w[0], w[1], w[2], 0.05, 0.9, 3.4, [1, 0.92, 0.7], yaw); g.e = 0; }
+      const lanes = Math.round(def.width / 3.6); for (let l = 0; l < lanes; l++) { const lat = -hw + (l + 0.5) * def.width / lanes; const q = P(i0 - 7, lat, 6.4); g.e = 1; g.box(q[0], q[1], q[2], 1.6, 0.7, 0.12, [0.55, 0.2, 0.85], yaw); const sg = P(i0 - 7, lat + 1.1, 5.7); g.box(sg[0], sg[1], sg[2], 0.3, 0.3, 0.15, [0.1, 1, 0.4], yaw); g.e = 0; addGlow(sg, 1.6, [0.2, 1, 0.45], 1); addGlow(q, 2.4, [0.6, 0.3, 1], 0.5); }
+      for (let k = -24; k <= -12; k += 3) { const r = ch(i0 + k).road; r.quad(P(i0 + k, -hw + 0.4, 0.025), P(i0 + k, hw - 0.4, 0.025), P(i0 + k + 0.35, hw - 0.4, 0.025), P(i0 + k + 0.35, -hw + 0.4, 0.025), [0.85, 0.85, 0.85]); }
+      lamps.push({ p: P(i0, 0, 6.6), c: [0.9, 0.95, 1] });
+    }
+    // JCT：分岐ランプ（本線は直進）と案内標識
+    const greenSign = (g, i, lat, h, w, arrowDir) => { const p = P(i, lat, h), yaw = yawAt(i) + PI; g.e = night ? 0.45 : 0.2; g.box(p[0], p[1], p[2], w, 2.3, 0.14, [0.04, 0.42, 0.22], yaw); g.e = night ? 0.9 : 0.5;
+      const f = [Math.sin(yaw) * 0.09, Math.cos(yaw) * 0.09], cx = Math.cos(yaw), cz = -Math.sin(yaw);
+      for (let r = 0; r < 2; r++) { const q = [p[0] + f[0] - cx * 0.4, p[1] + 0.5 - r * 0.55, p[2] + f[1] - cz * 0.4]; g.box(q[0], q[1], q[2], w * 0.55, 0.22, 0.02, [0.95, 0.97, 0.95], yaw); }
+      const a = [p[0] + f[0] + cx * (w * 0.33), p[1] - 0.15, p[2] + f[1] + cz * (w * 0.33)]; g.box(a[0], a[1], a[2], 0.18, 1.2, 0.02, [0.95, 0.97, 0.95], yaw); g.box(a[0] + cx * arrowDir * 0.18, a[1] + 0.45, a[2] + cz * arrowDir * 0.18, 0.16, 0.6, 0.02, [0.95, 0.97, 0.95], yaw + arrowDir * 0.7); g.e = 0; };
+    (track.jcts || []).forEach((J, jn) => {
+      const { i: i0, side } = J, m = Math.floor(J.len / STEP), ext = Math.floor(m * 1.7), hwB = 3.9, up = jn % 2 === 0 ? 1 : -0.6;
+      const latC = k => side * (wallOff + 0.5 + hwB + Math.pow(k / m, 2) * 42), hB = k => up * Math.pow(k / m, 2) * 8;
+      for (let k = 0; k < ext; k += 2) {
+        const i = i0 + k, j = i0 + k + 2, g = ch(i).scene, r = ch(i).road; const c0 = latC(k), c1 = latC(k + 2), y0 = hB(k), y1 = hB(k + 2);
+        r.quad(P(i, c0 - hwB, y0), P(i, c0 + hwB, y0), P(j, c1 + hwB, y1), P(j, c1 - hwB, y1), vary(asphalt, 0.04));
+        for (const e of [-1, 1]) { const a0 = c0 + e * (hwB - 0.3), a1 = c1 + e * (hwB - 0.3); r.quad(P(i, a0 - 0.08, y0 + 0.02), P(i, a0 + 0.08, y0 + 0.02), P(j, a1 + 0.08, y1 + 0.02), P(j, a1 - 0.08, y1 + 0.02), white);
+          const w0 = c0 + e * (hwB + 0.6), w1 = c1 + e * (hwB + 0.6); g.quad(P(i, w0, y0), P(j, w1, y1), P(j, w1, y1 + 1.1), P(i, w0, y0 + 1.1), [0.62, 0.62, 0.6]); }
+        g.quad(P(i, c0 - hwB - 0.6, y0 - 0.5), P(j, c1 - hwB - 0.6, y1 - 0.5), P(j, c1 + hwB + 0.6, y1 - 0.5), P(i, c0 + hwB + 0.6, y0 - 0.5), [0.4, 0.4, 0.42]);
+        if (k > 6 && k % 14 === 0) { const q = P(i, c0, y0); const hh = q[1] - groundY; g.box(q[0], groundY + hh / 2 - 0.6, q[2], 1.8, hh, 1.8, [0.5, 0.5, 0.5], yawAt(i)); }
+        if (k < 26 && k % 4 === 0) { const q0 = P(i, c0 - side * hwB, y0 + 0.03), q1 = P(i + 2, c0 - side * (hwB - 2.2), y0 + 0.03); r.quad(q0, [q0[0] + (q1[0] - q0[0]) * 0.2, q0[1], q0[2] + (q1[2] - q0[2]) * 0.2], q1, [q1[0] - (q1[0] - q0[0]) * 0.2, q1[1], q1[2] - (q1[2] - q0[2]) * 0.2], white); }
+        if (k % 25 === 0 && k > 0) { const q = P(i, c0 + side * (hwB + 0.8), y0); g.cylY(q[0], q[1], q[2], 0.1, 0.08, 7, 5, [0.4, 0.42, 0.45], true); const lp = P(i, c0 + side * (hwB - 1), y0 + 7); g.e = 1; g.box(lp[0], lp[1], lp[2], 0.5, 0.18, 0.9, lampCol, yawAt(i)); g.e = 0; addGlow(lp, 4.5, lampCol, 0.8); }
+      }
+      // 案内標識（300m前・100m前・分岐点）
+      for (const back of [150, 50]) {
+        const i = (i0 - back + n) % n, g = ch(i).scene, yaw = yawAt(i); for (const s of [-1, 1]) { const q = P(i, s * (wallOff + 0.6), 0); g.box(q[0], q[1] + 3.8, q[2], 0.35, 7.6, 0.35, [0.5, 0.52, 0.55], yaw); }
+        const bm = P(i, 0, 7.4); g.box(bm[0], bm[1], bm[2], 2 * wallOff + 1.2, 0.3, 0.3, [0.5, 0.52, 0.55], yaw);
+        greenSign(g, i, side * hw * 0.55, 6.1, 4.2, side); greenSign(g, i, -side * hw * 0.35, 6.1, 4.8, 0);
+      }
+      { const i = i0 + 4, g = ch(i).scene, p = P(i, side * (wallOff + 0.5), 0), yaw = yawAt(i) + PI; g.box(p[0], p[1] + 0.6, p[2], 1.2, 1.2, 0.12, [0.95, 0.72, 0.05], yaw); g.e = 0.6; g.box(p[0], p[1] + 0.6, p[2], 0.25, 0.9, 0.16, [0.1, 0.1, 0.1], yaw + 0.8 * side); g.e = 0; addGlow(P(i, side * (wallOff + 0.5), 1.4), 1.4, [1, 0.6, 0.1], 0.9); }
+    });
+    // 高層ビル群・屋上・ネオン看板
+    const jctBlock = (i, side) => (track.jcts || []).some(J => J.side === side && ((i - J.i + n) % n) < J.len / STEP * 1.8 + 10);
+    const neon = [[1, 0.1, 0.5], [0.1, 0.9, 1], [1, 0.75, 0.1], [0.6, 0.25, 1], [0.2, 1, 0.45], [1, 0.3, 0.1]];
+    placeAlong(6, (i, side, clear) => {
+      if (track.tunnel[i] || jctBlock(i, side)) return; const dense = inR(i, def.dense); if (rng() > (dense ? 0.95 : 0.6) * dens + 0.05) return;
+      const dist = wallOff + (inR(i, def.walls) ? 5 : 3) + rng() * (dense ? 3 : 10), w = 10 + rng() * 14, d = 10 + rng() * 12;
+      if (dist + d > clear + wallOff - 2) return;
+      const p = P(i, side * (dist + d / 2), 0), yaw = yawAt(i); const h = (dense ? 40 : 22) + rng() * rng() * (dense ? 120 : 70) + (Y[i] - groundY);
+      const col = [[0.62, 0.64, 0.68], [0.36, 0.42, 0.52], [0.72, 0.68, 0.6], [0.28, 0.3, 0.36], [0.82, 0.82, 0.84], [0.5, 0.56, 0.6]][Math.floor(rng() * 6)];
+      building(ch(i).bld, p[0], groundY, p[2], w, d, h, yaw, col);
+      const g = ch(i).scene, top = groundY + h;
+      if (rng() < 0.5) g.cylY(p[0] + (rng() - 0.5) * w * 0.4, top, p[2] + (rng() - 0.5) * d * 0.4, 1.4, 1.4, 2.4, 8, [0.55, 0.55, 0.58]);
+      if (rng() < 0.5) g.box(p[0], top + 1.2, p[2], w * 0.5, 2.4, d * 0.4, mixc(col, [0.2, 0.2, 0.2], 0.4), yaw);
+      if (h > 60) { g.cylY(p[0], top, p[2], 0.15, 0.08, 9, 4, [0.6, 0.6, 0.6], false); addGlow([p[0], top + 9.2, p[2]], 2.8, [1, 0.08, 0.05], 1); if (rng() < 0.6) { g.e = 1; const c2 = rng() < 0.5 ? [0.95, 0.95, 1] : neon[Math.floor(rng() * neon.length)]; g.box(p[0], top - 1.2, p[2], w + 0.1, 0.5, d + 0.1, c2, yaw); g.e = 0; } }
+      if (rng() < (dense ? 0.75 : 0.45)) { const c = neon[Math.floor(rng() * neon.length)], hh = Math.min(h - 4, Y[i] - groundY + 4 + rng() * 14); const q = P(i, side * (dist - 0.25), 0); q[1] = groundY + hh; g.e = 1; g.box(q[0], q[1], q[2], 0.3, 2 + rng() * 4, 4 + rng() * 6, c, yaw); g.e = 0; addGlow(q, 7, c, 0.55); }
+    });
+    // 地上の街明かり（高架下の一般道）
+    for (let i = 0; i < n; i += 9) for (const s of [-1, 1]) { if (track.tunnel[i]) continue; const q = P(i, s * (wallOff + 2), 0); q[1] = groundY + 0.1; addGlow([q[0], groundY + 6, q[2]], 4, [1, 0.75, 0.45], 0.55); }
+  }
+  // トンネル内装（新マップ）：ジェットファン・非常口灯
+  if (def.tunnels) for (let i = 0; i < n; i++) {
+    if (!track.tunnel[i]) continue; const g = ch(i).scene;
+    if (i % 50 === 0) { const q = P(i, 0, 6.0); g.cylY(q[0], q[1] - 0.6, q[2], 0.6, 0.6, 1.2, 8, [0.6, 0.62, 0.64]); }
+    if (i % 40 === 20) for (const s of [-1, 1]) { const q = P(i, s * (wallOff - 0.05), 2.4); g.e = 1; g.box(q[0], q[1], q[2], 0.05, 0.4, 0.9, [0.1, 0.9, 0.4], yawAt(i)); g.e = 0; addGlow(q, 1.2, [0.2, 1, 0.45], 0.9); }
+    if (i % 2 === 0) { const j = (i + 2) % n; for (const s of [-1, 1]) g.quad(P(i, s * wallOff, 1.6), P(j, s * wallOff, 1.6), P(j, s * wallOff, 1.75), P(i, s * wallOff, 1.75), [0.25, 0.55, 0.85]); }
   }
 
   // ---- メッシュ化 ----

@@ -47,7 +47,7 @@ class Showroom {
   setCar(inst, force) {
     const car = CAR_BY_ID[inst.id]; if (!car) return; const t = inst.tune || defaultTune(car), lk = inst.look || defaultLook(car);
     const sig = JSON.stringify([inst.id, lk, t.height, t.wheelIn, t.tireW, t.camber]); if (sig === this.sig && !force && this.model) return; if (sig === this.sig && this.model) return;
-    try { const m = buildCarModel(this.R, car, lk, { height: t.height, wheelIn: t.wheelIn, tireW: t.tireW, camber: t.camber }); if (this.model) this.model.dispose(); this.model = m; this.sig = sig; this.model.setLights(!car.popup); } catch (e) { console.error(e); }
+    try { const m = buildCarModel(this.R, car, lk, { height: t.height, wheelIn: t.wheelIn, tireW: t.tireW, camber: t.camber, track: t.track }); if (this.model) this.model.dispose(); this.model = m; this.sig = sig; this.model.setLights(!car.popup); } catch (e) { console.error(e); }
   }
   stageShift() {
     const W = innerWidth, H = innerHeight; let cx = 0.5, cy = 0.5;
@@ -140,5 +140,5 @@ class Showroom {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__DL = { game, show, UI, SAVE, R, Input, wrapAngle, clamp, AUDIO, LOADER, AERO, CARS, CAR_BY_ID, ITEMS };
+  window.__DL = { game, show, UI, SAVE, R, Input, wrapAngle, clamp, AUDIO, LOADER, AERO, CARS, CAR_BY_ID, ITEMS, MAPS, MAP_BY_ID, getTrack, Track, STEP };
 })();

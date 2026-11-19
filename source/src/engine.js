@@ -175,10 +175,11 @@ const LIT_FS = `
 precision highp float;
 varying vec3 vW; varying vec3 vN; varying vec3 vC; varying vec2 vE; varying vec2 vUV;
 uniform vec3 uCam,uSunDir,uSunCol,uSkyCol,uGroundCol,uFogCol,uZenith,uHorizon,uTint;
-uniform float uFogDen,uEmis,uRefl,uSpec,uShin,uAlpha,uTexMode,uNight,uSunScale,uWet;
+uniform float uFogDen,uEmis,uRefl,uSpec,uShin,uAlpha,uTexMode,uNight,uSunScale,uWet,uMetal,uRough,uClear,uFlake;
 uniform sampler2D uTex;
 uniform vec4 uPL[8]; uniform vec3 uPLC[8];
 uniform vec3 uSpotPos,uSpotDir,uSpotCol; uniform vec3 uSpot2Pos;
+float hsh(vec3 p){ return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453); }
 vec3 sky(vec3 d){ float t=clamp(d.y,0.0,1.0); vec3 c=mix(uHorizon,uZenith,pow(t,0.55)); if(d.y<0.0) c=mix(uHorizon,uGroundCol*0.8,clamp(-d.y*4.0,0.0,1.0)); return c; }
 void main(){
   vec3 N=normalize(vN); vec3 V=normalize(uCam-vW); if(dot(N,V)<0.0) N=-N;
@@ -188,11 +189,15 @@ void main(){
   vec3 L=mix(uGroundCol,uSkyCol,N.y*0.5+0.5)*(0.35+0.65*vE.y) + uSunCol*max(dot(N,uSunDir),0.0)*sv;
   for(int i=0;i<8;i++){ vec3 d=uPL[i].xyz-vW; float dist=length(d)+0.001; float att=clamp(1.0-dist/uPL[i].w,0.0,1.0); att*=att; L+=uPLC[i]*att*(max(dot(N,d/dist),0.0)*0.75+0.25); }
   for(int k=0;k<2;k++){ vec3 sp = k==0?uSpotPos:uSpot2Pos; vec3 d=sp-vW; float dist=length(d)+0.001; vec3 ld=d/dist; float cs=dot(-ld,uSpotDir); float cone=smoothstep(0.80,0.95,cs); float att=cone/(1.0+dist*dist*0.0035); L+=uSpotCol*att*(max(dot(N,ld),0.0)*0.8+0.2); }
-  vec3 col=base*L;
-  vec3 H=normalize(uSunDir+V); col+=uSunCol*pow(max(dot(N,H),0.0),uShin)*uSpec*sv;
+  vec3 col=base*L*(1.0-uMetal*0.75);
+  vec3 H=normalize(uSunDir+V); float nh=max(dot(N,H),0.0); float sh=uRough>0.0?mix(uShin,8.0,uRough):uShin;
+  col+=uSunCol*pow(nh,sh)*uSpec*sv*mix(vec3(1.0),base,uMetal);
+  if(uFlake>0.0){ float fl=step(0.992,hsh(floor(vW*300.0))); col+=uSunCol*fl*uFlake*pow(nh,10.0)*sv*1.2; }
   float refl=uRefl+uWet*step(0.9,N.y)*0.0;
-  if(refl>0.0){ vec3 R=reflect(-V,N); float fr=0.04+0.96*pow(1.0-max(dot(N,V),0.0),5.0); vec3 env=sky(R);
-     env+=uSpotCol*0.0; col=mix(col, env*1.05, clamp(refl*(0.3+fr),0.0,0.95)); }
+  float fr=0.04+0.96*pow(1.0-max(dot(N,V),0.0),5.0); vec3 R=reflect(-V,N);
+  if(refl>0.0){ vec3 env=mix(sky(R),sky(normalize(N+vec3(0.0,0.3,0.0)))*0.9,uRough); env*=mix(vec3(1.0),base*1.4,uMetal);
+     col=mix(col, env*1.05, clamp(refl*(0.3+fr),0.0,0.95)); }
+  if(uClear>0.0){ col+=sky(R)*fr*uClear*0.55; col+=uSunCol*pow(nh,420.0)*uClear*2.2*sv; }
   col+=base*em*2.2+add;
   float fd=length(uCam-vW); float f=1.0-exp(-fd*uFogDen);
   col=mix(col,uFogCol,clamp(f,0.0,1.0));
@@ -377,7 +382,7 @@ class Renderer {
   _draw(mesh, mat, model) {
     const gl = this.gl, L = this.lit, u = L.u, at = L.at;
     gl.uniformMatrix4fv(u.uModel, false, model); gl.uniform3fv(u.uTint, mat.tint); gl.uniform1f(u.uEmis, mat.emis); gl.uniform1f(u.uRefl, mat.refl);
-    gl.uniform1f(u.uSpec, mat.spec); gl.uniform1f(u.uShin, mat.shin); gl.uniform1f(u.uAlpha, mat.alpha); gl.uniform1f(u.uTexMode, mat.tex ? mat.texMode : 0); gl.uniform1f(u.uSunScale, mat.sunScale);
+    gl.uniform1f(u.uSpec, mat.spec); gl.uniform1f(u.uMetal, mat.metal || 0); gl.uniform1f(u.uRough, mat.rough || 0); gl.uniform1f(u.uClear, mat.clear || 0); gl.uniform1f(u.uFlake, mat.flake || 0); gl.uniform1f(u.uShin, mat.shin); gl.uniform1f(u.uAlpha, mat.alpha); gl.uniform1f(u.uTexMode, mat.tex ? mat.texMode : 0); gl.uniform1f(u.uSunScale, mat.sunScale);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, mat.tex || this.white);
     gl.bindBuffer(gl.ARRAY_BUFFER, mesh.buf); const S = VSTRIDE * 4;
     gl.enableVertexAttribArray(at.aPos); gl.vertexAttribPointer(at.aPos, 3, gl.FLOAT, false, S, 0);

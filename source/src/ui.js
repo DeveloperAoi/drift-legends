@@ -14,7 +14,7 @@ const SAVE = {
   defaults() {
     const c = this.newCar('ak_kiri');
     return { v: 1, seenVersion: GAME_VERSION, money: 1000000, xp: 0, cars: [c], current: c.uid, story: { cleared: [] }, records: { ta: {}, touge: {} }, ach: {}, stats: { parts: 0, races: 0, wins: 0, nightDist: 0, drifts: 0, playSec: 0 }, event: { done: {}, items: [], best: {} },
-      inv: {}, exSlot2: false, cons: {}, boosts: {}, diamonds: 0, diaCh: {}, extras: [], medals: { g: 0, s: 0, b: 0 }, medalLog: [], lbClaim: {}, advent: { y: 0, open: [] }, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { lang: 'ja', ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'A', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
+      inv: {}, exSlot2: false, cons: {}, boosts: {}, diamonds: 0, diaCh: {}, extras: [], medals: { g: 0, s: 0, b: 0 }, medalLog: [], lbClaim: {}, advent: { y: 0, open: [] }, chest: { freeDate: '' }, shopBuy: { date: '', ids: [] }, settings: { lang: 'ja', ctrlPreset: 'standard', accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, btnScale: 1, btnAlpha: 1, mirror: false, bg: 'garage', bgm: 0.6, sfx: 0.8, mute: false, quality: IS_TOUCH ? 1 : 2, camera: 0, trans: 'AT', assist: 2, steerSens: 0.5, autoAccel: false, layout: 'C', showFps: false, xmasTheme: 'auto', touchUI: 'auto', aiLevel: 1, nick: 'プレイヤー', gyro: false, gyroSens: 0.5, gyroInvert: false }, created: Date.now() };
   },
   ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); return true; } catch (e) { if (v === undefined) return this.mem[k] ?? null; this.mem[k] = v; return false; } },
   load() {
@@ -97,6 +97,7 @@ function carLockText(c) { const u = c.unlock; if (!u) return ''; if (u.chest) re
 function eventActive() { if (typeof DEV !== 'undefined' && DEV.owner && SAVE.data && SAVE.data.settings.devEvent) return true; const now = new Date(); const s = new Date(XMAS_EVENT.start + 'T00:00:00+09:00'), e = new Date(XMAS_EVENT.end + 'T23:59:59+09:00'); return now >= s && now <= e; }
 function xmasThemeOn() { const t = SAVE.data.settings.xmasTheme; return t === 'on' || (t === 'auto' && eventActive()); }
 const TRACK_CACHE = {};
+function qrPrize(m) { return 150000 + (m.diff || 2) * 50000; }
 function getTrack(id) { if (!TRACK_CACHE[id]) TRACK_CACHE[id] = new Track(MAP_BY_ID[id]); return TRACK_CACHE[id]; }
 function recordFor(mapId) { const tr = getTrack(mapId); return tr.length / 1000 * (RECORD_PACE[tr.env] || 30); }
 function hasItem(it) { return SAVE.data.event.items.includes(it); }
@@ -191,7 +192,10 @@ const LB_BOARDS = [
 ];
 function lbWeekDist() { const F = window.DL_FB, d = SAVE.data; if (!F) return null; const k = F.weekKey(); if (!d.wk || d.wk.k !== k) d.wk = { k, m: 0 }; return d.wk; }
 const EX_SLOT2_COST = 150;
-const SIM_ACTS = new Set(['tuneLv', 'tuneOpt', 'lookOpt', 'buyKit', 'hlCol', 'lookGlow', 'lookWheel', 'lookPaint', 'lookLivery', 'lookDecal']);
+const SND_NAV = /^(setTab|season|achCat|psType|shopTab|selStory|selMap|selShop|exSlot|trPick|dragOpp|clanOpenSet|cat|tcat|tmode|garageSel|setCar)$/;
+const SND_OK = /^(buyConfirm|storyGo|dragGo|resNext|restart|tutNext|frOk|frSend|trAccept|clanCreate|clanJoin|clanJoinCode|redeem|achClaim|achAll|glvClaim|glvAll|ftClaim|go|start|launch|xGo|diaGo|useCons)$/;
+const SND_NG = /^(buyCancel|closeModal|closeChest|tutSkip|tutPrev|trCancel|tradeClose|frNo|frDel|clanLeave|clanDisband|back)$/;
+const SIM_ACTS = new Set(['tuneLv', 'tuneOpt', 'lookOpt', 'buyKit', 'hlCol', 'mfType', 'lookGlow', 'lookWheel', 'lookPaint', 'lookLivery', 'lookDecal']);
 const GATED_ACTS = new Set([...SIM_ACTS, 'setExtra', 'buyItem', 'buyMusic', 'buyCons', 'buyDia', 'shopBuy', 'openChest']);
 function lbBlocked(inst, game) { const ex = inst && inst.look && EXTRA_BY_ID[inst.look.extra], ex2 = inst && inst.look && SAVE.data.exSlot2 && EXTRA_BY_ID[inst.look.extra2]; if ((ex && ex.perf) || (ex2 && ex2.perf)) return 'extra'; if (typeof DEV !== 'undefined' && DEV.owner && (SAVE.data.settings.devNitro || SAVE.data.settings.devGhostCar)) return 'dev'; return ''; }
 function lbBoardName(id) { if (id.startsWith('ta_')) { const m = MAP_BY_ID[id.slice(3)]; return 'タイムアタック ' + (m ? m.jp : id.slice(3)); } const b = LB_BOARDS.find(x => x.id === id); return b ? b.name : id; }
@@ -212,7 +216,7 @@ function diaRaces() {
 }
 function diaClaim(ch) { const d = SAVE.data; if (d.diaCh[ch.id]) return false; d.diaCh[ch.id] = 1; d.diamonds = (d.diamonds || 0) + ch.reward; SAVE.save(); AUDIO.fanfare(); UI.refreshTop(); return true; }
 const CTRL_PRESETS = [
-  { id: 'standard', name: '標準', desc: '初期設定。ボタンを押している間アクセル', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'A', mirror: false, trans: 'AT' } },
+  { id: 'standard', name: '標準', desc: '初期設定。左手でハンドル、右手でアクセル・ブレーキ', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'C', mirror: false, trans: 'AT' } },
   { id: 'easy', name: 'かんたん', desc: 'アクセル自動＋ドリフトとニトロもおまかせ', v: { accelMode: 'auto', steerMode: 'buttons', autoHand: true, autoNitro: true, assist: 3, layout: 'A', mirror: false, trans: 'AT' } },
   { id: 'toggle', name: 'アクセル切替', desc: 'GASをタップでON/OFF。指が疲れにくい', v: { accelMode: 'toggle', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 2, layout: 'A', mirror: false, trans: 'AT' } },
   { id: 'slide', name: 'スライド', desc: '左手でなぞってハンドル。細かく切れる', v: { accelMode: 'hold', steerMode: 'slide', autoHand: false, autoNitro: false, assist: 2, layout: 'B', mirror: false, trans: 'AT' } },
@@ -221,16 +225,19 @@ const CTRL_PRESETS = [
   { id: 'pro', name: '上級者', desc: 'アシストOFF・マニュアル。腕で勝負', v: { accelMode: 'hold', steerMode: 'buttons', autoHand: false, autoNitro: false, assist: 0, layout: 'A', mirror: false, trans: 'MT' } }
 ];
 const priceTag2 = (owned, price) => `<span class="pr ${owned ? 'own' : ''}">${owned ? '所有' : yen(price)}</span>`;
+const mufRow = (lk) => { lk.owned.mf = lk.owned.mf || ['stock']; return `<div class="h3">マフラーの音</div><div class="opt-row">${MUFFLER_TYPES.filter(m => !m[3] || invHas(m[3])).map(([id, nm, pr]) => `<button class="opt ${(lk.mfType || 'stock') === id ? 'on' : ''}" data-a="mfType" data-v="${id}">${nm}${priceTag2(lk.owned.mf.includes(id), pr)}</button>`).join('')}</div>`; };
 const hlColRow = (lk) => { lk.owned.hlCol = lk.owned.hlCol || ['white']; return `<div class="h3">ヘッドライトの色</div><div class="opt-row">${HL_COLORS.map(([id, nm, c]) => `<button class="opt ${(lk.hlCol || 'white') === id ? 'on' : ''}" data-a="hlCol" data-v="${id}"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-1px;background:${id === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : 'rgb(' + c.map(v => Math.round(v * 255)).join(',') + ')'}"></span>${nm}${priceTag2(lk.owned.hlCol.includes(id), id === 'rainbow' ? 300000 : 50000)}</button>`).join('')}</div>`; };
+const STYLES = [['stock', '純正', '工場出荷時の姿'], ['street', 'ストリート', '街乗り仕様'], ['widebody', 'ワイドボディ', '迫力のワイド'], ['timeattack', 'レーシング', 'サーキット仕様'], ['drift', 'ドリフト', '峠のドリフト仕様']];
+const styleRow = (lk) => `<div class="h3">スタイル</div><div class="style-row">${STYLES.map(([id, nm, sub]) => `<button class="style-b" data-a="${id === 'stock' ? 'stockAll' : 'buyKit'}" data-v="${id}"><b>${nm}</b><small>${sub}</small></button>`).join('')}</div>`;
 const kitRow = (lk) => `<div class="h3">ボディキット（セット）</div><div class="note">フロント・サイド・リア・ウイングなどをまとめて装着。持っていないパーツだけセット価格で購入できます。</div><div class="opt-row">${BODY_KITS.map(k => { const own = Object.entries(k.set).every(([sl, i]) => (lk.owned[sl] || [0]).includes(i)); const on = Object.entries(k.set).every(([sl, i]) => (lk[sl] || 0) === i); return `<button class="opt ${on ? 'on' : ''}" data-a="buyKit" data-v="${k.id}">${k.name}${priceTag2(own, k.price)}</button>`; }).join('')}</div>`;
 
 const UI = {
   init(R, game, show) {
     this.R = R; this.game = game; this.show = show; this.screen = 'title'; this.stack = [];
     document.body.classList.toggle('touch', this.touchUI());
-    document.body.classList.add(SAVE.data.settings.layout === 'B' ? 'layB' : 'layA'); this.applyCtrl();
-    $('btnStart').onclick = () => { AUDIO.init(); AUDIO.resume(); AUDIO.setVol({ bgm: SAVE.data.settings.bgm, sfx: SAVE.data.settings.sfx, mute: SAVE.data.settings.mute }); AUDIO.click(); AUDIO.playCat(xmasThemeOn() ? 'xmas' : 'menu'); this.goMenu(); if (SAVE.data.firstRunShown !== true) { SAVE.data.firstRunShown = true; SAVE.save(); this.welcome(); } };
-    $('btnBack').onclick = () => { AUDIO.click(); this.back(); };
+    document.body.classList.add('lay' + (SAVE.data.settings.layout || 'A')); this.applyCtrl();
+    $('btnStart').onclick = () => { AUDIO.init(); AUDIO.resume(); { const S = SAVE.data.settings; AUDIO.setVol({ bgm: S.bgm, sfx: S.sfx, ui: S.ui ?? 0.8, engine: S.engine ?? 0.9, tire: S.tire ?? 0.8, mute: S.mute }); } AUDIO.confirm(); AUDIO.playCat(xmasThemeOn() ? 'xmas' : 'menu'); this.goMenu(); if (SAVE.data.firstRunShown !== true) { SAVE.data.firstRunShown = true; SAVE.save(); this.welcome(); } };
+    $('btnBack').onclick = () => { AUDIO.cancel(); this.back(); };
     // ---- タップ反応の改善：指を離した瞬間に反応（スクロール中の微妙なズレで押せない問題を防ぐ） ----
     { let down = null, last = null; const SEL = 'button, [data-a], [data-m]';
       document.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; const el = e.target.closest && e.target.closest(SEL); down = el && !el.closest('#touch') ? { el, x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId } : null; }, true);
@@ -251,7 +258,7 @@ const UI = {
       else return; // メニューでは通常どおり
       history.pushState({ dl: 1 }, '');
     }); } catch (e) { }
-    $('btnProfile').onclick = () => { AUDIO.click(); this.open('profile'); };
+    $('btnProfile').onclick = () => { AUDIO.nav(); this.open('profile'); };
     $('btnPause').onclick = () => this.pause();
     $('btnRotOk').onclick = () => { this.rotDismiss = true; $('rotateHint').classList.add('hidden'); };
     $('panelBody').addEventListener('click', e => this.onAction(e));
@@ -285,7 +292,7 @@ const UI = {
     const p = CTRL_PRESETS.find(x => x.id === id); if (!p) return; const s = SAVE.data.settings; Object.assign(s, p.v); s.ctrlPreset = id; SAVE.save();
     if (s.steerMode === 'gyro' && !Gyro.on) Gyro.enable(); else if (s.steerMode !== 'gyro' && Gyro.on) Gyro.disable();
     if (this.game.active) this.game.veh.auto = s.trans !== 'MT';
-    document.body.classList.toggle('layA', s.layout === 'A'); document.body.classList.toggle('layB', s.layout === 'B');
+    for (const k of ['A', 'B', 'C']) document.body.classList.toggle('lay' + k, s.layout === k);
     this.applyCtrl(); this.toast('操作プリセット「' + p.name + '」にしました'); this.render();
   },
   a_ctrlTest() { const inst = SAVE.cur(); this.launch({ mode: 'free', mapId: 'akigiri', weather: 'clear', time: 'day', laps: 1, carInst: inst, rivals: [] }); },
@@ -343,7 +350,7 @@ const UI = {
     if (xm || A.M === 12 || A.M === 11) h += `<button class="mm-ban" data-m="${advOpen ? 'advent' : xm ? 'events' : 'advent'}">${ICO(advOpen ? 'calendar' : 'tree', '#ffd76a', 30)}<span><b>${advOpen ? 'アドベントカレンダー：扉が開けられます！' : xm ? 'クリスマスイベント開催中' : 'アドベントカレンダー 12/1スタート'}</b><small>${A.M === 12 && A.D <= 25 ? `クリスマスまで あと${25 - A.D}日` : A.M === 12 ? 'メリークリスマス！' : '限定アイテムが毎日もらえる'}</small></span></button>`;
     h += `<div class="mm-sec">PLAY</div><div class="mm-grid">`;
     h += T('story', 'flag', 'ストーリー', 'STORY MODE  SEASON 1-3', { cls: 'hero', big: true, sub: `${d.story.cleared.length} / ${STORY.length} レベルクリア`, badge: 'S3' });
-    h += T('time', 'clock', 'タイムアタック', 'TIME ATTACK') + T('touge', 'mountain', '峠チャレンジ', 'TOUGE CHALLENGE') + T('free', 'carSide', 'フリードライブ', 'FREE DRIVE') + T('drag', 'flag2', 'ドラッグレース', 'DRAG RACE 0-400m', { col: '#ff6a3a', badge: 'NEW' }) + T('practice', 'drift', 'ドリフト練習場', 'DRIFT PRACTICE', { col: '#2fdc7a', badge: 'NEW' });
+    h += T('time', 'clock', 'タイムアタック', 'TIME ATTACK') + T('touge', 'mountain', '峠チャレンジ', 'TOUGE CHALLENGE') + T('free', 'carSide', 'フリードライブ', 'FREE RUN') + T('race', 'flag', 'レース', 'RACE vs RIVAL', { col: '#ff4a4a', badge: 'NEW' }) + T('drag', 'flag2', 'ドラッグレース', 'DRAG RACE 0-400m', { col: '#ff6a3a', badge: 'NEW' }) + T('practice', 'drift', 'ドリフト練習場', 'DRIFT PRACTICE', { col: '#2fdc7a', badge: 'NEW' });
     if (!window.DL_STANDALONE) h += T('online', 'globe', 'オンライン対戦', 'ONLINE BATTLE', { col: '#5ad1ff' });
     if (window.DL_FB) h += T('ranking', 'trophy', '週間ランキング', 'WEEKLY RANKING', { col: '#ffcf3d', badge: 'NEW' });
     h += `</div><div class="mm-sec">CAR</div><div class="mm-grid">`;
@@ -355,14 +362,14 @@ const UI = {
     h += `</div>` + T('settings', 'gear', '設定', 'SETTINGS', { cls: 'wide', col: '#aab' });
     if (DEV.owner) h += T('dev', 'wrench', '開発者メニュー', 'DEVELOPER MENU', { cls: 'wide dev', col: '#ffcf3d' });
     const el = $('menuList'); el.innerHTML = h;
-    el.onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; AUDIO.click(); const k = b.dataset.m; if (['time', 'touge', 'free'].includes(k)) this.open('maps', { mode: k }); else if (k === 'practice') this.startPractice(); else if (k === 'tutorial') this.tutorial(true); else this.open(k); };
+    el.onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; AUDIO.nav(); const k = b.dataset.m; if (['time', 'touge', 'free', 'race'].includes(k)) this.open('maps', { mode: k }); else if (k === 'practice') this.startPractice(); else if (k === 'tutorial') this.tutorial(true); else this.open(k); };
   },
   menuAccountHTML() {
     const F = window.DL_FB; if (!F) return '';
     if (!F.isGoogle()) return `<button class="mm-acc" data-m="account">${ICO('globe', '#fff', 22)}<span><b>Googleでログイン</b><small>ランキングに参加・ユーザーネームを決めよう</small></span><i>LOGIN</i></button>`;
-    const nm = F.profile && F.profile.name;
+    const nm = F.profile && F.profile.name; const ttl = SAVE.data.title && ITEM_BY_ID[SAVE.data.title];
     if (!nm) return `<button class="mm-acc warn" data-m="account">${ICO('trophy', '#ffcf3d', 22)}<span><b>ユーザーネームを決めよう</b><small>決めるとランキングに参加できます</small></span><i>設定</i></button>`;
-    return `<button class="mm-acc on" data-m="account">${ICO('trophy', '#ffcf3d', 22)}<span><b class="noi18n">${esc(nm)}</b><small>ランキング参加中 ・ タップで名前を変更</small></span><i>変更</i></button>`;
+    return `<button class="mm-acc on" data-m="account">${ICO('trophy', '#ffcf3d', 22)}<span><b class="noi18n">${esc(nm)}</b><small>${ttl ? `<span class="ttl-badge">${esc(ttl.title)}</span> ` : ''}ランキング参加中 ・ タップで名前を変更</small></span><i>変更</i></button>`;
   },
   menuStatsHTML() {
     const st = SAVE.data.stats, ps = st.playSec || 0, mine = `<div class="ms-me">${ICO('clock', '#9aa0aa', 13)}<span>あなた：プレイ時間 <b>${Math.floor(ps / 3600)}時間${Math.floor(ps % 3600 / 60)}分</b> ・ レース <b>${(st.races || 0).toLocaleString()}</b>回</span></div>`;
@@ -386,8 +393,9 @@ const UI = {
     body.scrollTop = st; this.refreshTop();
   },
   onAction(e) {
-    const b = e.target.closest('[data-a]'); if (!b || b.disabled) return; const a = b.dataset.a, v = b.dataset.v;
-    if (a !== 'noop') AUDIO.click();
+    const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a, v = b.dataset.v;
+    if (b.disabled || (a === 'noop' && b.closest('.lock,.locked'))) { AUDIO.locked(); return; }
+    if (a !== 'noop') { if (SND_NAV.test(a)) AUDIO.nav(); else if (SND_OK.test(a)) AUDIO.confirm(); else if (SND_NG.test(a)) AUDIO.cancel(); else AUDIO.click(); }
     const fn = this['a_' + a]; if (fn) { try { if (GATED_ACTS.has(a)) this.runGated(a, v, b); else fn.call(this, v, b); } catch (err) { this._sim = null; this._gate = false; console.error(err); this.toast('エラー: ' + err.message); } }
   },
   // ---- 購入前のプレビューと購入確定 ----
@@ -397,6 +405,7 @@ const UI = {
     let name = ''; if (b) { const c = b.cloneNode(true); c.querySelectorAll('.pr,.pc-pr,small,svg').forEach(x => x.remove()); name = c.textContent.replace(/\s+/g, ' ').trim(); }
     let preview = null;
     if (SIM_ACTS.has(a)) { const sim = JSON.parse(JSON.stringify(this.tuneInst())); this._sim = sim; try { fn.call(this, v, b); } finally { this._sim = null; } preview = sim; }
+    else if (a === 'buyItem' && ITEM_BY_ID[v] && typeof itemApply === 'function') { const sim = JSON.parse(JSON.stringify(SAVE.cur())); itemApply(ITEM_BY_ID[v], sim, true); preview = sim; }
     else if (a === 'setExtra') { const sim = JSON.parse(JSON.stringify(this.tuneInst())); sim.look[this.exSlot === 2 && SAVE.data.exSlot2 ? 'extra2' : 'extra'] = v || ''; preview = sim; }
     this.confirmBuy({ name, price: p.price, cur: p.cur, preview, go: () => { this._ok = true; try { fn.call(this, v, b); } finally { this._ok = false; } } });
   },
@@ -431,28 +440,32 @@ const UI = {
   carLine(c) { return `${c.maker} ・ ${c.era} ・ ${c.drive}`; },
   // ---------------- マップ選択 ----------------
   r_maps(arg) {
-    const mode = arg.mode; $('panelTitle').textContent = { time: 'TIME ATTACK', touge: 'TOUGE CHALLENGE', free: 'FREE DRIVE', event: 'EVENT' }[mode];
+    const mode = arg.mode; $('panelTitle').textContent = { time: 'TIME ATTACK', touge: 'DRIFT CHALLENGE', free: 'FREE RUN', race: 'RACE', event: 'EVENT' }[mode];
     $('panelBody').classList.add('wide'); this.show.active = false;
-    const maps = MAPS.filter(m => (mode === 'free' || m.cat !== 'free') && m.cat !== 'drag' && (m.cat !== 'xmas' || eventActive()));
+    const maps = MAPS.filter(m => (mode === 'free' || m.cat !== 'free') && m.cat !== 'drag' && m.cat !== 'event' && (m.cat !== 'xmas' || eventActive()));
     if (!this.sel || !maps.find(m => m.id === this.sel)) this.sel = maps.find(mapUnlocked).id;
     const m = MAP_BY_ID[this.sel];
     if (!this.mopt || this.mopt.map !== m.id) this.mopt = { map: m.id, weather: m.weather, time: m.time, laps: 3 };
     const tr = getTrack(m.id); const rec = SAVE.data.records;
     const best = mode === 'time' ? (rec.ta[m.id] ? fmtTime(rec.ta[m.id].best) : '--') : mode === 'touge' ? (rec.touge[m.id] ? rec.touge[m.id].best.toLocaleString() + ' pts' : '--') : '';
     const wx = { clear: ICO('sun', '#ffcf3d', 14) + ' 晴れ', rain: ICO('rain', '#9ad0ff', 14) + ' 雨', snow: ICO('snow', '#fff', 14) + ' 雪', fog: ICO('fog', '#aaa', 14) + ' 霧' }, tm = { day: '昼', evening: '夕方', night: '夜' };
-    let html = `<div style="display:flex;gap:12px;flex-wrap:wrap"><div style="flex:2 1 320px;min-width:0"><div class="mapgrid">`;
+    let html = `<div class="mode-tabs">${[['free', 'FREE RUN', 'フリー走行'], ['time', 'TIME ATTACK', 'タイムアタック'], ['race', 'RACE', 'ライバルと対戦'], ['touge', 'DRIFT CHALLENGE', '峠チャレンジ']].map(([k, a, b]) => `<button class="${k === mode ? 'on' : ''}" data-a="mapMode" data-v="${k}"><b>${a}</b><small>${b}</small></button>`).join('')}</div><div style="display:flex;gap:12px;flex-wrap:wrap"><div style="flex:2 1 320px;min-width:0"><div class="mapgrid">`;
     for (const mp of maps) {
       const un = mapUnlocked(mp); const t = TRACK_CACHE[mp.id];
-      html += `<button class="mapcard ${mp.id === this.sel ? 'sel' : ''}" data-a="selMap" data-v="${mp.id}"><canvas width="160" height="120" data-thumb="${mp.id}"></canvas><div class="mn">${mp.jp}</div><div class="me">${mp.name}</div><div class="stars">${'★'.repeat(mp.diff)}${'☆'.repeat(5 - mp.diff)}</div>${un ? '' : `<div class="lock">${ICO('lock', '#fff', 26)}<br>${mapLockText(mp)}</div>`}</button>`;
+      html += `<button class="mapcard ${mp.id === this.sel ? 'sel' : ''}" data-a="selMap" data-v="${mp.id}"><canvas width="160" height="120" data-thumb="${mp.id}"></canvas>${mp.isNew ? '<i class="map-new">NEW</i>' : ''}<div class="mn">${mp.jp}</div><div class="me">${mp.name}</div><div class="stars">${'★'.repeat(mp.diff)}${'☆'.repeat(5 - mp.diff)}</div>${un ? '' : `<div class="lock">${ICO('lock', '#fff', 26)}<br>${mapLockText(mp)}</div>`}</button>`;
     }
     html += `</div></div><div style="flex:1 1 260px;min-width:240px"><div class="h3">${m.jp} / ${m.name}</div><div class="note">${m.desc}</div>
       <div class="kv" style="margin:8px 0"><div>難易度</div><div class="stars">${'★'.repeat(m.diff)}${'☆'.repeat(5 - m.diff)}</div><div>距離</div><div>${(tr.length / 1000).toFixed(2)} km</div><div>コーナー数</div><div>${tr.corners.length}（ヘアピン ${tr.corners.filter(c => c.type === 'ヘアピン').length}）</div><div>標準天候</div><div>${wx[m.weather]} / ${tm[m.time]}</div><div>高低差</div><div>${Math.round(tr.maxY - tr.minY)} m</div>${best ? `<div>ベスト記録</div><div>${best}</div>` : ''}${mode === 'time' ? `<div>コースレコード</div><div>${fmtTime(Math.min(recordFor(m.id), rec.ta[m.id] ? rec.ta[m.id].best : 1e9))}</div>` : ''}</div>`;
+    { const pb = rec.ta[m.id] ? fmtTime(rec.ta[m.id].best) : '--', pd = rec.touge[m.id] ? rec.touge[m.id].best.toLocaleString() + ' pts' : '--';
+      const fe = m.feats || [tr.corners.filter(c => c.type === 'ヘアピン').length ? `ヘアピン ${tr.corners.filter(c => c.type === 'ヘアピン').length}` : '', tr.hasTunnel ? 'トンネル' : '', (tr.maxY - tr.minY) > 25 ? `高低差 約${Math.round((tr.maxY - tr.minY) / 10) * 10}m` : '', { mountain: '峠道', highway: '高速道路', city: '市街地', port: '港湾', industrial: '工業地帯', coast: '海沿い', circuit: 'サーキット', lot: '広場' }[m.env]].filter(Boolean);
+      html += `<div class="map-chips">${fe.map(f => `<span>${f}</span>`).join('')}</div><div class="map-modes">${['FREE RUN', 'TIME ATTACK', 'RACE', 'DRIFT CHALLENGE'].map(x => `<span>${x}</span>`).join('')}</div><div class="kv" style="margin:6px 0"><div>ベストタイム</div><div>${pb}</div><div>ベストドリフト</div><div>${pd}</div></div>`; }
     if (mapUnlocked(m)) {
       html += `<div class="h3">天候</div><div class="opt-row">${Object.entries(wx).map(([k, l]) => `<button class="opt ${this.mopt.weather === k ? 'on' : ''}" data-a="mopt" data-v="weather:${k}">${l}</button>`).join('')}</div>
       <div class="h3">時間帯</div><div class="opt-row">${Object.entries(tm).map(([k, l]) => `<button class="opt ${this.mopt.time === k ? 'on' : ''}" data-a="mopt" data-v="time:${k}">${l}</button>`).join('')}</div>`;
-      if (mode === 'time') html += `<div class="h3">周回数</div><div class="opt-row">${[1, 3, 5].map(n => `<button class="opt ${this.mopt.laps === n ? 'on' : ''}" data-a="mopt" data-v="laps:${n}">${n} LAP</button>`).join('')}</div>`;
+      if (mode === 'time' || mode === 'race') html += `<div class="h3">周回数</div><div class="opt-row">${[1, 3, 5].map(n => `<button class="opt ${this.mopt.laps === n ? 'on' : ''}" data-a="mopt" data-v="laps:${n}">${n} LAP</button>`).join('')}</div>`;
       if (mode === 'touge') html += `<div class="note">エンドレス形式。ドリフトでポイントを稼ぎ、壁に当たるとダメージが蓄積。ダメージ100%または停止で終了。</div>`;
-      html += `<div class="btns"><button class="btn pri" data-a="toCarSel" style="flex:1">車両選択へ ▶</button></div>`;
+      if (mode === 'race') html += `<div class="note">ライバル1台と対戦。勝利で ${yen(qrPrize(m))}＋XP。</div>`;
+      html += `<div class="btns"><button class="btn pri" data-a="toCarSel" style="flex:1">PLAY ▶ 車両選択へ</button></div>`;
     } else html += `<div class="note" style="color:#ff8080">${ICO('lock', '#ff8080', 14)} ${mapLockText(m)}</div>`;
     html += `</div></div>`;
     setTimeout(() => this.drawThumbs(), 0);
@@ -477,6 +490,7 @@ const UI = {
   },
   a_selMap(v) { this.sel = v; this.render(); },
   a_mopt(v) { const [k, val] = v.split(':'); this.mopt[k] = k === 'laps' ? +val : val; this.render(); },
+  a_mapMode(v) { this.arg.mode = v; this.render(); },
   a_toCarSel() { this.open('carsel', { mode: this.arg.mode, mapId: this.sel, weather: this.mopt.weather, time: this.mopt.time, laps: this.mopt.laps }); },
   // ---------------- 車両選択 ----------------
   r_carsel(cfg) {
@@ -493,6 +507,8 @@ const UI = {
   a_selCarSel(v) { this.sel = v; this.render(); },
   a_startRace() {
     const cfg = this.arg; const inst = SAVE.data.cars.find(c => c.uid === this.sel) || SAVE.cur(); SAVE.data.current = inst.uid; SAVE.save();
+    if (cfg.mode === 'race') { const m = MAP_BY_ID[cfg.mapId]; const names = ['峠の 白い影', '高架の 流星', '夜明けの 稲妻', '湾岸の 黒い風']; const rv = { name: names[(m.seed || 0) % names.length], team: 'RIVAL', car: inst.id, color: '#20232a', skill: Math.min(0.93, 0.76 + m.diff * 0.03) };
+      return this.launch({ mode: 'event', quick: true, evRace: { title: 'RACE ・ ' + m.jp, prize: qrPrize(m) }, mapId: cfg.mapId, weather: cfg.weather, time: cfg.time, laps: cfg.laps || 1, carInst: inst, rivals: [rv] }); }
     this.launch({ mode: cfg.mode, mapId: cfg.mapId, weather: cfg.weather, time: cfg.time, laps: cfg.mode === 'time' ? cfg.laps : 1, carInst: inst, rivals: [] });
   },
   launch(cfg) {
@@ -518,7 +534,7 @@ const UI = {
     const tabs = [['chest', ICO('gift', '#ffcf3d', 16) + ' チェスト'], ['shop', ICO('shop', '#ffcf3d', 16) + ' 日替わり'], ['col', ICO('collection', '#ffcf3d', 16) + ' コレクション'], ['bg', ICO('image', '#ffcf3d', 16) + ' ホーム背景']];
     let html = `<div class="tabs">${tabs.map(([k, n]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${n}</button>`).join('')}</div>`;
     const rb = r => `<span class="rar" style="background:${RARITY[r].color}">${RARITY[r].name}</span>`;
-    if (this.tab === 'chest') {
+    if (this.tab === 'chest') { html += this.packChestHTML(); } if (false) {
       const today = jstDateKey(); const freeOk = d.chest.freeDate !== today;
       html += `<div class="note">チェストを開けると、限定のデカール・カラー・ホイール・ネオン・キャリパー・チューニングパーツ・ホーム背景・特別な限定車のどれか1つが出ます。すでに持っているアイテムが出た場合はレア度に応じて¥に換金されます。</div>`;
       for (const c of CHESTS) {
@@ -531,8 +547,8 @@ const UI = {
       html += `<div class="h3">提供割合について</div><div class="note">上の表は各チェストでそのレア度が出る確率です。レア度が決まった後、そのレア度のアイテムの中から均等な確率で1つ選ばれます。<br>${RAR_ORDER.map(r => `${RARITY[r].name}: ${cnt[r]}種類（1種あたり最大 ${(Math.max(...CHESTS.map(c => c.odds[r] || 0)) / cnt[r]).toFixed(2)}%）・重複時 ${yen(RARITY[r].dup)}`).join('<br>')}</div>`;
     }
     if (this.tab === 'shop') {
-      const key = jstDateKey(); if (d.shopBuy.date !== key) { d.shopBuy = { date: key, ids: [] }; }
-      const items = dailyShop(key); const nx = new Date(); const jst = new Date(nx.getTime() + 9 * 3600000); const left = 86400000 - (jst.getTime() % 86400000);
+      const key = srvDateKey(); if (d.shopBuy.date !== key) { d.shopBuy = { date: key, ids: [] }; }
+      const items = dailyShop(key); const left = srvMsToMidnight(); clearInterval(this._shopT); this._shopT = setInterval(() => { const el = document.getElementById('shopLeft'); if (!el) return clearInterval(this._shopT); const l = srvMsToMidnight(); el.textContent = `${Math.floor(l / 3600000)}:${String(Math.floor(l / 60000) % 60).padStart(2, '0')}:${String(Math.floor(l / 1000) % 60).padStart(2, '0')}`; if (l < 1500) setTimeout(() => this.render(), 1600); }, 1000);
       html += `<div class="note">毎日 0:00（日本時間）に品揃えが入れ替わります。次の更新まで <b id="shopLeft">${Math.floor(left / 3600000)}時間${Math.floor(left / 60000) % 60}分</b></div><div class="shop-grid">`;
       for (const it of items) { const bought = d.shopBuy.ids.includes(it.id) || invHas(it.id); const pr = RARITY[it.rarity].shop;
         html += `<div class="sitem" style="border-color:${RARITY[it.rarity].color}"><div class="si-ic">${this.itemIcon(it, 52)}</div><div class="si-nm">${esc(it.name)}</div>${rb(it.rarity)}<div class="si-ty">${ITEM_TYPES[it.type]}${it.desc ? '・' + it.desc : ''}</div><button class="btn ${bought ? '' : 'pri'}" data-a="shopBuy" data-v="${it.id}" ${bought ? 'disabled' : ''}>${bought ? '所持済み' : yen(pr)}</button></div>`; }
@@ -584,7 +600,7 @@ const UI = {
     h += `<div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${l}</button>`).join('')}</div>`;
     const card = (on, owned, icon, name, sub, price, act, val) => `<button class="pcard ${on ? 'on' : ''}" data-a="${act}" data-v="${val}"><span class="pc-ic">${icon}</span><span class="pc-tx"><b>${name}</b><small>${sub || ''}</small></span><span class="pc-pr">${on ? '装着中' : owned ? '購入済み' : yen(price)}</span></button>`;
     if (this.tab === 'wheel') {
-      const ws = WHEEL_STYLES.filter(w => !w.xmas && !w.chest);
+      const ws = WHEEL_STYLES.filter(w => !w.xmas && !w.chest && (!w.only || car.series === w.only));
       h += `<div class="pgrid">${ws.map(w => card(lk.wheel === w.id, lk.owned.wheel.includes(w.id), wheelIcon({ spokes: w.spokes || 5, rim: w.rim || '#c8c8cc', deep: w.deep }, 40), w.name, (w.spokes ? w.spokes + '本スポーク' : 'スチール') + (w.deep ? '・深リム' : ''), w.price, 'lookWheel', w.id)).join('')}</div>`;
       h += `<div class="note">ホイールの色はカスタマイズ画面で変えられます。限定ホイールはチェスト・イベントで手に入ります。</div>`;
     }
@@ -592,9 +608,9 @@ const UI = {
       h += `<div class="pgrid">${PARTS.tire.opts.map(o => card(t.tire === o.id, t.owned.tire.includes(o.id), ICO('tire', '#ffcf3d', 36), o.name, `グリップ ${Math.round(o.mu * 100)} ・ 滑りやすさ ${Math.round(o.slide * 100)} ・ 雨 ${Math.round(o.wet * 100)} ・ 雪 ${Math.round(o.snow * 100)}`, o.price, 'tuneOpt', 'tire:' + o.id)).join('')}</div>`;
     }
     if (this.tab === 'body') {
-      h += kitRow(lk) + hlColRow(lk);
+      h += styleRow(lk) + kitRow(lk) + hlColRow(lk);
       for (const k of ['wing', 'front', 'rear', 'side', 'hood', 'roof', 'trunk', 'fender', 'hl']) { const A = AERO[k]; lk.owned[k] = lk.owned[k] || [0];
-        h += `<div class="h3">${A.label}</div><div class="pgrid">${A.opts.map(([nm, pr], i) => card((lk[k] || 0) === i, lk.owned[k].includes(i), ICO(k === 'wing' ? 'wing' : k === 'front' || k === 'hl' ? 'carFront' : k === 'roof' || k === 'hood' ? 'carSide' : 'carSide', '#ffcf3d', 32), nm, '', pr, 'lookOpt', k + ':' + i)).join('')}</div>`; }
+        h += `<div class="h3">${A.label}</div><div class="pgrid">${A.opts.map(([nm, pr, o2], i) => (o2 && o2.only && car.series !== o2.only) ? '' : card((lk[k] || 0) === i, lk.owned[k].includes(i), ICO(k === 'wing' ? 'wing' : k === 'front' || k === 'hl' ? 'carFront' : k === 'roof' || k === 'hood' ? 'carSide' : 'carSide', '#ffcf3d', 32), nm, '', pr, 'lookOpt', k + ':' + i)).join('')}</div>`; }
     }
     if (this.tab === 'cons') { const d = SAVE.data;
       h += `<div class="note">買ったアイテムはバックパックの「消費アイテム」から使えます。効果は時間制（リアルタイム）です。</div><div class="pgrid">${CONSUMABLES.filter(c => c.price).map(c => `<button class="pcard" data-a="buyCons" data-v="${c.id}:money"><span class="pc-ic">${consIcon(c, 40)}</span><span class="pc-tx"><b>${esc(c.name)}${(d.cons || {})[c.id] ? ' <small>（所持 ' + d.cons[c.id] + '）</small>' : ''}</b><small>${esc(c.desc)}</small></span><span class="pc-pr">${yen(c.price)}</span></button>`).join('')}</div>`;
@@ -637,8 +653,8 @@ const UI = {
   a_useCons(id) { const r = useCons(id); if (!r.ok) { AUDIO.error && AUDIO.error(); return this.toast(r.msg); } SAVE.data.stats.consUsed = (SAVE.data.stats.consUsed || 0) + 1; AUDIO.buy ? AUDIO.buy() : 0; this.toast(CONS_BY_ID[id].name + ' を使いました！'); this.render(); },
   a_buyCons(v) { const [id, cur] = v.split(':'); const c = CONS_BY_ID[id], d = SAVE.data; if (!c) return; if (cur === 'dia') { if (!this.payDia(c.dia)) return; } else if (!SAVE.spend(c.price)) return; giveCons(id); SAVE.save(); AUDIO.buy ? AUDIO.buy() : 0; this.refreshTop(); this.toast(c.name + ' を購入しました（バックパックで使えます）'); this.render(); },
   r_bag() {
-    $('panelTitle').textContent = 'BACKPACK'; const d = SAVE.data; if (!this.tab) this.tab = 'medal'; this.show.setCar(SAVE.cur());
-    const tabs = [['medal', 'メダル'], ['cons', '消費アイテム'], ['items', 'アイテム'], ['extra', 'エキストラ'], ['wallet', '所持品']];
+    $('panelTitle').textContent = 'BACKPACK'; const d = SAVE.data; if (!this.tab) this.tab = 'items'; this.show.setCar(SAVE.cur());
+    const tabs = [['items', 'インベントリ'], ['log', '開封履歴'], ['medal', 'メダル'], ['cons', '消費アイテム'], ['extra', 'エキストラ'], ['wallet', '所持品']];
     let h = `<div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${this.tab === k ? 'on' : ''}" data-a="setTab" data-v="${k}">${l}</button>`).join('')}</div>`;
     if (this.tab === 'medal') {
       const M = d.medals; h += `<div class="medals">${[['g', '金メダル', '1位'], ['s', '銀メダル', '2位'], ['b', '銅メダル', '3位']].map(([k, nm, r]) => `<div class="medal ${k}">${medalIcon(k, 64)}<b>${M[k] || 0}</b><small>${nm}（${r}）</small></div>`).join('')}</div>`;
@@ -651,7 +667,9 @@ const UI = {
       h += `<div class="h3">持っている消費アイテム</div>` + (own.length ? `<div class="pgrid">${own.map(c => `<div class="pcard"><span class="pc-ic">${consIcon(c, 40)}</span><span class="pc-tx"><b>${esc(c.name)} ×${d.cons[c.id]}</b><small>${esc(c.desc)}</small></span><button class="btn pri" data-a="useCons" data-v="${c.id}">使う</button></div>`).join('')}</div>` : `<div class="note">パーツショップ・ダイヤショップ・チェストのおまけ・毎日の無料チェスト・ダイヤレースで手に入ります。</div>`);
       h += `<div class="note">同じ効果のアイテムを使うと時間が延長されます（最大3時間）。時間はゲームを閉じていても進みます。ランキングのスコアには影響しません。</div>`;
     }
-    if (this.tab === 'items') {
+    if (this.tab === 'items') h += this.invHTML();
+    if (this.tab === 'log') h += this.logHTML();
+    if (false) {
       const own = ITEMS.filter(i => invHas(i.id));
       h += `<div class="note">持っているアイテム ${own.length}種類（重複は ×数 で表示）</div>`;
       for (const ty of Object.keys(ITEM_TYPES)) { const list = own.filter(i => i.type === ty); if (!list.length) continue;
@@ -975,7 +993,7 @@ const UI = {
     const priceTag = (owned, price) => `<span class="pr ${owned ? 'own' : ''}">${owned ? '所有' : yen(price)}</span>`;
     const lvRow = key => { const P = PARTS[key]; return `<div class="h3">${P.label}</div><div class="opt-row">${P.lv.map((p, i) => `<button class="opt ${(t[key] || 0) === i ? 'on' : ''}" data-a="tuneLv" data-v="${key}:${i}">${P.names[i]}${priceTag(i <= (t.owned[key] || 0), p)}</button>`).join('')}</div>`; };
     const optRow = key => { const P = PARTS[key]; return `<div class="h3">${P.label}</div><div class="opt-row">${P.opts.map(o => `<button class="opt ${t[key] === o.id ? 'on' : ''}" data-a="tuneOpt" data-v="${key}:${o.id}">${o.name}${priceTag(t.owned[key].includes(o.id), o.price)}</button>`).join('')}</div>`; };
-    const slider = (key, label, min, max, step, unit, en = true) => `<div class="row"><label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${t[key]}" data-in="tuneSl" data-k="${key}" ${en ? '' : 'disabled'}><span class="val" id="sv_${key}">${(+t[key]).toFixed(step < 1 ? (step < 0.1 ? 2 : 1) : 0)}${unit}</span></div>`;
+    const slider = (key, label, min, max, step, unit, en = true) => `<div class="row"><label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${t[key] ?? 0}" data-in="tuneSl" data-k="${key}" ${en ? '' : 'disabled'}><span class="val" id="sv_${key}">${(+(t[key] ?? 0)).toFixed(step < 1 ? (step < 0.1 ? 2 : 1) : 0)}${unit}</span></div>`;
     if (this.tab === 'engine') { html += optRow('engine') + ['ecu', 'intercooler', 'intake', 'muffler', 'cam', 'piston', 'fuel', 'flywheel', 'clutch', 'reinforce', 'nos'].map(lvRow).join(''); html += `<div class="note">ターボ/大型ターボは高回転でパワーが出る代わりにターボラグが増加。スーパーチャージャーはラグなし。インタークーラーは過給機付きの時のみ効果。</div>`; }
     if (this.tab === 'chassis') {
       html += lvRow('susp') + lvRow('stab') + lvRow('strut') + lvRow('brake') + optRow('diff') + lvRow('knuckle') + lvRow('trans') + lvRow('weight');
@@ -983,14 +1001,14 @@ const UI = {
       html += `<div class="note">LSDは駆動輪の空転を抑えドリフトを持続しやすくします（2WAYは減速時も効く）。キャンバーは-2.5°前後で横グリップ最大。リアのトーアウトはオーバーステア傾向。</div>`;
     }
     if (this.tab === 'tire') {
-      html += optRow('tire'); html += `<div class="h3">サイズ</div>` + slider('tireW', 'タイヤ幅', -1, 2, 1, '') + slider('wheelIn', 'ホイール (インチ)', 15, 19, 1, '"');
+      html += optRow('tire'); html += `<div class="h3">サイズ</div>` + slider('tireW', 'タイヤ幅', -1, 2, 1, '') + slider('track', 'トレッド幅（左右）', -2, 4, 1, ' cm') + slider('wheelIn', 'ホイール (インチ)', 15, 19, 1, '"');
       html += `<div class="note">ドリフトタイヤは滑り出しが穏やかで角度を保ちやすい。ウェットタイヤは雨・雪で効果大。タイヤ幅を広げるとグリップ向上。</div>`;
     }
     if (this.tab === 'aero') {
-      html += kitRow(lk);
-      for (const k of ['front', 'rear', 'side', 'fender', 'wing', 'hood', 'roof', 'trunk', 'mirror', 'exhaust', 'hl', 'head', 'tail']) { const A = AERO[k]; html += `<div class="h3">${A.label}</div><div class="opt-row">${A.opts.map(([nm, p], i) => `<button class="opt ${(lk[k] || 0) === i ? 'on' : ''}" data-a="lookOpt" data-v="${k}:${i}">${nm}${priceTag((lk.owned[k] || [0]).includes(i), p)}</button>`).join('')}</div>`; }
-      html += hlColRow(lk);
-      html += `<div class="h3">ホイール</div><div class="opt-row">${WHEEL_STYLES.filter(w => (!w.xmas || hasItem('wheel:' + w.id)) && (!w.chest || invHas(w.id))).map(w => `<button class="opt ${lk.wheel === w.id ? 'on' : ''}" data-a="lookWheel" data-v="${w.id}">${w.name}${priceTag(lk.owned.wheel.includes(w.id), w.price)}</button>`).join('')}</div>`;
+      html += styleRow(lk) + kitRow(lk);
+      for (const k of ['front', 'rear', 'side', 'fender', 'wing', 'hood', 'roof', 'trunk', 'mirror', 'exhaust', 'hl', 'head', 'tail']) { const A = AERO[k]; html += `<div class="h3">${A.label}</div><div class="opt-row">${A.opts.map(([nm, p, o2], i) => (o2 && o2.only && (CAR_BY_ID[inst.id] || {}).series !== o2.only) ? '' : `<button class="opt ${(lk[k] || 0) === i ? 'on' : ''}" data-a="lookOpt" data-v="${k}:${i}">${nm}${priceTag((lk.owned[k] || [0]).includes(i), p)}</button>`).join('')}</div>`; }
+      html += hlColRow(lk) + mufRow(lk);
+      html += `<div class="h3">ホイール</div><div class="opt-row">${WHEEL_STYLES.filter(w => (!w.xmas || hasItem('wheel:' + w.id)) && (!w.chest || invHas(w.id)) && (!w.only || (CAR_BY_ID[inst.id] || {}).series === w.only)).map(w => `<button class="opt ${lk.wheel === w.id ? 'on' : ''}" data-a="lookWheel" data-v="${w.id}">${w.name}${priceTag(lk.owned.wheel.includes(w.id), w.price)}</button>`).join('')}</div>`;
       html += `<div class="h3">ホイールカラー</div><div class="swatches">${['#c8c8cc', '#1a1a1a', '#d4af37', '#ffffff', '#d01020', '#1e5aff', '#ff6a00', '#5a5f6a'].map(c => `<button class="sw ${lk.wheelColor === c ? 'on' : ''}" style="background:${c}" data-a="lookSet" data-v="wheelColor:${c}"></button>`).join('')}</div>`;
       html += `<div class="h3">ブレーキキャリパー色</div><div class="swatches">${['#cc1010', '#f0c000', '#1e5aff', '#1a1a1a', '#c8c8cc'].concat(hasItem('caliper:gold') ? ['#d4af37'] : []).concat(ITEMS.filter(i => i.type === 'caliper' && invHas(i.id)).map(i => i.color)).map(c => `<button class="sw ${(lk.caliper || '#cc1010') === c ? 'on' : ''}" style="background:${c}" data-a="lookSet" data-v="caliper:${c}"></button>`).join('')}</div>`;
       const glows = ITEMS.filter(i => i.type === 'neon' && invHas(i.id)).map(i => [i.id, i.name + ' ★', 0]).concat([['none', 'なし', 0]]); glows.push(...[ ['red', 'レッド', 60000], ['blue', 'ブルー', 60000], ['green', 'グリーン', 60000], ['purple', 'パープル', 60000], ['white', 'ホワイト', 60000]].concat(hasItem('glow:xmas') ? [['xmas', 'クリスマス (限定)', 0]] : []));
@@ -1118,6 +1136,9 @@ const UI = {
   a_tuneOpt(v) { const [k, id] = v.split(':'); const inst = this.tuneInst(); const t = inst.tune; const o = PARTS[k].opts.find(o => o.id === id); if (!t.owned[k].includes(id)) { if (!this.buyPart(inst, o.price)) return; t.owned[k].push(id); this.toast(o.name + ' を装着しました'); } t[k] = id; this.afterTune(); },
   in_tuneSl(val, el) { const inst = this.tuneInst(); const k = el.dataset.k; inst.tune[k] = +val; const sv = $('sv_' + k); if (sv) sv.textContent = (+val).toFixed(+el.step < 1 ? (+el.step < 0.1 ? 2 : 1) : 0) + ({ height: 'mm', camber: '°', toeF: '°', toeR: '°', final: 'x', wheelIn: '"' }[k] || ''); SAVE.save(); clearTimeout(this._slT); this._slT = setTimeout(() => { this.show.setCar(inst, true); this.render(); }, 250); },
   a_lookOpt(v) { const [k, i] = v.split(':'); const idx = +i; const inst = this.tuneInst(); const lk = inst.look; lk.owned[k] = lk.owned[k] || [0]; if (!lk.owned[k].includes(idx)) { if (!this.buyPart(inst, AERO[k].opts[idx][1])) return; lk.owned[k].push(idx); } lk[k] = idx; this.afterTune(); },
+  a_mfType(id) { const inst = this.tuneInst(), lk = inst.look, m = MUFFLER_TYPES.find(x => x[0] === id); if (!m) return; lk.owned.mf = lk.owned.mf || ['stock']; if (!lk.owned.mf.includes(id) && !invHas('mf_' + id)) { if (!this.buyPart(inst, m[2])) return; lk.owned.mf.push(id); } lk.mfType = id; this.afterTune(); if (!this._sim) this.revSample(id); },
+  revSample(id) { try { const car = CAR_BY_ID[this.tuneInst().id], e = AUDIO.createEngine(Object.assign({}, computeSpec(car, this.tuneInst().tune), { car, mfType: id, sound: car.sound }), true); if (!e) return; let r = 1000, up = true; const it = setInterval(() => { r += up ? 380 : -500; if (r > car.redline * 0.95) up = false; AUDIO.updateEngine(e, { rpm: r, thr: up ? 1 : 0, boost: up ? 0.6 : 0, slip: 0, speed: 0, redline: car.redline, gear: 1 }); if (!up && r < 1300) { clearInterval(it); AUDIO.stopEngine(e); } }, 50); } catch (x) { } },
+  a_stockAll() { const inst = this.tuneInst(), lk = inst.look; for (const k of ['front', 'rear', 'side', 'wing', 'hood', 'roof', 'trunk', 'fender', 'hl']) lk[k] = (k === 'wing' && CAR_BY_ID[inst.id].body === 'rally') ? 2 : 0; lk.kit = {}; this.afterTune(); this.toast('純正スタイルに戻しました（買ったパーツはそのまま所有）'); },
   a_buyKit(id) { const k = BODY_KITS.find(x => x.id === id); if (!k) return; const inst = this.tuneInst(); const lk = inst.look; const own = Object.entries(k.set).every(([sl, i]) => (lk.owned[sl] || [0]).includes(i)); if (!own) { if (!this.buyPart(inst, k.price)) return; } for (const [sl, i] of Object.entries(k.set)) { lk.owned[sl] = lk.owned[sl] || [0]; if (!lk.owned[sl].includes(i)) lk.owned[sl].push(i); lk[sl] = i; } this.afterTune(); this.toast(k.name + ' を装着しました'); },
   a_hlCol(id) { const inst = this.tuneInst(); const lk = inst.look; lk.owned.hlCol = lk.owned.hlCol || ['white']; if (!lk.owned.hlCol.includes(id)) { if (!this.buyPart(inst, id === 'rainbow' ? 300000 : 50000)) return; lk.owned.hlCol.push(id); } lk.hlCol = id; this.afterTune(); },
   a_lookGlow(id) { const inst = this.tuneInst(); const lk = inst.look; lk.owned.glow = lk.owned.glow || ['none']; if (!lk.owned.glow.includes(id) && id !== 'xmas' && !(ITEM_BY_ID[id] && invHas(id))) { if (!this.buyPart(inst, 60000)) return; lk.owned.glow.push(id); } lk.glow = id; this.afterTune(); },
@@ -1143,10 +1164,10 @@ const UI = {
     const opt = (key, list) => `<div class="opt-row">${list.map(([v, l]) => `<button class="opt ${String(s[key]) === String(v) ? 'on' : ''}" data-a="setOpt" data-v="${key}:${v}">${l}</button>`).join('')}</div>`;
     if (this.tab === 'sound') {
       html += `<div class="h3 noi18n">言語 / Language</div><div class="opt-row noi18n"><button class="opt ${(s.lang || 'ja') === 'ja' ? 'on' : ''}" data-a="setLang" data-v="ja">日本語</button><button class="opt ${s.lang === 'en' ? 'on' : ''}" data-a="setLang" data-v="en">English</button></div>`;
-      html += `<div class="row"><label>BGM 音量</label><input type="range" min="0" max="1" step="0.05" value="${s.bgm}" data-in="setVol" data-k="bgm"><span class="val">${Math.round(s.bgm * 100)}</span></div><div class="row"><label>効果音 音量</label><input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-in="setVol" data-k="sfx"><span class="val">${Math.round(s.sfx * 100)}</span></div>`;
+      html += `<div class="row"><label>BGM 音量</label><input type="range" min="0" max="1" step="0.05" value="${s.bgm}" data-in="setVol" data-k="bgm"><span class="val">${Math.round(s.bgm * 100)}</span></div>` + [['ui', 'UI効果音 音量', 0.8], ['engine', 'エンジン音量', 0.9], ['tire', 'タイヤ音量', 0.8], ['sfx', 'その他の効果音 音量', 0.8]].map(([k, l, d]) => `<div class="row"><label>${l}</label><input type="range" min="0" max="1" step="0.05" value="${s[k] ?? d}" data-in="setVol" data-k="${k}"><span class="val">${Math.round((s[k] ?? d) * 100)}</span></div>`).join('');
       html += `<div class="h3">ミュート</div>` + opt('mute', [[false, 'OFF'], [true, 'ON']]);
       html += this.musicPlayerHTML();
-      html += `<div class="note">BGMはすべて本ゲーム内でリアルタイムに生成されるオリジナルのユーロビートです（外部音源は使用していません）。PCではレース中に M キーで曲を変更できます。</div>`;
+      html += `<div class="note">BGMはゲーム内で生成するオリジナル曲に加えて、追加した音楽ファイル（MP3）も通常レース・タイムアタック・ストーリーでランダムに流れます。クリスマスイベントのレースでは専用曲が流れます。PCではレース中に M キーで曲を変更できます。</div>`;
     }
     if (this.tab === 'control') {
       const pm = this.ctrlPresetMatch();
@@ -1158,7 +1179,7 @@ const UI = {
       html += `<div class="h3">アクセル</div>` + opt('accelMode', [['hold', '押している間'], ['toggle', 'タップでON/OFF'], ['auto', '自動（ブレーキで減速）']]) + `<div class="note">「タップでON/OFF」はGASボタンを1回タップすると踏みっぱなしになり、もう1回で離します（ブレーキ中は自動で離します）。「自動」はGASボタンが消えて常にアクセルON。</div>`;
       html += `<div class="h3">ハンドル</div>` + opt('steerMode', [['buttons', '◀ ▶ ボタン'], ['slide', 'スライド操作'], ['gyro', '傾き（ジャイロ）']]) + `<div class="note">「スライド操作」は左側のエリアに指を置いて左右になぞると、なぞった量だけハンドルが切れます（細かく調整しやすい）。</div>`;
       html += `<div class="h3">操作アシスト</div>` + `<div class="row"><label>オートサイドブレーキ</label></div>` + opt('autoHand', [[false, 'OFF'], [true, 'ON（きついコーナーで自動でドリフトのきっかけ）']]) + `<div class="row"><label>オートニトロ</label></div>` + opt('autoNitro', [[false, 'OFF'], [true, 'ON（直線で自動で使う）']]);
-      html += `<div class="h3">ボタン</div>` + opt('layout', [['A', 'レイアウトA（左右ハンドル）'], ['B', 'レイアウトB（左手ハンドル）']]) + opt('mirror', [[false, '左右 通常'], [true, '左右 入れ替え（アクセルを左手に）']])
+      html += `<div class="h3">ボタン</div>` + opt('layout', [['C', 'スマホ標準（左：ハンドル／右：アクセル・ブレーキ）'], ['A', 'レイアウトA（左右ハンドル）'], ['B', 'レイアウトB（左手ハンドル）']]) + opt('mirror', [[false, '左右 通常'], [true, '左右 入れ替え（アクセルを左手に）']])
         + `<div class="row"><label>ボタンの大きさ</label><input type="range" min="0.7" max="1.3" step="0.05" value="${s.btnScale}" data-in="setNum" data-k="btnScale"><span class="val">${Math.round(s.btnScale * 100)}</span></div>`
         + `<div class="row"><label>ボタンの濃さ</label><input type="range" min="0.3" max="1" step="0.05" value="${s.btnAlpha}" data-in="setNum" data-k="btnAlpha"><span class="val">${Math.round(s.btnAlpha * 100)}</span></div>`
         + `<div class="row"><label>タッチボタンの表示</label></div>` + opt('touchUI', [['auto', '自動'], ['on', '常に表示'], ['off', '非表示']]) + `<div class="btns"><button class="btn" data-a="ctrlTest">試し走りで確認する</button></div>`;
@@ -1202,7 +1223,7 @@ const UI = {
   a_setLang(v) { const s = SAVE.data.settings; if ((s.lang || 'ja') === v) return; s.lang = v; SAVE.save(); try { CLOUD.flush(); } catch (e) { } this.toast(v === 'en' ? 'Switching to English…' : '日本語に切り替えています…'); setTimeout(() => location.reload(), 400); },
   a_setOpt(v) {
     const [k, raw] = v.split(':'); const s = SAVE.data.settings; let val = raw === 'true' ? true : raw === 'false' ? false : isNaN(+raw) ? raw : +raw; s[k] = val; SAVE.save();
-    if (k === 'mute') AUDIO.setVol({ mute: val }); if (k === 'layout') { document.body.classList.toggle('layA', val === 'A'); document.body.classList.toggle('layB', val === 'B'); }
+    if (k === 'mute') AUDIO.setVol({ mute: val }); if (k === 'layout') this.applyLayoutClass();
     if (k === 'touchUI') document.body.classList.toggle('touch', this.touchUI());
     if (k === 'xmasTheme') { this.show.rebuildStudio(); AUDIO.playCat(xmasThemeOn() ? 'xmas' : 'menu'); }
     if (k === 'showFps') $('fps').classList.toggle('hidden', !val);
@@ -1248,7 +1269,7 @@ const UI = {
   a_selStory(v) { this.sel = +v; this.render(); },
   a_storyGo() { const ch = STORY.find(s => s.id === this.sel); this.runStory(ch); },
   runStory(ch, isEvent) {
-    const m = MAP_BY_ID[ch.map]; AUDIO.playCat(isEvent ? 'xmas' : 'story');
+    const m = MAP_BY_ID[ch.map]; AUDIO.playCat(isEvent ? 'xmasRace' : 'story');
     const startRace = () => { this.vsScreen(ch, () => this.launch({ mode: isEvent ? 'event' : 'story', story: isEvent ? null : ch.id, eventTask: isEvent ? ch.id : null, mapId: ch.map, weather: m.weather, time: m.time, laps: 1, carInst: SAVE.cur(), rivals: [ch.rival] })); };
     this.dialog(ch.pre || [], ch.rival, startRace);
   },
@@ -1301,7 +1322,7 @@ const UI = {
     html += `<div style="text-align:center;margin:6px 0"><div class="note">部屋コード</div><div style="font-family:Orbitron;font-size:34px;font-weight:900;letter-spacing:.15em;color:var(--gold)">${esc(NET.code)}</div><div class="note">${NET.connected === false ? '⚠ 再接続中…' : '相手にこのコードを伝えてください'}</div></div>`;
     html += `<div class="h3">参加者（${peers.length}/4）</div><div class="list">${peers.slice(0, 4).map((p, i) => { const pr = p.presence || {}; const c = CAR_BY_ID[pr.car]; return `<div class="item"><div class="grow"><div class="t">${i === 0 ? ICO('trophy', '#ffcf3d', 14) + ' ' : ''}<span class="noi18n">${esc(String(pr.nm || 'プレイヤー').slice(0, 16))}</span>${p.sameTab ? '<span class="tag cur">あなた</span>' : ''}${p.guest ? '<span class="tag">ゲスト</span>' : ''}</div><div class="s">${c ? c.name : '---'}</div></div><div class="p" style="color:${pr.rd ? 'var(--green)' : '#888'}">${pr.rd ? 'READY' : '準備中'}</div></div>`; }).join('')}</div>`;
     if (peers.length > 4) html += `<div class="note">5人目以降は観戦扱いになります。</div>`;
-    const maps = MAPS.filter(m => m.cat !== 'free' && m.cat !== 'drag' && (m.cat !== 'xmas' || eventActive()));
+    const maps = MAPS.filter(m => m.cat !== 'free' && m.cat !== 'drag' && m.cat !== 'event' && (m.cat !== 'xmas' || eventActive()));
     html += `<div class="h3">レース設定 ${host ? '（ホスト）' : '（ホストが決定）'}</div>`;
     if (host) {
       html += `<div class="row"><label>コース</label><select data-in="netMap" style="flex:1;background:#111;color:#fff;border:1px solid #333;padding:8px">${maps.map(m => `<option value="${m.id}" ${o.map === m.id ? 'selected' : ''}>${m.jp}（${m.name}）</option>`).join('')}</select></div>`;
@@ -1330,8 +1351,8 @@ const UI = {
     this.launch({ mode: 'online', seq: st.seq, grid: gi, mapId: st.map, time: st.time, weather: st.weather, laps: st.laps || 1, carInst: SAVE.cur(), rivals: [] });
   },
   // ---------------- イベント ----------------
-  r_events() {
-    $('panelTitle').textContent = 'EVENTS'; const ev = XMAS_EVENT, d = SAVE.data, act = eventActive();
+  r_xmas() {
+    $('panelTitle').textContent = 'WINTER LEGENDS'; const ev = XMAS_EVENT, d = SAVE.data, act = eventActive();
     const end = new Date(ev.end + 'T23:59:59+09:00'); const days = Math.max(0, Math.ceil((end - new Date()) / 86400000));
     const xc = CAR_BY_ID.xm_reindeer; this.show.setCar({ id: xc.id, tune: defaultTune(xc), look: Object.assign(defaultLook(xc), { livery: 'snow', color2: '#ffffff', wheel: 'candy' }) });
     let html = `<div style="background:linear-gradient(90deg,#5a0010,#0f4a25);padding:12px;border:1px solid #2fbf71"><div style="font-family:Orbitron;font-weight:900;font-size:20px">${ICO('tree', '#2fdc7a', 22)} ${ev.title}</div><div class="note" style="color:#eee">${ev.jp} ・ 期間 ${ev.start} 〜 ${ev.end} ${act ? `（残り${days}日）` : '（期間外）'}</div></div>`;
@@ -1408,7 +1429,8 @@ const UI = {
     // 次のコーナー
     if (tr.env !== 'lot' && tr.corners.length) {
       const i = g.loc.i; let best = null, bd = 1e9; for (const c of tr.corners) { let d = (c.start - i + tr.n) % tr.n; if (tr.cornerAt[i] >= 0 && tr.corners[tr.cornerAt[i]] === c) d = 0; if (d < bd) { bd = d; best = c; } }
-      $('nextCorner').innerHTML = best ? (bd === 0 ? `▶ <b>${best.label}</b> ${Math.round(best.deg)}°` : `NEXT ▶ <b>${best.label}</b> ${Math.round(bd * STEP)}m`) : '';
+      let jg = ''; for (const J of tr.jcts || []) { const dj = (J.i - i + tr.n) % tr.n; if (dj * STEP < 650 && dj > 0) jg = `<span class="jct-g">JCT ${Math.round(dj * STEP)}m ・ ${J.side > 0 ? '右' : '左'}：${J.to} ／ 本線直進：${J.main}</span>`; }
+      $('nextCorner').innerHTML = jg + (best ? (bd === 0 ? `▶ <b>${best.label}</b> ${Math.round(best.deg)}°` : `NEXT ▶ <b>${best.label}</b> ${Math.round(bd * STEP)}m`) : '');
     } else $('nextCorner').innerHTML = '';
     // ドリフト表示
     const dl = $('driftLive'); const d = g.drift;
@@ -1485,7 +1507,9 @@ const UI = {
     d.stats.races++; d.stats.nightDist += res.nightDist || 0;
     if (res.maxSpeed >= 250) unlockAch('speed250');
     const evTask = cfg.eventTask ? XMAS_EVENT.tasks.find(t => t.id === cfg.eventTask) : null;
-    if (res.mode === 'story' || res.mode === 'event') {
+    if (cfg.evRace) { d.stats.races = d.stats.races; if (res.win) { d.stats.wins++; } money = res.win ? cfg.evRace.prize : Math.round(cfg.evRace.prize * 0.15); xp = res.win ? 900 : 250;
+      html += `<div class="res-big ${res.win ? 'win' : 'lose'}">${res.win ? 'YOU WIN!' : 'YOU LOSE'}</div><div class="res-grid"><div>イベント</div><div>${esc(cfg.evRace.title)}</div><div>タイム</div><div>${fmtTime(res.time)}</div><div>最高速度</div><div>${Math.round(res.maxSpeed)} km/h</div>`;
+    } else if (res.mode === 'story' || res.mode === 'event') {
       const ch = res.mode === 'story' ? STORY.find(s => s.id === cfg.story) : null;
       const reward = ch ? ch.reward : evTask.reward.money, xpR = ch ? ch.xp : 1200;
       if (res.win) { money = reward; xp = xpR; d.stats.wins++; unlockAch('first_win'); } else { money = Math.round(reward * 0.1 / 1000) * 1000; xp = Math.round(xpR * 0.3); }
@@ -1508,7 +1532,7 @@ const UI = {
     } else if (res.mode === 'time') {
       const laps = res.laps; const best = Math.min(...laps.map(l => l.t)); const rec = d.records.ta[res.mapId] || { best: null, sectors: [null, null, null], list: [] };
       const prevBest = rec.best; const newPB = !prevBest || best < prevBest; const courseRec = recordFor(res.mapId); const beatRec = best < courseRec && (!prevBest || prevBest >= courseRec);
-      if (newPB) rec.best = best; laps.forEach(l => l.s.forEach((s, k) => { if (s > 0 && (!rec.sectors[k] || s < rec.sectors[k])) rec.sectors[k] = s; }));
+      d.stats.taRuns = (d.stats.taRuns || 0) + 1; if (newPB && prevBest) d.stats.pbs = (d.stats.pbs || 0) + 1; if (newPB) rec.best = best; laps.forEach(l => l.s.forEach((s, k) => { if (s > 0 && (!rec.sectors[k] || s < rec.sectors[k])) rec.sectors[k] = s; }));
       rec.list = (rec.list || []).concat([{ t: best, car: res.car, date: Date.now() }]).sort((a, b) => a.t - b.t).slice(0, 10); d.records.ta[res.mapId] = rec;
       money = Math.round(tr.length / 1000 * 18000 * laps.length * clamp(courseRec / best, 0.5, 1.4) / 1000) * 1000 + (newPB ? 50000 : 0) + (beatRec ? 300000 : 0); xp = 120 * laps.length + (newPB ? 200 : 0);
       if (beatRec) unlockAch('record');
@@ -1540,14 +1564,19 @@ const UI = {
       if (ch) { let ok = false; if (ch.t === 'touge') ok = (res.score || 0) >= ch.goal; if (ch.t === 'time' && res.laps && res.laps.length) ok = Math.min(...res.laps.map(l => l.t)) <= ch.goal;
         if (ok) { const got = diaClaim(ch); if (got) { giveCons('energy'); notes.push(`ダイヤレース達成！ ダイヤ +${ch.reward} ＋ エナジードリンク`); } } else if (ch.t !== 'jump') notes.push('ダイヤレースの目標に届きませんでした。もう一度挑戦しよう！'); } }
     { const cm = boostMult('coin'), xm = boostMult('xp'); if (cm > 1 && money > 0) { money = Math.round(money * cm / 100) * 100; notes.push(`ブースト使用中：賞金 ×${cm}`); } if (xm > 1 && xp > 0) { xp = Math.round(xp * xm); notes.push(`ブースト使用中：経験値 ×${xm}`); } }
+    try { evOnResult(res, this.game); } catch (e) { console.warn(e); }
     try { fwkAdd(this.game ? this.game.totalDist : 0, res.mode === 'touge' ? res.score : (this.game && this.game.drift ? this.game.drift.score : 0), (res.win ? 1 : 0)); } catch (e) { }
-    SAVE.addMoney(money); d.xp += xp; checkAch(); try { const nw = achNewlyDone(); if (nw.length) notes.push('実績達成：' + nw.map(a => a.name).join('、') + '（実績画面で報酬を受け取れます）'); } catch (e) { } SAVE.save();
-    html += `<div>獲得賞金</div><div style="color:var(--gold)">${yen(money)}</div><div>経験値</div><div>+${xp} XP（Lv.${SAVE.level()}）</div></div>`;
+    { const fin = res.reason !== 'crash' && res.reason !== 'stuck' && res.reason !== 'quit'; if (fin) d.stats.finishes = (d.stats.finishes || 0) + 1; d.stats.totalDist = (d.stats.totalDist || 0) + Math.max(0, Math.min(200000, this.game ? this.game.totalDist : 0)); d.stats.driftTotal = (d.stats.driftTotal || 0) + (res.mode === 'touge' ? (res.score || 0) : (this.game && this.game.drift ? this.game.drift.score || 0 : 0)); if (res.mode !== 'touge' && this.game && this.game.drift && this.game.drift.score > 0) xp += Math.round(this.game.drift.score / 50); }
+    const lvBefore = lvInfo(d.xp); SAVE.addMoney(money); addXp(xp, res.mode); const lvAfter = lvInfo(d.xp); checkAch(); try { const nw = achNewlyDone(); if (nw.length) notes.push('実績達成：' + nw.map(a => a.name).join('、') + '（実績画面で報酬を受け取れます）'); } catch (e) { } SAVE.save();
+    html += `<div>獲得賞金</div><div style="color:var(--gold)">${yen(money)}</div><div>経験値</div><div>+${xp} XP</div></div>`;
+    html += `<div class="res-lv" data-from="${lvBefore.lv === lvAfter.lv ? lvBefore.cur / lvBefore.need * 100 : 0}" data-to="${lvAfter.cur / lvAfter.need * 100}">${lvBarHTML('lvbR')}</div>`;
     if (notes.length) html += `<div class="h3">お知らせ</div>${notes.map(n => `<div class="note" style="color:#fff">・${esc(n)}</div>`).join('')}`;
     const isStory = res.mode === 'story' || (res.mode === 'event' && evTask && evTask.type === 'race');
     html += res.mode === 'online' ? `<div class="btns"><button class="btn pri" data-a="resNext">ロビーへ戻る</button></div>` : `<div class="btns"><button class="btn pri" data-a="resNext">${isStory ? '次へ' : 'メニューへ'}</button><button class="btn" data-a="restart">リトライ</button></div>`;
     this.lastRes = res; this.paused = true; this.game.paused = true;
     this.modal(`<h2>RESULT ・ ${m.jp}</h2>${html}`);
+    { const box = document.querySelector('.res-lv'); const bar = box && box.querySelector('.lv-bar i'); if (bar) { bar.style.transition = 'none'; bar.style.width = box.dataset.from + '%'; requestAnimationFrame(() => setTimeout(() => { bar.style.transition = 'width 1.4s cubic-bezier(.2,.9,.3,1)'; bar.style.width = box.dataset.to + '%'; }, 300)); } }
+    if (this._lvUps && this._lvUps.length) setTimeout(() => this.showLvUps(), 1500);
   },
   eventReward(t, notes) {
     const d = SAVE.data; if (d.event.done[t.id]) { notes.push('タスク達成済み（初回報酬は受け取り済み）'); return; }
@@ -1556,14 +1585,16 @@ const UI = {
   },
   a_resNext() {
     const res = this.lastRes; this.closeModal(); this.paused = false; AUDIO.applyVol(); this.game.exit();
-    if (res.mode === 'story' || res.mode === 'event') {
+    if ((res.mode === 'story' || res.mode === 'event') && !res.cfg.evRace) {
       const ch = res.mode === 'story' ? STORY.find(s => s.id === res.cfg.story) : null;
       const lines = ch ? (res.win ? ch.win : ch.lose) : res.win ? [['サンタ・ドリフター', 'ホッホー！見事じゃ！ メリー・ドリフトマス！']] : [['サンタ・ドリフター', 'まだまだじゃな。また来年…いや、また挑戦しておいで！']];
       const rv = ch ? ch.rival : XMAS_EVENT.tasks[0].rival; const rc = CAR_BY_ID[rv.car]; this.show.setCar({ id: rc.id, tune: defaultTune(rc), look: Object.assign(defaultLook(rc), { color: rv.color }) });
-      this.dialog(lines, rv, () => { this.goMenu(); this.open(res.mode === 'story' ? 'story' : 'events'); });
+      this.dialog(lines, rv, () => { this.goMenu(); this.open(res.mode === 'story' ? 'story' : 'xmas'); });
     } else if (res.mode === 'online') { NET.publishLobby({ race: null }); this.goMenu(); this.open('online'); }
     else if (res.mode === 'drag') { this.goMenu(); this.open('drag'); }
-    else if (res.cfg.eventTask) { this.goMenu(); this.open('events'); }
+    else if (res.cfg.quick) { this.goMenu(); this.open('maps', { mode: 'race' }); }
+    else if (res.cfg.evRace || res.cfg.evId) { this.goMenu(); this.open('evDetail', { id: res.cfg.evId }); }
+    else if (res.cfg.eventTask) { this.goMenu(); this.open('xmas'); }
     else { this.goMenu(); }
   }
 };

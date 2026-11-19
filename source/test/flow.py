@@ -41,7 +41,7 @@ with sync_playwright() as p:
     clk(pg,'[data-a=resNext]', 500); clk(pg,'#dlgSkip', 600)
     print('story cleared', E("window.__DL.SAVE.data.story.cleared"), 'screen', E("window.__DL.UI.screen"))
     # event touge
-    E("window.__DL.UI.open('events')"); clk(pg,'[data-a=evGo][data-v=x_drift]', 300); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
+    E("window.__DL.UI.open('xmas')"); clk(pg,'[data-a=evGo][data-v=x_drift]', 300); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
     pg.screenshot(path='flow_xmas.png')
     E("const g=window.__DL.game; g.started=true; g.drift.score=20000; g.finish('crash')"); pg.wait_for_timeout(2600)
     pg.screenshot(path='flow_xresult.png')

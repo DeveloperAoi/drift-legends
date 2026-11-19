@@ -4,7 +4,7 @@
 **`index.html` を直接編集しないこと。** 必ず `source/src/` を編集してビルドし、出力をコピーする。
 
 ## 現在のバージョン
-v2.5（`src/data.js` の `GAME_VERSION` と `CHANGELOG`）。アップデートしたら両方を更新すると、次回起動時にお知らせ画面が自動で開く。
+v3.0（`src/data.js` の `GAME_VERSION` と `CHANGELOG`）。アップデートしたら両方を更新すると、次回起動時にお知らせ画面が自動で開く。
 
 ## ビルド手順
 ```bash
@@ -22,6 +22,11 @@ build.py の `order` の順に1つの即時関数へ連結される。
 - `data.js` メーカー・車（CAR_ROWS）・パーツ（PARTS / AERO）・マップ（MAPS）・ストーリー（STORY）・曲（TRACKS）・実績・エキストラ・バージョン／更新履歴
 - `items.js` / `items2.js` / `items3.js` アイテム（ITEMS）・チェスト・追加の車（addCar）・ダイヤショップ・ボディキット・消費アイテム
 - `content25.js` v2.5 の追加分：ドラッグストリップ／ドリフト練習場（MAPS の ctrl 指定）、新曲、ストーリー S2・S3、実績の追加、コード（REDEEM_CODES）、ガレージレベル、車ごとのヘッドライト（hlDef）
+- `maps7.js` v3.0 新マップ：turtleCourse（直線/円弧の区間リスト→2本の直線長を解いてループを閉じる）で明神峠（pass）・東京メトロポリタン高速（metro）を定義。tunnels / park / gates / walls / dense / jct
+- `packs.js` v2.7 カードパック演出・インベントリ・開封ログ・称号/マフラー・サーバー時刻 SRV
+- `progress.js` v2.8 レベル（最大200）・XP・プロフィール・実績XP
+- `events.js` v2.9 期間限定イベント（EVENTS：xmas2026 / nye2026 / ny2027）・年越し演出 NYFX
+- `final.js` v3.0 最終統合：車カード（CAR_CARDS、type 'carcard'）と新車 hk_van（carmodel の 'van' ボディ）、リザルト仕上げ（_runId で二重受取防止）、下部ナビ #bnav、メニューBGM（music/ の menu*.mp3）、スマホ標準レイアウト C、開発者パネル r_devPanel・告知/メンテ ADM（Firebase admin/*）
 - `physics.js` 車の物理・スペック計算（computeSpec、defaultLook、defaultTune）
 - `track.js` コース生成（def.ctrl があればその制御点を使う）と景観
 - `carmodel.js` 車の3Dモデル（BODY_TYPES の形状プロファイル、エアロ、ライト、運転席、バス／そり専用モデル）
@@ -65,3 +70,11 @@ open('src/i18n_dict.js','w').write(head+'const I18N_EN = '+json.dumps(en,ensure_
 - 運転席視点のカメラの near は 0.2（小さくすると画面が真っ黒になる環境がある）
 - 実在のメーカー名・車名は使わない（架空の名前にする）
 - `ads/` は過去に作った広告（HTML アニメーション）
+
+
+## v2.6〜v3.0 の補足
+- テスト用フック：`window.__DL`（game, UI, SAVE, MAPS, getTrack, Track ...）と `window.__DLX`（SRV, EVENTS, ADM, DEV, carCards ...）。テストは `test/*.py`（Playwright）。
+- 音楽ファイル：`../music/` と `music/playlist.json`。ChristmasNight.mp3 はクリスマスイベント専用、`menu` で始まるファイルはメインメニュー用、それ以外は通常レースのランダム再生。
+- 管理機能：Firebase の `admin/announce|maint|reset|update|log`。書き込みはルールで開発者UID（または `admins/{uid}=true`）だけ。サーバー再起動はこの構成では存在しない（メンテナンスモード＋カウントダウンで代替）。
+- `game.start(cfg)` の `cfg.startProg` で開始位置を指定できる（テスト・スクリーンショット用）。
+- メールアドレスはリポジトリに絶対に書かない（firebase-config の SHA-256 ハッシュか UID のみ）。

@@ -166,3 +166,22 @@ function garageReward(lv) { // Lv ごとの報酬
 { const BYBODY = { coupe80: [3, 1, 7], coupe90: [10, 6, 0], gt: [4, 7, 3], modern: [5, 6, 4], sedan: [7, 3, 0], hatch: [1, 10, 4], hatch80: [3], rotary: [10, 0], rally: [2, 8, 7], super: [10, 4], wedge: [10], fd: [0], roadster: [1, 10], kei: [1] };
   for (const c of CARS) { const L = BYBODY[c.body] || [0]; let h = 0; for (const ch of c.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0; c.hlDef = L[h % L.length]; }
 }
+
+// ---- v2.6 オリジナル 4世代 GT シリーズ「HOKUTO 紫電（SHIDEN）」 ----
+// 世代ごとに専用のボディ形状・フロントフェイス・ライト・テール・ボンネット・フェンダー・ウイング・ホイールを持つ
+addCar(['hk_sd1', 'HOKUTO', 'SHIDEN GTS-X', '1989 直6ツインターボ・4WD（第1世代）', '4WD', 280, 353, 1430, 255, 5, 8000, 1, 84, 74, 82, 4500000, 'gs1', 4.55, 1.755, 1.34, '#2b2d33', 0, 'i6', 2.615, 0.57, null]);
+addCar(['hk_sd2', 'HOKUTO', 'SHIDEN GTS-X II', '1995 直6ツインターボ・4WD（第2世代）', '4WD', 280, 368, 1530, 265, 5, 8000, 1, 83, 72, 84, 5500000, 'gs2', 4.675, 1.78, 1.36, '#5a2a8a', 0, 'i6', 2.72, 0.57, null]);
+addCar(['hk_sd3', 'HOKUTO', 'SHIDEN GTS-X III', '1999 直6ツインターボ・4WD（第3世代）', '4WD', 280, 392, 1560, 270, 6, 8000, 1, 88, 76, 88, 8000000, 'gs3', 4.6, 1.785, 1.36, '#1e5ad8', 0, 'i6', 2.665, 0.56, null]);
+addCar(['hk_sd4', 'HOKUTO', 'SHIDEN GTX-V', '2010 V6ツインターボ・4WD（第4世代）', '4WD', 570, 637, 1740, 315, 6, 7100, 1, 90, 70, 94, 15000000, 'gs4', 4.71, 1.895, 1.37, '#e8e8ea', 0, 'v6', 2.78, 0.55, null]);
+[['hk_sd1', 1, 'sd1'], ['hk_sd2', 2, 'sd2'], ['hk_sd3', 3, 'sd3'], ['hk_sd4', 4, 'sd4']].forEach(([id, g, w]) => Object.assign(CAR_BY_ID[id], { series: 'shiden', face: g, stockWheel: w, isNew: '2.6' }));
+
+// ---- v2.6 車ごとのサウンド調整（重点：紫電 III・ロータリー各車） ----
+Object.assign(CAR_BY_ID.hk_sd3 || {}, { snd: { hi: 0.24, hiMul: 3, rasp: 0.42, bright: 520, whistle: 1.25, crackle: 0.45 } });
+Object.assign(CAR_BY_ID.hk_sd1 || {}, { snd: { rasp: 0.4, bright: 380, whistle: 1.1 } });
+Object.assign(CAR_BY_ID.hk_sd2 || {}, { snd: { rasp: 0.38, bright: 420, whistle: 1.15, flutter: 1 } });
+Object.assign(CAR_BY_ID.hk_sd4 || {}, { snd: { bright: 600, whistle: 0.9 } });
+Object.assign(CAR_BY_ID.hb_fc || {}, { snd: { rasp: 0.9, bright: 800, crackle: 0.75, whistle: 1.0, flutter: 1 } }); // 古いロータリーターボ：荒々しい
+Object.assign(CAR_BY_ID.hb_fd || {}, { snd: { rasp: 0.7, bright: 1150, crackle: 0.65, whistle: 1.3, hi: 0.36 } }); // ツインターボ：滑らかで甲高い
+Object.assign(CAR_BY_ID.hb_r8 || {}, { snd: { rasp: 0.55, bright: 1400, hi: 0.42, hiMul: 2, crackle: 0.5 } }); // 高回転NAロータリー
+for (const id of ['hb_r3', 'hb_r2']) Object.assign(CAR_BY_ID[id] || {}, { snd: { rasp: 0.78, bright: 1000, whistle: 1.15 } });
+const MUFFLER_TYPES = [['stock', '純正', 0], ['sport', 'スポーツ', 60000], ['big', '大径', 90000], ['race', '競技用', 150000], ['titanium', 'チタン', 200000]];

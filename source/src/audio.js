@@ -4,6 +4,8 @@
 // 外部音源は一切使用しない。音声が使えない環境でもゲームは動作する。
 // =====================================================================
 // エンジン形式ごとの音のプロファイル（h=倍音、hi=高域、sub=低い鼓動、rasp=排気のザラつき）
+// マフラーの音質（純正・スポーツ・大径・競技用・チタン）
+const MUFFLER_SOUND = { stock: { lvl: 0, vol: 0.85, rasp: 0.8, sub: 1, bright: 0.85, crackle: 0.3 }, sport: { lvl: 1, vol: 1.0, rasp: 1.1, sub: 1.1, bright: 1.0, crackle: 0.8 }, big: { lvl: 2, vol: 1.12, rasp: 1.0, sub: 1.5, bright: 0.9, crackle: 1 }, race: { lvl: 3, vol: 1.25, rasp: 1.5, sub: 1.2, bright: 1.15, crackle: 2.2 }, titanium: { lvl: 3, vol: 1.12, rasp: 1.25, sub: 0.9, bright: 1.45, crackle: 1.6 } };
 const ENGINE_PROFILES = {
   i4: { h: [1, 0.62, 0.48, 0.28, 0.3, 0.12, 0.12, 0.06], h2: [1, 0.4, 0.3, 0.2], hi: 0.22, hiMul: 2, sub: 0.18, rasp: 0.55, intake: 0.08, bright: 600, crackle: 0.35 },
   i6: { h: [1, 0.42, 0.32, 0.16, 0.12, 0.08, 0.05], h2: [1, 0.2, 0.15], hi: 0.18, hiMul: 3, sub: 0.12, rasp: 0.35, intake: 0.06, bright: 400, crackle: 0.3 },
@@ -16,7 +18,7 @@ const ENGINE_PROFILES = {
 };
 ENGINE_PROFILES.flat6 = ENGINE_PROFILES.flat4; ENGINE_PROFILES.v10 = ENGINE_PROFILES.v12;
 class AudioSys {
-  constructor() { this.ok = false; this.ctx = null; this.vol = { bgm: 0.6, sfx: 0.8, mute: false }; this.music = { playing: false, track: null, cat: 'menu', step: 0, next: 0, bar: 0, paused: false }; this.listeners = []; this.engines = []; }
+  constructor() { this.ok = false; this.ctx = null; this.vol = { bgm: 0.6, sfx: 0.8, ui: 0.8, engine: 0.9, tire: 0.8, mute: false }; this.mp3 = { list: [], el: null, cur: null, hist: [], loaded: false }; this.music = { playing: false, track: null, cat: 'menu', step: 0, next: 0, bar: 0, paused: false }; this.listeners = []; this.engines = []; }
   init() {
     if (this.ctx) return;
     try {
@@ -25,16 +27,21 @@ class AudioSys {
       this.master = c.createGain(); const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
       this.master.connect(comp); comp.connect(c.destination);
       this.musicBus = c.createGain(); this.sfxBus = c.createGain(); this.musicBus.connect(this.master); this.sfxBus.connect(this.master);
+      // v2.6：用途ごとに独立した音量バス（BGM / UI / エンジン / タイヤ / その他）。musicFade はレース終了時のフェード、duck は効果音とBGMの競合よけ
+      this.musicFade = c.createGain(); this.duck = c.createGain(); this.musicFade.connect(this.duck); this.duck.connect(this.musicBus);
+      this.uiBus = c.createGain(); this.engineBus = c.createGain(); this.tireBus = c.createGain(); for (const b of [this.uiBus, this.engineBus, this.tireBus]) b.connect(this.master);
       // ディレイ（音楽用）
       this.delay = c.createDelay(1); this.delay.delayTime.value = 0.3; const fb = c.createGain(); fb.gain.value = 0.28; const dl = c.createGain(); dl.gain.value = 0.25;
-      this.delay.connect(fb); fb.connect(this.delay); this.delay.connect(dl); dl.connect(this.musicBus);
+      this.delay.connect(fb); fb.connect(this.delay); this.delay.connect(dl); dl.connect(this.musicFade);
       const len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; this.noise = buf;
-      this.ok = true; this.applyVol();
+      this.ok = true; this.applyVol(); this.loadPlaylist();
       this.timer = setInterval(() => { try { this.schedule(); } catch (e) { } }, 25);
     } catch (e) { this.ok = false; }
   }
   resume() { try { if (this.ctx && this.ctx.state !== 'running') this.ctx.resume(); } catch (e) { } }
-  applyVol() { if (!this.ok) return; const m = this.vol.mute ? 0 : 1; this.musicBus.gain.value = this.vol.bgm * 0.55 * m; this.sfxBus.gain.value = this.vol.sfx * m; }
+  applyVol() { if (!this.ok) return; const m = this.vol.mute ? 0 : 1, V = k => (this.vol[k] ?? 0.8) * m; this.musicBus.gain.value = V('bgm') * 0.55; this.sfxBus.gain.value = V('sfx'); this.uiBus.gain.value = V('ui'); this.engineBus.gain.value = V('engine'); this.tireBus.gain.value = V('tire'); }
+  duckMusic(amt = 0.45, dur = 1.2) { if (!this.ok) return; const t = this.ctx.currentTime; this.duck.gain.cancelScheduledValues(t); this.duck.gain.setTargetAtTime(amt, t, 0.05); this.duck.gain.setTargetAtTime(1, t + dur, 0.4); }
+  fadeMusic(to, sec = 1.5) { if (!this.ok) return; const t = this.ctx.currentTime; this.musicFade.gain.cancelScheduledValues(t); this.musicFade.gain.setTargetAtTime(to, t, sec / 3); }
   setVol(v) { Object.assign(this.vol, v); this.applyVol(); }
   noiseSrc() { const s = this.ctx.createBufferSource(); s.buffer = this.noise; s.loop = true; s.loopStart = Math.random(); return s; }
   // ---------------- 効果音 ----------------
@@ -46,15 +53,21 @@ class AudioSys {
     if (!this.ok || ![dur, freq, q, vol, when].every(isFinite)) return; const c = this.ctx, t = c.currentTime + when; const s = this.noiseSrc(), f = c.createBiquadFilter(), g = c.createGain(); f.type = type; f.frequency.value = freq; f.Q.value = q;
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(bus || this.sfxBus); s.start(t); s.stop(t + dur + 0.05);
   }
-  click() { this.tone(1400, 0.05, 'square', 0.06); this.tone(2100, 0.04, 'sine', 0.05, 0.02); }
+  uiOk() { const t = performance.now(); if (this._uiT && t - this._uiT < 45) return false; this._uiT = t; return this.ok; }
+  click() { if (!this.uiOk()) return; this.tone(1400, 0.05, 'square', 0.05, 0, 0, this.uiBus); this.tone(2100, 0.04, 'sine', 0.04, 0.02, 0, this.uiBus); }
+  nav() { if (!this.uiOk()) return; this.tone(660, 0.07, 'triangle', 0.08, 0, 1.5, this.uiBus); this.noiseBurst(0.08, 3500, 1.5, 0.03, 0, 'bandpass', this.uiBus); }
+  confirm() { if (!this.uiOk()) return; this.tone(988, 0.08, 'triangle', 0.1, 0, 0, this.uiBus); this.tone(1480, 0.14, 'triangle', 0.1, 0.06, 0, this.uiBus); }
+  cancel() { if (!this.uiOk()) return; this.tone(740, 0.08, 'triangle', 0.08, 0, 0.7, this.uiBus); this.tone(494, 0.1, 'triangle', 0.07, 0.06, 0, this.uiBus); }
+  locked() { if (!this.uiOk()) return; this.tone(180, 0.09, 'square', 0.06, 0, 0, this.uiBus); this.tone(150, 0.09, 'square', 0.05, 0.09, 0, this.uiBus); }
   hover() { this.tone(900, 0.03, 'sine', 0.03); }
-  buy() { [880, 1108, 1318, 1760].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.12, i * 0.07)); }
-  error() { this.tone(220, 0.25, 'square', 0.1, 0, 0.6); }
+  buy() { this.duckMusic(0.6, 0.6); [880, 1108, 1318, 1760].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.12, i * 0.07, 0, this.uiBus)); }
+  error() { this._uiT = 0; this.tone(220, 0.25, 'square', 0.09, 0, 0.6, this.uiBus); }
   countdown(n) { if (n > 0) this.tone(660, 0.25, 'square', 0.18); else { this.tone(1320, 0.6, 'square', 0.2); this.tone(1980, 0.6, 'sine', 0.12); } }
   crash(k) { k = clamp(k, 0.1, 1); this.noiseBurst(0.35 + k * 0.3, 400, 0.8, 0.5 * k, 0, 'lowpass'); this.tone(90, 0.3, 'sine', 0.5 * k, 0, 0.5); this.noiseBurst(0.15, 3000, 2, 0.2 * k); }
   land(k) { k = clamp(k, 0.1, 1); this.noiseBurst(0.3 + k * 0.2, 180, 0.7, 0.55 * k, 0, 'lowpass'); this.tone(55, 0.25, 'sine', 0.5 * k, 0, 0.6); this.noiseBurst(0.08, 2400, 2, 0.12 * k, 0.02); }
   scrape(k) { this.noiseBurst(0.12, 2500, 3, 0.12 * k); }
   shiftSfx() { this.noiseBurst(0.05, 1800, 4, 0.08); this.tone(120, 0.06, 'square', 0.06); }
+  blowoffFor(e) { if (!e || !e.turbo) return; const P = e.P || {}; if (P.flutter) { for (let i = 0; i < 6; i++) this.noiseBurst(0.04, 1800, 2, 0.1, i * 0.035, 'bandpass', this.engineBus); } else { this.noiseBurst(0.35, 2600, 1.2, 0.16, 0, 'bandpass', this.engineBus); this.noiseBurst(0.25, 5000, 0.7, 0.07, 0.03, 'highpass', this.engineBus); } }
   blowoff() { this.noiseBurst(0.35, 2600, 1.2, 0.18, 0, 'bandpass'); this.noiseBurst(0.25, 5000, 0.7, 0.08, 0.03, 'highpass'); }
   nitroBurst() { // ニトロ点火：圧縮ガスの噴出音＋低音のドン
     if (!this.ok) return; const c = this.ctx, t = c.currentTime;
@@ -62,7 +75,7 @@ class AudioSys {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7); n.connect(f); f.connect(g); g.connect(this.sfxBus); n.start(t); n.stop(t + 0.75);
     this.tone(70, 0.35, 'sine', 0.45, 0, 0.5); this.tone(140, 0.25, 'sawtooth', 0.12, 0.02, 2.2);
   }
-  chestOpen(rar) { // チェストを開ける音：きしみ→ガタガタ→開く→レア度に応じたきらめき
+  chestOpen(rar) { this.duckMusic(0.35, 2.2); // チェストを開ける音：きしみ→ガタガタ→開く→レア度に応じたきらめき
     if (!this.ok) return; const c = this.ctx, t = c.currentTime;
     for (let k = 0; k < 4; k++) this.noiseBurst(0.07, 300 + k * 60, 1.2, 0.18, k * 0.16, 'bandpass');
     this.tone(90, 0.12, 'square', 0.12, 0.65, 0.6); this.noiseBurst(0.35, 1800, 0.6, 0.18, 0.7, 'bandpass');
@@ -73,11 +86,12 @@ class AudioSys {
   }
   pop() { this.noiseBurst(0.06, 600, 1, 0.35, 0, 'lowpass'); this.tone(70, 0.05, 'square', 0.2); }
   starter() { if (!this.ok) return; for (let i = 0; i < 7; i++) this.tone(55 + (i % 2) * 8, 0.09, 'sawtooth', 0.12, i * 0.09); this.noiseBurst(0.4, 300, 1, 0.3, 0.6, 'lowpass'); }
-  fanfare() { [523, 659, 784, 1046, 784, 1046].forEach((f, i) => this.tone(f, 0.3, 'square', 0.1, i * 0.12)); }
+  fanfare() { this.duckMusic(0.4, 2); [523, 659, 784, 1046, 784, 1046].forEach((f, i) => this.tone(f, 0.3, 'square', 0.1, i * 0.12)); }
   // ---------------- エンジン音 ----------------
   createEngine(spec, isPlayer = true) {
     if (!this.ok) return null; const c = this.ctx;
-    const out = c.createGain(); out.gain.value = 0; out.connect(this.sfxBus);
+    const out = c.createGain(); out.gain.value = 0; out.connect(this.engineBus);
+    const tOut = c.createGain(); tOut.gain.value = isPlayer ? 1 : 0.6; const tPan = c.createStereoPanner ? c.createStereoPanner() : null; if (tPan) { tPan.connect(tOut); } tOut.connect(this.tireBus); const tDest = tPan || tOut;
     const pan = c.createStereoPanner ? c.createStereoPanner() : null; if (pan) { pan.connect(out); }
     const dest = pan || out;
     const ws = c.createWaveShaper(); const curve = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 2.2); } ws.curve = curve;
@@ -85,7 +99,7 @@ class AudioSys {
     const eg = c.createGain(); eg.gain.value = 0.0;
     ws.connect(lp); lp.connect(eg); eg.connect(dest);
     // エンジン形式ごとの倍音構成（v2.2：よりリアルな音）
-    const P = ENGINE_PROFILES[spec.sound] || ENGINE_PROFILES.i4; const mkWave = h => { const re = new Float32Array(h.length + 1), im = new Float32Array(h.length + 1); h.forEach((v, i) => im[i + 1] = v); return c.createPeriodicWave(re, im); };
+    const P = Object.assign({}, ENGINE_PROFILES[spec.sound] || ENGINE_PROFILES.i4, (spec.car && spec.car.snd) || {}); const MF = MUFFLER_SOUND[spec.mfType || 'stock'] || MUFFLER_SOUND.stock; const mkWave = h => { const re = new Float32Array(h.length + 1), im = new Float32Array(h.length + 1); h.forEach((v, i) => im[i + 1] = v); return c.createPeriodicWave(re, im); };
     const o1 = c.createOscillator(); o1.setPeriodicWave(mkWave(P.h)); const o2 = c.createOscillator(); o2.setPeriodicWave(mkWave(P.h2 || [1, 0.3, 0.15])); const o3 = c.createOscillator(); o3.type = 'sine';
     const g1 = c.createGain(), g2 = c.createGain(), g3 = c.createGain(); g1.gain.value = 0.55; g2.gain.value = P.hi; g3.gain.value = P.sub;
     o1.connect(g1); o2.connect(g2); o3.connect(g3); g1.connect(ws); g2.connect(ws); g3.connect(ws);
@@ -101,16 +115,18 @@ class AudioSys {
     const tw = c.createOscillator(); tw.type = 'sine'; const twg = c.createGain(); twg.gain.value = 0; tw.connect(twg); twg.connect(dest);
     // タイヤスキール
     const sq = this.noiseSrc(), sqf = c.createBiquadFilter(), sqf2 = c.createBiquadFilter(); sqf.type = 'bandpass'; sqf.Q.value = 9; sqf.frequency.value = 1500; sqf2.type = 'bandpass'; sqf2.Q.value = 6; sqf2.frequency.value = 2400;
-    const sqg = c.createGain(); sqg.gain.value = 0; sq.connect(sqf); sq.connect(sqf2); sqf.connect(sqg); sqf2.connect(sqg); sqg.connect(dest);
+    const sqg = c.createGain(); sqg.gain.value = 0; sq.connect(sqf); sq.connect(sqf2); sqf.connect(sqg); sqf2.connect(sqg); sqg.connect(tDest);
+    // 高速の横滑り（低めのゴーッという擦過音）
+    const rr = this.noiseSrc(), rrf = c.createBiquadFilter(); rrf.type = 'lowpass'; rrf.frequency.value = 700; const rrg = c.createGain(); rrg.gain.value = 0; rr.connect(rrf); rrf.connect(rrg); rrg.connect(tDest);
     // 風切り
     const wn = this.noiseSrc(), wf = c.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 600; const wg = c.createGain(); wg.gain.value = 0; wn.connect(wf); wf.connect(wg); wg.connect(dest);
     // ニトロ噴射音（高域ノイズの連続音）
     const nn = this.noiseSrc(), nbp = c.createBiquadFilter(), nhp = c.createBiquadFilter(), ng2 = c.createGain(); nbp.type = 'bandpass'; nbp.frequency.value = 2200; nbp.Q.value = 0.6; nhp.type = 'highpass'; nhp.frequency.value = 900; ng2.gain.value = 0;
     nn.connect(nbp); nbp.connect(nhp); nhp.connect(ng2); ng2.connect(dest);
-    const t = c.currentTime; [o1, o2, o3, lfo, nz, tw, sq, wn, nn, cn, cmod, inz].forEach(o => o.start(t));
+    const t = c.currentTime; [o1, o2, o3, lfo, nz, tw, sq, wn, nn, cn, cmod, inz, rr].forEach(o => o.start(t));
     out.gain.setTargetAtTime(isPlayer ? 0.9 : 0.5, t, 0.3);
     const cyl = { i4: 2, i6: 3, v6: 3, v8: 4, v10: 5, v12: 6, flat4: 2, flat6: 3, rotary: 2 }[spec.sound] || 2;
-    const e = { P, cnf, cam, cmod, cmodG, inf, ing, gear: 1, shiftT: 0, out, pan, lp, eg, o1, o2, o3, g1, g2, g3, lfo, lfoG, ng, nf, tw, twg, sqg, sqf, sqf2, wg, wf, cyl, sound: spec.sound, muffler: spec.muffler || 0, player: isPlayer, nodes: [o1, o2, o3, lfo, nz, tw, sq, wn, nn, cn, cmod, inz], popT: 0, lastThr: 0, nitroG: ng2, nitroF: nbp };
+    const e = { P, MF, tOut, tPan, rrg, rrf, lastSlip: 0, turbo: !!spec.turbo || (spec.boostMax || 0) > 0, cnf, cam, cmod, cmodG, inf, ing, gear: 1, shiftT: 0, out, pan, lp, eg, o1, o2, o3, g1, g2, g3, lfo, lfoG, ng, nf, tw, twg, sqg, sqf, sqf2, wg, wf, cyl, sound: spec.sound, muffler: MF.lvl, player: isPlayer, nodes: [o1, o2, o3, lfo, nz, tw, sq, wn, nn, cn, cmod, inz, rr], popT: 0, lastThr: 0, nitroG: ng2, nitroF: nbp };
     this.engines.push(e); return e;
   }
   // AudioParam へ非数値を渡すと例外になるため、安全に設定する
@@ -120,33 +136,43 @@ class AudioSys {
     const P = e.P || ENGINE_PROFILES.i4; const f = s.rpm / 60 * e.cyl * (e.sound === 'rotary' ? 1.0 : 0.5);
     const base = e.sound === 'rotary' ? f * 1.5 : f;
     this.sp(e.o1.frequency, base, t, k); this.sp(e.o2.frequency, base * P.hiMul, t, k); this.sp(e.o3.frequency, base * 0.5, t, k);
-    const nr = s.rpm / s.redline;
-    const muff = 1 + e.muffler * 0.18;
+    const nr = s.rpm / s.redline, MF = e.MF || MUFFLER_SOUND.stock, inside = !!s.interior;
+    const muff = MF.vol;
+    // 回転域ごとのレイヤーをクロスフェード（低回転＝太い基音、中回転＝本体、高回転＝高次倍音）
+    const xLow = clamp(1 - nr / 0.45, 0, 1), xHigh = clamp((nr - 0.45) / 0.45, 0, 1), xMid = 1 - Math.max(xLow, xHigh) * 0.55;
+    this.sp(e.g1.gain, 0.55 * xMid, t, k); this.sp(e.g3.gain, P.sub * (0.6 + xLow * 1.2) * MF.sub * (inside ? 1.5 : 1), t, k);
+    const brake = s.thr < 0.08 && nr > 0.35; // エンジンブレーキ
     // シフトチェンジ：一瞬音が途切れてガチャッ
     if (s.gear !== undefined && s.gear !== e.gear) { if (e.player && s.gear > e.gear && e.gear > 0) { e.shiftT = 0.12; this.noiseBurst(0.05, 900, 2, 0.08); } e.gear = s.gear; }
     if (e.shiftT > 0) e.shiftT -= 1 / 60;
     const load = s.thr * (0.6 + 0.4 * nr);
-    this.sp(e.lp.frequency, (300 + s.thr * 1700 * muff + nr * 2600 + P.bright) * (e.shiftT > 0 ? 0.5 : 1), t, k);
-    this.sp(e.g2.gain, P.hi * (0.5 + nr * 0.8) * (0.6 + s.thr * 0.6), t, k);
-    let vol = (0.16 + s.thr * 0.3 + nr * 0.2) * muff * (e.shiftT > 0 ? 0.35 : 1);
+    this.sp(e.lp.frequency, (300 + s.thr * 1700 * MF.bright + nr * 2600 + P.bright) * (e.shiftT > 0 ? 0.5 : 1) * (inside ? 0.62 : 1) * (brake ? 0.7 : 1), t, k);
+    this.sp(e.g2.gain, P.hi * (0.35 + xHigh * 1.1) * (0.6 + s.thr * 0.6) * (brake ? 1.25 : 1), t, k);
+    let vol = (0.16 + s.thr * 0.3 + nr * 0.2) * muff * (e.shiftT > 0 ? 0.35 : 1) * (brake ? 0.75 : 1) * (inside ? 0.85 : 1);
+    if (nr < 0.16 && e.sound === 'rotary') vol *= 0.85 + 0.3 * Math.max(0, Math.sin(t * s.rpm / 60 * 3.1)); // ロータリーのアイドリング（ブリブリ）
     if (s.limiter) vol *= 0.55 + 0.45 * (Math.sin(t * 160) > 0 ? 1 : 0);
-    const distAtt = e.player ? 1 : clamp(1 / (1 + (s.dist || 0) / 18), 0, 1);
+    const distAtt = e.player ? 1 : (s.mute ? 0 : clamp(1 / (1 + Math.pow((s.dist || 0) / 18, 1.5)), 0, 1));
     this.sp(e.eg.gain, vol * distAtt, t, s.limiter ? 0.004 : k);
     if (P.lumpy) { this.sp(e.lfo.frequency, f * P.lumpy, t, k); this.sp(e.lfoG.gain, vol * P.lumpAmt * distAtt, t, k); }
     // 燃焼の脈動と吸気音
-    if (e.cam) { this.sp(e.cmod.frequency, f, t, k); this.sp(e.cmodG.gain, P.rasp * (0.3 + load) * muff, t, k); this.sp(e.cnf.frequency, 700 + nr * 2400 + P.bright * 0.6, t, k); this.sp(e.inf.frequency, 400 + nr * 1600, t, k); this.sp(e.ing.gain, P.intake * s.thr * (0.3 + nr) * distAtt, t, k); }
+    if (e.cam) { this.sp(e.cmod.frequency, f, t, k); this.sp(e.cmodG.gain, P.rasp * (0.3 + load) * MF.rasp * (inside ? 0.6 : 1) * (brake ? 0.5 : 1), t, k); this.sp(e.cnf.frequency, 700 + nr * 2400 + P.bright * 0.6, t, k); this.sp(e.inf.frequency, 400 + nr * 1600, t, k); this.sp(e.ing.gain, (P.intake * s.thr * (0.3 + nr) + (e.turbo ? s.boost * s.thr * 0.05 : 0)) * distAtt * (inside ? 1.9 : 1), t, k); }
     this.sp(e.nf.frequency, 500 + nr * 2500, t, k); this.sp(e.ng.gain, (0.02 + s.thr * 0.05) * muff * distAtt, t, k);
     // ターボ
-    this.sp(e.tw.frequency, 2500 + s.boost * 5500, t, 0.05); this.sp(e.twg.gain, s.boost * s.thr * 0.045 * distAtt, t, 0.05);
+    this.sp(e.tw.frequency, 2500 + s.boost * 5500 * (P.whistle || 1), t, 0.05); this.sp(e.twg.gain, e.turbo ? s.boost * (0.25 + s.thr * 0.75) * 0.05 * (P.whistle || 1) * distAtt * (inside ? 1.3 : 1) : 0, t, 0.05);
     // ニトロ
     if (e.nitroG) { this.sp(e.nitroG.gain, s.nitro ? 0.22 * distAtt : 0, t, s.nitro ? 0.04 : 0.15); this.sp(e.nitroF.frequency, 1800 + (s.speed || 0) * 25, t, 0.1); }
     // スキール
-    const sl = clamp(s.slip, 0, 1); this.sp(e.sqg.gain, sl * sl * 0.35 * distAtt * (s.snow ? 0.25 : 1), t, 0.04);
-    this.sp(e.sqf.frequency, 1100 + sl * 700 + Math.sin(t * 13) * 120, t, 0.05); this.sp(e.sqf2.frequency, 2000 + sl * 900, t, 0.05);
-    this.sp(e.wg.gain, clamp(s.speed / 80, 0, 1) * 0.12 * (e.player ? 1 : 0), t, 0.1); this.sp(e.wf.frequency, 300 + s.speed * 12, t, 0.1);
+    // タイヤ：軽い滑り（チッ）→ 通常ドリフト（キーッ）→ 高速の横滑り（ゴーッ）→ グリップ回復（キュッ）
+    const sl = clamp(s.slip, 0, 1), spd = s.speed || 0, light = sl < 0.35, hiSlide = sl > 0.5 && spd > 28, lat = clamp(Math.abs(s.lat || 0) * 2, 0, 1);
+    this.sp(e.sqg.gain, (light ? sl * sl * 0.5 : sl * sl * 0.35) * distAtt * (s.snow ? 0.25 : 1) * (hiSlide ? 0.8 : 1), t, 0.04);
+    this.sp(e.sqf.frequency, (light ? 1700 : 1100 + sl * 600) - lat * 150 + Math.sin(t * 13) * 120, t, 0.05); this.sp(e.sqf2.frequency, (light ? 2900 : 2000 + sl * 900), t, 0.05);
+    if (e.rrg) { this.sp(e.rrg.gain, hiSlide ? clamp((spd - 28) / 30, 0, 1) * sl * 0.22 * distAtt * (s.snow ? 0.4 : 1) : 0, t, 0.08); this.sp(e.rrf.frequency, 400 + spd * 8, t, 0.1); }
+    if (e.player && e.lastSlip > 0.5 && sl < 0.2 && spd > 8) this.noiseBurst(0.09, 2600, 5, 0.09, 0, 'bandpass', this.tireBus);
+    e.lastSlip = sl; if (e.tPan && s.panX !== undefined) this.sp(e.tPan.pan, clamp(s.panX, -1, 1), t, 0.05); if (!e.player && e.tOut) this.sp(e.tOut.gain, distAtt * 0.6, t, 0.1);
+    this.sp(e.wg.gain, clamp(s.speed / 80, 0, 1) * 0.12 * (e.player ? 1 : 0) * (inside ? 0.6 : 1), t, 0.1); this.sp(e.wf.frequency, 300 + s.speed * 12, t, 0.1);
     if (e.pan && s.panX !== undefined) this.sp(e.pan.pan, clamp(s.panX, -1, 1), t, 0.05);
     // アフターファイア
-    if (e.player && e.lastThr > 0.8 && s.thr < 0.2 && nr > 0.55 && (e.muffler >= 1 || Math.random() < (P.crackle || 0.3))) { const n = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) setTimeout(() => this.pop(), 40 + i * 70 + Math.random() * 40); }
+    if (e.player && e.lastThr > 0.8 && s.thr < 0.2 && nr > 0.55 && (Math.random() < (P.crackle || 0.3) * MF.crackle)) { const n = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) setTimeout(() => this.pop(), 40 + i * 70 + Math.random() * 40); }
     e.lastThr = s.thr;
   }
   stopEngine(e) {
@@ -157,19 +183,44 @@ class AudioSys {
   stopAllEngines() { for (const e of this.engines.slice()) this.stopEngine(e); }
   // ---------------- 音楽 ----------------
   unlocked(t) { return !t.lock || (typeof invHas === 'function' && invHas(t.lock)); }
+  // ---------------- MP3 プレイリスト（music/ フォルダ） ----------------
+  // music/playlist.json の一覧＋（GitHub Pages なら）フォルダの中身を自動で読み込む。ChristmasNight.mp3 はクリスマスイベント専用、それ以外は通常レース用
+  async loadPlaylist() {
+    if (this.mp3.loaded || location.protocol === 'file:') return; this.mp3.loaded = true; const files = new Set();
+    try { const r = await fetch('music/playlist.json', { cache: 'no-cache' }); if (r.ok) (await r.json()).forEach(f => files.add(f)); } catch (e) { }
+    try { const m = location.hostname.match(/^([^.]+)\.github\.io$/), repo = location.pathname.split('/').filter(Boolean)[0]; if (m && repo) { const r = await fetch(`https://api.github.com/repos/${m[1]}/${repo}/contents/music`); if (r.ok) (await r.json()).forEach(x => { if (/\.mp3$/i.test(x.name)) files.add(x.name); }); } } catch (e) { }
+    this.mp3.list = [...files].filter(f => /\.mp3$/i.test(f)).map(f => ({ id: 'mp3:' + f, file: f, mp3: true, cat: /^christmasnight\.mp3$/i.test(f) ? 'xmasRace' : 'race', name: f.replace(/\.mp3$/i, '').replace(/_/g, ' ') }));
+  }
+  mp3For(cat) { return this.mp3.list.filter(t => t.cat === (cat === 'xmasRace' ? 'xmasRace' : 'race')); }
+  playMp3(tr) {
+    if (!this.ok) return; this.stopMp3(); this.music.playing = false; this.music.track = tr;
+    const el = new Audio(); el.src = 'music/' + encodeURIComponent(tr.file); el.preload = 'auto'; el.crossOrigin = 'anonymous';
+    try { const src = this.ctx.createMediaElementSource(el); const g = this.ctx.createGain(); g.gain.value = 0.9; src.connect(g); g.connect(this.musicFade); this.mp3.g = g; } catch (e) { }
+    el.onended = () => { if (this.mp3.cur === tr) this.playCat(this.music.cat, true); }; el.onerror = () => { if (this.mp3.cur === tr) { this.mp3.list = this.mp3.list.filter(x => x !== tr); this.playCat(this.music.cat, true); } };
+    this.mp3.el = el; this.mp3.cur = tr; this.fadeMusic(1, 0.6); el.play().catch(() => { });
+    this.mp3.hist = [tr.id].concat(this.mp3.hist).slice(0, 3); this.listeners.forEach(f => { try { f(tr); } catch (e) { } });
+  }
+  stopMp3() { const el = this.mp3.el; if (el) { try { el.onended = null; el.pause(); el.src = ''; } catch (e) { } } this.mp3.el = null; this.mp3.cur = null; }
   tracksFor(cat) { const a = TRACKS.filter(t => (t.cat === cat || (cat === 'race' && t.cat === 'story')) && this.unlocked(t)); return a.length ? a : TRACKS.filter(t => !t.lock); }
   playCat(cat, force = false) {
-    this.music.cat = cat;
-    if (!force && this.music.track && (this.music.track.cat === cat || (cat === 'race' && this.music.track.cat === 'story')) && this.music.playing) return;
-    const list = this.tracksFor(cat); this.play(list[Math.floor(Math.random() * list.length)].id);
+    const raceLike = cat === 'race' || cat === 'story', cur = this.music.track; this.music.cat = cat;
+    if (cat === 'xmasRace') { const x = this.mp3For('xmasRace')[0]; if (x) { if (!force && this.mp3.cur === x) return; return this.playMp3(x); } cat = 'xmas'; this.music.cat = 'xmasRace'; }
+    if (!force && cur && ((cur.cat === cat) || (raceLike && (cur.cat === 'story' || cur.cat === 'race'))) && (this.music.playing || (this.mp3.cur && this.mp3.el && !this.mp3.el.paused))) return;
+    if (raceLike) { // 通常レース：MP3 と既存の曲を合わせてランダム（直前の曲は避ける）
+      const mp = this.mp3For('race'), useMp3 = mp.length && Math.random() < 0.6, src = useMp3 ? mp : this.tracksFor(cat); // 追加したMP3を優先（約6割）
+      const pool = src.filter(t => !this.mp3.hist.includes(t.id)); const all = pool.length ? pool : src;
+      const tr = all[Math.floor(Math.random() * all.length)]; if (tr.mp3) return this.playMp3(tr); this.stopMp3(); this.mp3.hist = [tr.id].concat(this.mp3.hist).slice(0, 3); this.fadeMusic(1, 0.3); return this.play(tr.id);
+    }
+    this.stopMp3(); this.fadeMusic(1, 0.3); const list = this.tracksFor(cat); this.play(list[Math.floor(Math.random() * list.length)].id);
   }
   play(id) {
-    const tr = TRACKS.find(t => t.id === id) || TRACKS[0]; this.music.track = tr; this.music.playing = true; this.music.paused = false; this.music.step = 0; this.music.bar = 0;
+    if (String(id).startsWith('mp3:')) { const m = this.mp3.list.find(x => x.id === id); if (m) return this.playMp3(m); }
+    this.stopMp3(); const tr = TRACKS.find(t => t.id === id) || TRACKS[0]; this.music.track = tr; this.music.playing = true; this.music.paused = false; this.music.step = 0; this.music.bar = 0;
     this.music.next = this.ok ? this.ctx.currentTime + 0.1 : 0; this.prepSong(tr);
     this.listeners.forEach(f => { try { f(tr); } catch (e) { } });
   }
-  nextTrack(d = 1) { const all = TRACKS.filter(t => this.unlocked(t)); const i = all.indexOf(this.music.track); this.play(all[(i + d + all.length) % all.length].id); }
-  togglePause() { this.music.paused = !this.music.paused; if (!this.music.paused && this.ok) this.music.next = this.ctx.currentTime + 0.05; return this.music.paused; }
+  nextTrack(d = 1) { const all = TRACKS.filter(t => this.unlocked(t)).concat(this.mp3.list); const i = all.indexOf(this.music.track); const tr = all[(i + d + all.length) % all.length]; if (tr.mp3) this.playMp3(tr); else { this.stopMp3(); this.play(tr.id); } }
+  togglePause() { if (this.mp3.el) { if (this.mp3.el.paused) { this.mp3.el.play().catch(() => { }); return false; } this.mp3.el.pause(); return true; } this.music.paused = !this.music.paused; if (!this.music.paused && this.ok) this.music.next = this.ctx.currentTime + 0.05; return this.music.paused; }
   prepSong(tr) {
     const rng = mulberry32(tr.seed * 131); const scale = tr.minor ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 11];
     const chordNotes = d => [0, 2, 4].map(k => { const idx = d + k; return scale[idx % 7] + 12 * Math.floor(idx / 7); });

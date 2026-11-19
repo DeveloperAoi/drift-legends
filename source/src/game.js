@@ -157,9 +157,9 @@ class Game {
     const tune = Object.assign({}, inst.tune, { _look: inst.look });
     this.spec = computeSpec(car, tune);
     this.veh = new Vehicle(this.spec); this.veh.auto = set.trans !== 'MT';
-    this.model = buildCarModel(R, car, inst.look, { height: inst.tune.height, wheelIn: inst.tune.wheelIn, tireW: inst.tune.tireW, camber: inst.tune.camber });
+    this.model = buildCarModel(R, car, inst.look, { height: inst.tune.height, wheelIn: inst.tune.wheelIn, tireW: inst.tune.tireW, camber: inst.tune.camber, track: inst.tune.track });
     this.model.setLights(this.lightsOn);
-    let startProg = cfg.mode === 'touge' || cfg.mode === 'free' ? 6 : 4, startLat = cfg.rivals && cfg.rivals.length ? 2.2 : 0;
+    let startProg = cfg.startProg != null ? cfg.startProg : cfg.mode === 'touge' || cfg.mode === 'free' ? 6 : 4, startLat = cfg.rivals && cfg.rivals.length ? 2.2 : 0;
     if (cfg.mode === 'online') { const gi = cfg.grid || 0; startProg = 4 - Math.floor(gi / 2) * 9; startLat = gi % 2 ? 2.2 : -2.2; }
     if (cfg.mode === 'drag') { startProg = 4; startLat = 3.2; }
     this.startProg = startProg;
@@ -189,8 +189,8 @@ class Game {
     this.myFinish = 0; this.netGone = {};
     // サウンド
     AUDIO.stopAllEngines(); AUDIO.starter();
-    setTimeout(() => { if (this.active) { this.engine = AUDIO.createEngine(this.spec, true); this.rivals.forEach(r => r.engine = AUDIO.createEngine(r.spec, false)); } }, 700);
-    AUDIO.playCat(def.xmas ? 'xmas' : cfg.mode === 'story' ? 'story' : 'race', true);
+    setTimeout(() => { if (this.active) { this.engine = AUDIO.createEngine(Object.assign({}, this.spec, { car: CAR_BY_ID[this.carInst.id], mfType: this.carInst.look.mfType || ['stock', 'sport', 'big', 'titanium'][this.carInst.tune.muffler || 0] }), true); this.rivals.forEach(r => r.engine = AUDIO.createEngine(Object.assign({}, r.spec, { car: r.car, mfType: 'sport' }), false)); } }, 700);
+    AUDIO.playCat(cfg.music ? cfg.music : def.xmas || (cfg.mode === 'event' && !cfg.evRace) || cfg.eventTask ? 'xmasRace' : cfg.mode === 'story' ? 'story' : 'race', true);
     // ミニマップ準備
     this.prepMinimap();
     this.active = true; this.paused = false; Input.active = true;
@@ -269,7 +269,7 @@ class Game {
     }
     if (DEV.owner && set.devNitro) v.nitro = 1;
     for (const e of [this.exActive, this.exActive2]) if (e) { if (e.kind === 'thrust') { const a = e.F / this.spec.mass * dt; v.vx += Math.sin(v.heading) * a; v.vz += Math.cos(v.heading) * a; } else if (e.kind === 'chute' && v.speed > 3) { const k = Math.min(0.5, 1.1 * dt); v.vx *= 1 - k; v.vz *= 1 - k; } }
-    if (v.blowoff) { v.blowoff = 0; AUDIO.blowoff(); }
+    if (v.blowoff) { v.blowoff = 0; if (this.engine) AUDIO.blowoffFor(this.engine); }
     if (this.started) this.raceT += dt;
     // 位置・壁
     this.collide(dt);
@@ -313,10 +313,11 @@ class Game {
     if (this.engine) {
       const slip = clamp(Math.max(Math.abs(v.slipR) * 2.2 - 0.25, v.spinR * 0.9, v.handOn ? 0.8 : 0, (Math.abs(v.slipF) * 2 - 0.35)) * clamp(v.speed / 6, 0, 1), 0, 1);
       if (v.nitroOn && !this._nitroWas) AUDIO.nitroBurst(); this._nitroWas = v.nitroOn;
-      AUDIO.updateEngine(this.engine, { gear: v.gear, nitro: v.nitroOn || !!(this.exActive && this.exActive.kind === 'thrust'), rpm: v.rpm, thr: v.throttleOut, boost: v.boost, slip, speed: v.speed, redline: this.spec.redline, limiter: v.limiter > 0, snow: this.cfg.weather === 'snow' });
+      AUDIO.updateEngine(this.engine, { gear: v.gear, nitro: v.nitroOn || !!(this.exActive && this.exActive.kind === 'thrust'), rpm: v.rpm, thr: v.throttleOut, boost: v.boost, slip, speed: v.speed, redline: this.spec.redline, limiter: v.limiter > 0, snow: this.cfg.weather === 'snow', interior: this.camMode >= 1 && this.camMode <= 3, lat: v.beta || 0 });
       if (v.lastShift) { v.lastShift = 0; AUDIO.shiftSfx(); }
     }
-    this.rivals.forEach(r => { if (r.engine) { const dx = r.x - v.x, dz = r.z - v.z; const d = Math.hypot(dx, dz); const rx = -Math.cos(v.heading), rz = Math.sin(v.heading); AUDIO.updateEngine(r.engine, { rpm: r.rpm || 3000, thr: r.thr || 0.7, boost: 0.5, slip: r.drift > 0.15 ? r.drift * 1.5 : 0, speed: r.v, redline: r.spec.redline, dist: d, panX: (dx * rx + dz * rz) / Math.max(d, 1) }); } });
+    const near = this.rivals.filter(r => r.engine).map(r => [Math.hypot(r.x - v.x, r.z - v.z), r]).sort((a, b) => a[0] - b[0]).slice(0, 2).map(x => x[1]); // 近い2台だけ鳴らす
+    this.rivals.forEach(r => { if (r.engine) { const dx = r.x - v.x, dz = r.z - v.z; const d = Math.hypot(dx, dz); const rx = -Math.cos(v.heading), rz = Math.sin(v.heading); AUDIO.updateEngine(r.engine, { rpm: r.rpm || 3000, thr: r.thr || 0.7, boost: 0.5, slip: r.drift > 0.15 ? r.drift * 1.5 : 0, speed: r.v, redline: r.spec.redline, dist: d, mute: !near.includes(r), panX: (dx * rx + dz * rz) / Math.max(d, 1) }); } });
     // HUD
     this.hudT -= dt;
     if (this.hudT <= 0) { this.hudT = 1 / 20; try { this.ui.updateHUD(this); } catch (e) { logErr('HUD', e); } }
@@ -462,6 +463,7 @@ class Game {
       else this.msg('FINAL LAP', '', 1.4);
     }
     // バトル: ライバルがゴールして一定時間経過
+    if (tr.def.fireworks && this.started && Math.random() < dt * 0.6) this.extraFire({ kind: 'fireworks', fwCols: tr.def.fwCols });
     if (cfg.mode === 'drag' && this.started && !this.finished && this.totalDist >= 402) { this.dragTrap = v.speed * 3.6; this.finish('goal'); }
     if (cfg.mapId === 'driftpark' && this.started && !this.finished) { const st = SAVE.data.stats; st.practiceSec = (st.practiceSec || 0) + dt; }
     if ((cfg.mode === 'story' || cfg.mode === 'event') && !this.finished && this.rivals[0] && this.rivals[0].finished && this.raceT > this.rivals[0].finishT + 30) this.finish('lose');
@@ -513,7 +515,7 @@ class Game {
     d.corner = -1; d.cornerPts = 0;
   }
   finish(reason) {
-    if (this.finished) return; this.finished = true; this.endReason = reason;
+    if (this.finished) return; this.finished = true; this.endReason = reason; if (reason === 'goal' && this.cfg.mode !== 'online') { this._finA = 0; this.camMode = 5; }
     const cfg = this.cfg, d = this.drift; if (d.on && d.pts > 0) { d.score += Math.round(d.pts); d.count++; }
     const res = { mode: cfg.mode, mapId: cfg.mapId, car: this.carInst.id, time: this.raceT, laps: this.laps, maxSpeed: this.maxSpeed, reason, cfg, nightDist: this.nightDist };
     if (cfg.mode === 'drag') { const r = this.rivals[0]; res.win = !r || !r.finished || r.finishT > this.raceT; res.rivalTime = r && r.finished ? r.finishT : null; res.trap = this.dragTrap || 0; res.rivalTrap = r && r.trap; }
@@ -523,7 +525,7 @@ class Game {
     if (cfg.mode === 'online') { this.myFinish = this.raceT; NET.sendRace(this, true); res.myTime = this.raceT; }
     if (cfg.mode === 'touge') { Object.assign(res, { score: d.score, dist: this.totalDist, survive: this.raceT, drifts: d.count, maxCombo: d.maxCombo }); }
     if (reason === 'crash') this.msg('走行不能！', 'bad', 2.5); else if (reason === 'stuck') this.msg('走行不能（停止）', 'bad', 2.5); else this.msg('FINISH!', 'good', 2.5);
-    AUDIO.fanfare();
+    AUDIO.fanfare(); AUDIO.fadeMusic(0.25, 1.8);
     setTimeout(() => { if (this.active) this.ui.showResults(res); }, 2200);
   }
   extraFire(ex) {
@@ -576,7 +578,8 @@ class Game {
     const fx = Math.sin(v.heading), fz = Math.cos(v.heading);
     const sh = this.camShake * 0.25; const shx = (Math.random() - .5) * sh, shy = (Math.random() - .5) * sh;
     const mode = this.camMode; let fov = 60 + clamp(kmh - 40, 0, 200) * 0.07 + (v.nitroOn ? 6 : 0);
-    if (mode === 0 || mode === 4) {
+    if (mode === 5) { this._finA = (this._finA || 0) + dt * 0.45; const a = v.heading + 2.5 + this._finA; const eye = [v.x + Math.sin(a) * 7.5, v.y + 2.4, v.z + Math.cos(a) * 7.5]; const gy = this.track.env === 'lot' ? 0 : this.track.locate(eye[0], eye[2], this.loc.i).y; eye[1] = Math.max(eye[1], gy + 1.2); c.pos = eye; c.target = [v.x, v.y + 0.8, v.z]; }
+    else if (mode === 0 || mode === 4) {
       let dx = fx, dz = fz;
       if (mode === 4 && v.speed > 3) { const vx = v.vx / v.speed, vz = v.vz / v.speed; dx = lerp(fx, vx, 0.65); dz = lerp(fz, vz, 0.65); const l = Math.hypot(dx, dz); dx /= l; dz /= l; }
       const rate = mode === 4 ? 3.2 : 6;
@@ -677,7 +680,7 @@ class Game {
     if (v.nitroOn) { for (const s of [-1, 1]) addL([v.x - fx * (m.dims.L / 2 + 0.3) + lx * s * 0.5, v.y + 0.25, v.z - fz * (m.dims.L / 2 + 0.3) + lz * s * 0.5], 1.4, [0.3, 0.6, 1], 0.9); }
     R.flushTransparent();
     this.lightsP.upload();
-    if (this.night > 0.2 || this.track.def.tunnel) { const gp = this.world.glow; gp.add = true; R.drawPoints(gp, 1); }
+    if (this.night > 0.2 || this.track.hasTunnel) { const gp = this.world.glow; gp.add = true; R.drawPoints(gp, 1); }
     R.drawPoints(this.lightsP, 1);
     this.smoke.upload(); R.drawPoints(this.smoke, 1);
     this.sparks.upload(); R.drawPoints(this.sparks, 1);
