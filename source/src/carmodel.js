@@ -100,7 +100,7 @@ const PAINT_MAT = { // PBR 風：metal=金属度 rough=粗さ clear=クリアコ
 };
 
 function buildCarModel(R, car, look, opts = {}) {
-  const T0 = BODY_TYPES[car.body] || BODY_TYPES.coupe90;
+  const T0 = Object.assign({}, BODY_TYPES[car.body] || BODY_TYPES.coupe90, car.prof || {});
   // 実車らしいプロポーション：ボンネットとベルトラインを少し高く（ぺったんこ防止）
   const HB = { super: 0.025, wedge: 0.02, fd: 0.035, bus: 0, van: 0, tank: 0, formula: 0, brick: 0, ktruck: 0, sleigh: 0, kei: 0.03 }[car.body] ?? 0.045;
   const T = Object.assign({}, T0, { hood: T0.hood + HB, deck: T0.deck + HB * 0.8, nose: T0.nose + HB * 0.45 }); if (T.tailV && car.L > 4.25) { T.tailV = 0; T.rr = Math.max(T.rr, 0.24); T.rb = Math.max(T.rb, 0.07); }
@@ -298,6 +298,69 @@ function buildCarModel(R, car, look, opts = {}) {
     if (look.rear === 12) { for (let k = -3; k <= 3; k++) gbCarbon.box(k * 0.16, clr + 0.08, Z(0.04), 0.015, 0.16, 0.42, cb); gbCarbon.box(0, clr + 0.005, Z(0.04), W * 0.92, 0.014, 0.46, cb); }
     if (look.wing === 19) { const wz = Z(0.06); for (const s2 of [-1, 1]) { gbCarbon.box(s2 * (hw0 - 0.4), deckYs + 0.22, wz, 0.03, 0.44, 0.08, cb); gbCarbon.box(s2 * (hw0 + 0.03), deckYs + 0.44, wz, 0.014, 0.18, 0.4, cb); } gbCarbon.hexa([[-hw0, deckYs + 0.42, wz - 0.18], [hw0, deckYs + 0.42, wz - 0.18], [hw0, deckYs + 0.46, wz + 0.18], [-hw0, deckYs + 0.46, wz + 0.18], [-hw0, deckYs + 0.47, wz - 0.18], [hw0, deckYs + 0.47, wz - 0.18], [hw0, deckYs + 0.49, wz + 0.18], [-hw0, deckYs + 0.49, wz + 0.18]], cb); gbCarbon.box(0, deckYs + 0.5, wz - 0.17, hw0 * 2, 0.04, 0.012, cb); }
     if (look.hood === 11) { const f0 = lerp(T.ws + 0.02, 0.93, 0.5); gbCarbon.box(0, topAt(f0) + 0.008, Z(f0), 0.95, 0.014, 0.75, cb); for (const s2 of [-1, 1]) for (let k = 0; k < 6; k++) gbDark.box(s2 * 0.24, topAt(f0) + 0.018, Z(f0) - 0.2 + k * 0.07, 0.18, 0.008, 0.03, dk); }
+  }
+  // ---- v3.0 日本車・欧州車の専用造形（sig）：ライト・グリル・テール・ボンネット・純正ウイング ----
+  if (car.sig) { const S = car.sig, dk = [0.025, 0.025, 0.03], ch = [0.85, 0.86, 0.9], bc = bodyCol, cb = [0.07, 0.07, 0.08], red = [1, 0.06, 0.05], amb = [1, 0.55, 0.05], smoke = [0.35, 0.05, 0.05];
+    const fz = zF0 + 0.004, fyT = yF - 0.03, fyB = yB, rz = Z(0) - 0.004, ryT = topAt(0.02) - 0.03, xw = xF, rw = widthAt(0.03), dy = topAt(0.05), wz = Z(0.07), hf = f0 => lerp(T.ws + 0.02, 0.93, f0);
+    const mesh = (cx, cy, w, h, n, z = fz) => { gbDark.box(cx, cy, z - 0.01, w, h, 0.04, dk); for (let k = 0; k < n; k++) for (let j = 0; j < 2; j++) gbChrome.box(cx - w / 2 + (k + 0.5) * w / n, cy - h / 2 + (j + 0.5) * h / 2, z + 0.012, w / n * 0.5, h / 2 * 0.5, 0.006, [0.22, 0.22, 0.25]); };
+    const quadF = (s2, pts, g, col) => { const q = pts.map(p => [s2 * p[0], p[1], fz + (p[2] || 0)]); if (s2 > 0) g.quad(q[0], q[1], q[2], q[3], col); else g.quad(q[0], q[3], q[2], q[1], col); };
+    const roundTail = (x, y, r) => { discZ(gbDark, x, y, rz - 0.004, r + 0.015, [0.05, 0.02, 0.02]); const g = new GB(); discZ(gbBrake, x, y, rz - 0.008, r, red); discZ(gbChrome, x, y, rz - 0.01, r * 0.35, [0.9, 0.5, 0.5]); };
+    if (faceOn) {
+      if (S === 'raijin4') { // 長いノーズ・横長の楕円ハウジングに3連プロジェクター・大きな下部インテーク
+        for (const s2 of [-1, 1]) { const cx = s2 * xw * 0.64; gbDark.box(cx, fyT - 0.05, fz - 0.01, xw * 0.56, 0.085, 0.05, dk); for (let k = 0; k < 3; k++) { const x = cx + s2 * (k - 1) * xw * 0.16; discZ(gbChrome, x, fyT - 0.05, fz + 0.016, 0.034, [0.8, 0.8, 0.85]); discZ(gbLight, x, fyT - 0.05, fz + 0.018, 0.024, headTint); }
+          gbGlass.box(s2 * xw * 0.95, fyT - 0.05, fz - 0.03, 0.05, 0.05, 0.1, amb); gbDark.box(s2 * xw * 0.78, fyB + 0.1, fz - 0.005, 0.18, 0.06, 0.05, dk); discZ(gbLight, s2 * xw * 0.78, fyB + 0.1, fz + 0.022, 0.022, [1, 0.95, 0.8]); }
+        mesh(0, fyB + 0.11, xw * 1.05, 0.12, 12); gbChrome.box(0, fyT - 0.12, fz + 0.012, 0.12, 0.04, 0.008, ch); }
+      if (S === 'raijin5') { // 中央の大型グリル＋左右の縦型インテーク＋細いL字LED
+        mesh(0, fyB + 0.13, xw * 0.95, 0.16, 12); gbDark.box(0, fyT - 0.07, fz - 0.01, xw * 0.35, 0.06, 0.04, dk);
+        for (const s2 of [-1, 1]) { const cx = s2 * xw * 0.7; gbDark.box(cx, fyT - 0.045, fz - 0.005, xw * 0.5, 0.07, 0.05, dk); for (let k = 0; k < 3; k++) discZ(gbLight, cx + s2 * (k - 1) * 0.08, fyT - 0.045, fz + 0.016, 0.02, headTint);
+          gbLight.box(cx, fyT - 0.012, fz + 0.016, xw * 0.46, 0.008, 0.006, headTint); gbLight.box(s2 * xw * 0.93, fyT - 0.05, fz + 0.016, 0.008, 0.06, 0.006, headTint);
+          gbDark.box(s2 * xw * 0.88, fyB + 0.14, fz - 0.005, 0.12, 0.2, 0.05, dk); gbLight.box(s2 * xw * 0.88, fyB + 0.06, fz + 0.016, 0.1, 0.008, 0.006, headTint); } }
+      if (S === 'sakura3') { // つり上がった鋭いヘッドライト＋小さなグリル＋大きな開口
+        for (const s2 of [-1, 1]) { quadF(s2, [[xw * 0.4, fyT - 0.1, 0], [xw * 0.98, fyT - 0.03, 0], [xw * 0.98, fyT + 0.01, 0], [xw * 0.4, fyT - 0.05, 0]], gbDark, dk);
+          discZ(gbChrome, s2 * xw * 0.58, fyT - 0.06, fz + 0.006, 0.032, [0.8, 0.8, 0.85]); discZ(gbLight, s2 * xw * 0.58, fyT - 0.06, fz + 0.008, 0.022, headTint); discZ(gbLight, s2 * xw * 0.8, fyT - 0.035, fz + 0.008, 0.02, headTint); gbGlass.box(s2 * xw * 0.92, fyT - 0.035, fz + 0.006, 0.05, 0.016, 0.006, amb); }
+        gbDark.box(0, fyT - 0.08, fz - 0.01, xw * 0.32, 0.035, 0.04, dk); mesh(0, fyB + 0.12, xw * 1.1, 0.13, 12); for (const s2 of [-1, 1]) { discZ(gbLight, s2 * xw * 0.82, fyB + 0.1, fz + 0.02, 0.025, [1, 0.95, 0.8]); } }
+      if (S === 'tempest') { // 六角形グリル＋涙目ヘッドライト＋丸いフォグ
+        const gw = xw * 0.42, gy = fyT - 0.08; gbDark.quad([-gw, gy - 0.05, fz], [gw, gy - 0.05, fz], [gw * 0.8, gy + 0.04, fz], [-gw * 0.8, gy + 0.04, fz], dk); for (let k = 0; k < 4; k++) gbChrome.box(0, gy - 0.035 + k * 0.022, fz + 0.008, gw * 1.6, 0.006, 0.006, [0.3, 0.3, 0.33]);
+        gbChrome.box(0, gy, fz + 0.012, 0.1, 0.05, 0.006, [0.25, 0.4, 0.8]);
+        for (const s2 of [-1, 1]) { quadF(s2, [[xw * 0.46, fyT - 0.1, 0], [xw * 0.98, fyT - 0.06, 0], [xw * 0.98, fyT, 0], [xw * 0.5, fyT - 0.04, 0]], gbDark, dk); discZ(gbChrome, s2 * xw * 0.66, fyT - 0.055, fz + 0.006, 0.036, [0.8, 0.8, 0.85]); discZ(gbLight, s2 * xw * 0.66, fyT - 0.055, fz + 0.008, 0.026, headTint); gbGlass.box(s2 * xw * 0.88, fyT - 0.07, fz + 0.006, 0.08, 0.014, 0.006, amb);
+          gbDark.box(s2 * xw * 0.78, fyB + 0.11, fz - 0.005, 0.2, 0.1, 0.05, dk); discZ(gbChrome, s2 * xw * 0.78, fyB + 0.11, fz + 0.02, 0.042, [0.8, 0.8, 0.85]); discZ(gbLight, s2 * xw * 0.78, fyB + 0.11, fz + 0.022, 0.032, [1, 0.95, 0.75]); }
+        mesh(0, fyB + 0.11, xw * 0.9, 0.11, 10); }
+      if (S === 'zephyr') { // 縦長のヘッドライト＋大きな台形の開口
+        for (const s2 of [-1, 1]) { quadF(s2, [[xw * 0.55, fyT - 0.11, 0], [xw * 0.95, fyT - 0.08, 0], [xw * 0.95, fyT + 0.0, 0], [xw * 0.7, fyT - 0.02, 0]], gbDark, dk); discZ(gbLight, s2 * xw * 0.76, fyT - 0.06, fz + 0.008, 0.03, headTint); discZ(gbLight, s2 * xw * 0.86, fyT - 0.035, fz + 0.008, 0.022, headTint); }
+        gbDark.quad([-xw * 0.62, fyB + 0.05, fz], [xw * 0.62, fyB + 0.05, fz], [xw * 0.48, fyB + 0.2, fz], [-xw * 0.48, fyB + 0.2, fz], dk); for (let k = 0; k < 4; k++) gbChrome.box(0, fyB + 0.07 + k * 0.035, fz + 0.008, xw * 1.0, 0.006, 0.006, [0.28, 0.28, 0.3]); }
+      if (S === 'eu_it') { // イタリアのミッドシップ：細いLEDライト＋大型サイドインテーク
+        for (const s2 of [-1, 1]) { quadF(s2, [[xw * 0.35, fyT - 0.06, 0], [xw * 0.97, fyT - 0.02, 0], [xw * 0.97, fyT + 0.02, 0], [xw * 0.38, fyT - 0.03, 0]], gbDark, dk); gbLight.box(s2 * xw * 0.66, fyT - 0.022, fz + 0.012, xw * 0.56, 0.008, 0.006, headTint); discZ(gbLight, s2 * xw * 0.6, fyT - 0.04, fz + 0.01, 0.018, headTint); discZ(gbLight, s2 * xw * 0.74, fyT - 0.032, fz + 0.01, 0.018, headTint);
+          quadF(s2, [[xw * 0.55, fyB + 0.04, 0], [xw * 1.0, fyB + 0.04, 0], [xw * 1.0, fyB + 0.2, 0], [xw * 0.7, fyB + 0.16, 0]], gbDark, dk); }
+        gbDark.box(0, fyB + 0.06, fz - 0.005, xw * 0.9, 0.06, 0.05, dk); }
+      if (S === 'eu_de') { // ドイツ：丸目の大型ライト（RR）／キドニーグリル（セダン）
+        for (const s2 of [-1, 1]) { const cx = s2 * xw * 0.7; discZ(gbDark, cx, fyT - 0.05, fz - 0.002, 0.07, dk); discZ(gbChrome, cx, fyT - 0.05, fz + 0.004, 0.06, [0.8, 0.8, 0.85]); discZ(gbLight, cx, fyT - 0.05, fz + 0.006, 0.046, headTint); for (let k = 0; k < 4; k++) discZ(gbLight, cx + Math.cos(k * 1.57 + 0.78) * 0.03, fyT - 0.05 + Math.sin(k * 1.57 + 0.78) * 0.03, fz + 0.008, 0.008, [1, 1, 1]); }
+        if (car.body === 'sedan') for (const s2 of [-1, 1]) { gbChrome.box(s2 * 0.11, fyT - 0.07, fz + 0.004, 0.17, 0.11, 0.01, ch); mesh(s2 * 0.11, fyT - 0.07, 0.15, 0.09, 4, fz + 0.006); }
+        mesh(0, fyB + 0.1, xw * 1.0, 0.1, 10); }
+    }
+    // テール
+    if (S === 'raijin4') { for (const s2 of [-1, 1]) for (const o of [0.38, 0.7]) roundTail(s2 * rw * o, ryT - 0.07, 0.062); gbDark.box(0, ryT - 0.07, rz + 0.004, rw * 1.85, 0.16, 0.02, [0.05, 0.02, 0.02]); }
+    if (S === 'raijin5') for (const s2 of [-1, 1]) { gbDark.box(s2 * rw * 0.66, ryT - 0.05, rz, rw * 0.58, 0.1, 0.02, smoke); gbBrake.box(s2 * rw * 0.66, ryT - 0.015, rz - 0.008, rw * 0.54, 0.012, 0.008, red); gbBrake.box(s2 * rw * 0.92, ryT - 0.05, rz - 0.008, 0.014, 0.08, 0.008, red); gbBrake.box(s2 * rw * 0.5, ryT - 0.085, rz - 0.008, rw * 0.3, 0.012, 0.008, red); }
+    if (S === 'sakura3') for (const s2 of [-1, 1]) { const q = [[rw * 0.42, ryT - 0.1], [rw * 0.96, ryT - 0.06], [rw * 0.96, ryT - 0.02], [rw * 0.42, ryT - 0.05]].map(p => [s2 * p[0], p[1], rz - 0.006]); if (s2 > 0) gbBrake.quad(q[0], q[1], q[2], q[3], red); else gbBrake.quad(q[0], q[3], q[2], q[1], red); gbGlass.box(s2 * rw * 0.62, ryT - 0.07, rz - 0.01, 0.1, 0.02, 0.006, [1, 0.8, 0.75]); }
+    if (S === 'tempest') { for (const s2 of [-1, 1]) { gbDark.box(s2 * rw * 0.68, ryT - 0.06, rz, rw * 0.56, 0.12, 0.02, [0.06, 0.02, 0.02]); roundTail(s2 * rw * 0.56, ryT - 0.06, 0.04); roundTail(s2 * rw * 0.82, ryT - 0.06, 0.04); } gbChrome.box(0, ryT - 0.06, rz - 0.01, 0.12, 0.04, 0.006, [0.25, 0.4, 0.8]); }
+    if (S === 'zephyr') for (const s2 of [-1, 1]) { const q = [[rw * 0.5, ryT - 0.11], [rw * 0.98, ryT - 0.09], [rw * 0.98, ryT - 0.02], [rw * 0.84, ryT - 0.02]].map(p => [s2 * p[0], p[1], rz - 0.006]); if (s2 > 0) gbBrake.quad(q[0], q[1], q[2], q[3], red); else gbBrake.quad(q[0], q[3], q[2], q[1], red); }
+    if (S === 'eu_it') { gbBrake.box(0, ryT - 0.04, rz - 0.008, rw * 1.7, 0.012, 0.008, red); for (const s2 of [-1, 1]) { const q = [[rw * 0.6, ryT - 0.06], [rw * 0.98, ryT - 0.05], [rw * 0.98, ryT - 0.02], [rw * 0.6, ryT - 0.035]].map(p => [s2 * p[0], p[1], rz - 0.006]); if (s2 > 0) gbBrake.quad(q[0], q[1], q[2], q[3], red); else gbBrake.quad(q[0], q[3], q[2], q[1], red); }
+      mesh(0, botAt(0) + 0.12, rw * 1.6, 0.12, 14, rz - 0.012); for (const s2 of [-1, 1]) { const g = new GB(); discZ(gbChrome, s2 * 0.12, botAt(0) + 0.09, rz - 0.02, 0.045, [0.8, 0.8, 0.85]); discZ(gbDark, s2 * 0.12, botAt(0) + 0.09, rz - 0.022, 0.032, dk); } }
+    if (S === 'eu_de') { if (car.body === 'sedan') for (const s2 of [-1, 1]) { gbDark.box(s2 * rw * 0.66, ryT - 0.06, rz, rw * 0.58, 0.1, 0.02, [0.05, 0.02, 0.02]); gbBrake.box(s2 * rw * 0.66, ryT - 0.06, rz - 0.008, rw * 0.5, 0.012, 0.008, red); gbBrake.box(s2 * rw * 0.9, ryT - 0.06, rz - 0.008, 0.014, 0.07, 0.008, red); }
+      else { gbBrake.box(0, ryT - 0.05, rz - 0.008, rw * 1.85, 0.03, 0.008, red); gbDark.box(0, ryT - 0.05, rz, rw * 1.9, 0.06, 0.02, [0.05, 0.02, 0.02]); } }
+    // ボンネット
+    if (!look.hood) { if (S === 'tempest') { const f0 = hf(0.55); gbBody.box(0, topAt(f0) + 0.045, Z(f0), 0.5, 0.09, 0.42, bc); gbDark.box(0, topAt(f0) + 0.06, Z(f0) + 0.21, 0.42, 0.06, 0.01, dk); }
+      if (S === 'raijin5') for (const s2 of [-1, 1]) { const f0 = hf(0.45); gbDark.box(s2 * 0.3, topAt(f0) + 0.012, Z(f0), 0.16, 0.01, 0.2, dk); }
+      if (S === 'sakura3') { const f0 = hf(0.5); for (const s2 of [-1, 1]) gbDark.box(s2 * 0.2, topAt(f0) + 0.008, Z(f0), 0.12, 0.008, 0.26, dk); } }
+    // 純正ウイング
+    if (!look.wing) {
+      if (S === 'raijin4') { for (const s2 of [-1, 1]) { gbBody.box(s2 * (hw0 - 0.28), dy + 0.12, wz + 0.02, 0.05, 0.24, 0.12, bc); gbBody.box(s2 * (hw0 - 0.1), dy + 0.22, wz, 0.04, 0.06, 0.26, bc); } gbBody.box(0, dy + 0.24, wz, (hw0 - 0.08) * 2, 0.035, 0.26, bc); }
+      if (S === 'tempest') { for (const s2 of [-1, 1]) gbBody.box(s2 * (hw0 - 0.34), dy + 0.14, wz, 0.05, 0.28, 0.14, bc); gbBody.box(0, dy + 0.28, wz - 0.02, (hw0 - 0.16) * 2, 0.03, 0.3, bc); gbBody.box(0, dy + 0.3, wz - 0.16, (hw0 - 0.16) * 2, 0.05, 0.02, bc); }
+      if (S === 'raijin5' || S === 'sakura3' || S === 'zephyr') gbBody.hexa([[-hw0 + 0.2, dy, Z(0.02)], [hw0 - 0.2, dy, Z(0.02)], [hw0 - 0.2, dy, Z(0.09)], [-hw0 + 0.2, dy, Z(0.09)], [-hw0 + 0.2, dy + 0.045, Z(0.01)], [hw0 - 0.2, dy + 0.045, Z(0.01)], [hw0 - 0.2, dy + 0.01, Z(0.09)], [-hw0 + 0.2, dy + 0.01, Z(0.09)]], bc);
+      if (S === 'eu_it') { gbCarbon.box(0, dy + 0.02, Z(0.04), (hw0 - 0.25) * 2, 0.02, 0.18, cb); } }
+    // サイド：インテーク・ダクト
+    for (const s2 of [-1, 1]) { const zR2 = -car.wb / 2 + 0.04, zF2 = car.wb / 2 + 0.04;
+      if (S === 'eu_it') { const f0 = (zR2 + 0.7 - z0) / L; gbDark.box(s2 * (widthAt(f0) + 0.006), clr + 0.36, zR2 + 0.7, 0.012, 0.2, 0.5, dk); }
+      if (S === 'zephyr' || S === 'raijin5') { const f0 = (zF2 - 0.55 - z0) / L; gbDark.box(s2 * (widthAt(f0) + 0.006), clr + 0.32, zF2 - 0.55, 0.012, 0.06, 0.24, dk); } }
   }
   // ボンネットの見切り線（パネルの隙間）
   if (!CUSTOM_BODY[car.body]) { const gapC = [0.02, 0.02, 0.025], N2 = 14, f0 = T.ws + 0.012, f1 = 0.972;
