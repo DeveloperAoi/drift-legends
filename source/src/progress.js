@@ -1,13 +1,13 @@
 // =====================================================================
 // progress.js — v2.8 レベル・XP・レベル報酬・プロフィール・実績追加・セーブ保護
 // =====================================================================
-const LV_MAX = 200;
+const LV_MAX = Infinity; // v3.0：レベル上限なし
 const lvReq = L => 1000 + 150 * (L - 1);                          // L → L+1 に必要なXP（段階的に増える）
 const lvCum = L => { L = Math.max(1, L); return 1000 * (L - 1) + 75 * (L - 1) * (L - 2); }; // Lv.L に到達する累計XP
-function lvInfo(xp) { xp = Math.max(0, xp || 0); let lv = 1; while (lv < LV_MAX && xp >= lvCum(lv + 1)) lv++; const cur = xp - lvCum(lv), need = lv >= LV_MAX ? 1 : lvReq(lv); return { lv, cur: lv >= LV_MAX ? need : cur, need, next: lv >= LV_MAX ? 0 : need - cur, max: lv >= LV_MAX }; }
+function lvInfo(xp) { xp = Math.max(0, xp || 0); let lv = Math.max(1, Math.floor((-925 + Math.sqrt(925 * 925 + 300 * xp)) / 150) + 1); while (lv > 1 && xp < lvCum(lv)) lv--; while (xp >= lvCum(lv + 1)) lv++; const cur = xp - lvCum(lv), need = lvReq(lv); return { lv, cur, need, next: need - cur, max: false }; }
 SAVE.level = function () { return lvInfo(this.data.xp).lv; };
 // 旧方式（1500XPごとに1レベル）からの移行：レベルと途中経過をそのまま引き継ぐ
-function migrateXp(d) { if (!d || d.xpv === 2) return; const old = 1 + Math.floor((d.xp || 0) / 1500), frac = ((d.xp || 0) % 1500) / 1500; d.xp = lvCum(Math.min(old, LV_MAX)) + Math.round(frac * lvReq(Math.min(old, LV_MAX))); d.xpv = 2; d.lvClaim = d.lvClaim || {}; for (let L = 2; L <= old; L++) d.lvClaim[L] = 1; }
+function migrateXp(d) { if (!d || d.xpv === 2) return; const old = 1 + Math.floor((d.xp || 0) / 1500), frac = ((d.xp || 0) % 1500) / 1500; d.xp = lvCum(old) + Math.round(frac * lvReq(old)); d.xpv = 2; d.lvClaim = d.lvClaim || {}; for (let L = 2; L <= old; L++) d.lvClaim[L] = 1; }
 { const _load = SAVE.load.bind(SAVE); SAVE.load = function () { _load(); migrateXp(this.data); }; migrateXp(SAVE.data);
   // セーブ保護：壊れたデータでは上書きしない・直前のセーブをバックアップ
   const _save = SAVE.save.bind(SAVE); SAVE.save = function (force) { const d = this.data; if (!d || !Array.isArray(d.cars) || !d.cars.length || !isFinite(d.money) || !isFinite(d.xp)) { console.warn('save skipped: invalid data'); return; } try { const prev = this.ls(this.key); if (prev && Math.random() < 0.2) this.ls(this.key + '_bak', prev); } catch (e) { } return _save(force); }; }
@@ -23,7 +23,7 @@ function lvReward(L) { const r = { money: 30000 + L * 20000 }, items = [];
   r.items = items.filter(Boolean).map(i => i.id); r.cars = CARS.filter(c => c.unlock && c.unlock.level === L).map(c => c.id); return r; }
 function lvRewardLabel(r) { return [r.money ? yen(r.money) : '', r.dia ? 'ダイヤ ' + r.dia : ''].concat((r.items || []).map(id => ITEM_BY_ID[id] ? ITEM_BY_ID[id].name : '')).concat((r.cars || []).map(id => 'ショップに「' + CAR_BY_ID[id].name + '」入荷')).filter(Boolean).join('、'); }
 // ---- XP 加算（レベルアップ報酬は1レベルにつき1回だけ） ----
-function addXp(n, why) { const d = SAVE.data; n = Math.max(0, Math.round(n || 0)); if (!n) return []; const before = lvInfo(d.xp).lv; d.xp = Math.min(lvCum(LV_MAX), (d.xp || 0) + n); const after = lvInfo(d.xp).lv; d.lvClaim = d.lvClaim || {}; const ups = [];
+function addXp(n, why) { const d = SAVE.data; n = Math.max(0, Math.round(n || 0)); if (!n) return []; const before = lvInfo(d.xp).lv; d.xp = Math.min(Number.MAX_SAFE_INTEGER, (d.xp || 0) + n); const after = lvInfo(d.xp).lv; d.lvClaim = d.lvClaim || {}; const ups = [];
   for (let L = before + 1; L <= after; L++) { if (d.lvClaim[L]) continue; d.lvClaim[L] = Date.now(); const r = lvReward(L); if (r.money) SAVE.addMoney(r.money); if (r.dia) d.diamonds = (d.diamonds || 0) + r.dia; for (const id of r.items) if (ITEM_BY_ID[id]) grantChestItem(ITEM_BY_ID[id]); ups.push({ L, r }); }
   d.xpLog = [{ t: Date.now(), n, why: why || '' }].concat(d.xpLog || []).slice(0, 30); SAVE.save(); if (ups.length) UI._lvUps = (UI._lvUps || []).concat(ups); UI.refreshTop(); return ups; }
 
