@@ -90,7 +90,7 @@ const BNAV_OF = { menu: 'home', garage: 'garage', tuning: 'garage', maps: 'race'
   nav.innerHTML = BNAV.map(([k, ic, en, jp]) => `<button data-nav="${k}">${ICO(ic, '#fff', 20)}<b>${en}</b></button>`).join('');
   document.body.appendChild(nav);
   nav.addEventListener('click', e => { const b = e.target.closest('[data-nav]'); if (!b) return; AUDIO.nav && AUDIO.nav(); const k = b.dataset.nav;
-    if (k === 'home') UI.goMenu(); else if (k === 'race') { UI.goMenu(); UI.open('maps', { mode: 'race' }); } else if (k === 'shop') { UI.goMenu(); UI.open('shop'); } else { UI.goMenu(); UI.open(k); } });
+    if (k === 'home') UI.goMenu(); else if (k === 'race') { UI.goMenu(); UI.open('maps', { mode: 'race' }); } else if (k === 'shop') { UI.goMenu(); UI.open('store'); } else { UI.goMenu(); UI.open(k); } });
   const upd = () => { const racing = UI.game && UI.game.active, pk = document.getElementById('packFx'), pkOn = pk && pk.classList.contains('show'), ov = $('overlay'), res = ov && !ov.classList.contains('hidden') && ov.querySelector('.res-modal');
     const vis = !racing && !pkOn && !res && UI.screen && UI.screen !== 'title' && !document.getElementById('maintFx');
     nav.classList.toggle('show', !!vis); document.body.classList.toggle('has-bnav', !!vis);

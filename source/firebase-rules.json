@@ -181,6 +181,17 @@
           ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true) && !data.exists()"
         }
       }
+    },
+    "replays": {
+      "$week": {
+        "$board": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && auth.uid == $uid",
+            ".validate": "newData.child('d').isString() && newData.child('d').val().length < 300000"
+          }
+        }
+      }
     }
   }
 }

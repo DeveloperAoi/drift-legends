@@ -865,3 +865,63 @@ body.racing #updCd{top:auto;bottom:calc(6px + var(--safe-b,0px));font-size:10px;
 .xp-ban{display:flex;gap:10px;align-items:center;background:linear-gradient(120deg,#0a3a1a,#3a0a0e);border:1px solid #ff5a5a66;border-radius:12px;padding:10px 12px;margin:4px 0 10px}.xp-ban b{display:block;color:#fff}.xp-ban small{color:#cfe;font-size:11px}
 body.has-bnav .menu-col{bottom:calc(66px + var(--safe-b,0px))!important}
 @media (max-height:500px){.nm-head #mmStats{display:none}.nm-head .lvbar{padding:4px 10px}.nm-hero{min-height:68px;padding:10px 14px}.nm-hero-tx b{font-size:20px}.nm-ban{padding:6px 10px!important}.nm-card{padding:8px}.nm-ic{width:30px;height:30px}}
+/* ===== v3.01 リプレイ ===== */
+body.replaying #hud .race-info,body.replaying #touch{display:none!important}
+#rpHud{position:fixed;left:0;right:0;top:calc(6px + var(--safe-t,0px));z-index:60;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.rp-top{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.6);border:1px solid #ffffff22;border-radius:20px;padding:5px 14px;color:#fff;font-size:12px}
+.rp-rec{color:#ff3a3a;font-family:Orbitron,sans-serif;font-weight:900;letter-spacing:.15em;animation:recBlink 1s steps(2) infinite}@keyframes recBlink{50%{opacity:.35}}
+.rp-top small{color:#aab}#rpTime{font-family:Orbitron,sans-serif;color:#ffcf3d}
+.rp-prog{width:min(520px,80vw);height:4px;background:#ffffff22;border-radius:2px;overflow:hidden}.rp-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff3a3a,#ffcf3d)}
+.rp-ctl{position:fixed;bottom:calc(14px + var(--safe-b,0px));left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto}
+.rp-ctl button,.rp-end button{background:rgba(10,12,18,.85);border:1px solid #ffffff33;color:#fff;border-radius:22px;padding:9px 14px;font-weight:800;font-size:13px;min-width:56px}
+.rp-ctl button:hover{background:#e8202a}
+.rp-end{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:auto;background:rgba(0,0,0,.75);padding:18px 26px;border-radius:14px;animation:resIn .4s both}.rp-end b{font-family:Orbitron,sans-serif;letter-spacing:.2em;font-size:22px}.rp-end div{display:flex;gap:8px}
+.rp-btn{background:linear-gradient(90deg,#3a8cff,#1a4ab0)!important;color:#fff!important;border:0!important}
+.lb-rp{margin-left:8px;width:30px;height:30px;border-radius:50%;border:0;background:#e8202a;color:#fff;font-size:12px;flex:0 0 auto;transition:transform .15s}.lb-rp:hover{transform:scale(1.12)}
+.rp-note{color:#9fd4ff!important}
+/* ===== v3.01 カードパックの新デザイン ===== */
+.pk2{background:linear-gradient(165deg,color-mix(in srgb,var(--pb) 85%,#fff) 0%,var(--pb) 18%,var(--pa) 58%,#040406 100%);box-shadow:0 calc(14px*var(--ps)) calc(34px*var(--ps)) #000a,inset 0 0 0 calc(2px*var(--ps)) color-mix(in srgb,var(--pb) 60%,transparent)}
+.pk2-holo{position:absolute;inset:0;border-radius:inherit;background:conic-gradient(from 0deg at 30% 30%,#ff3a6a33,#ffcf3d33,#2fdc7a33,#3a8cff33,#b04dff33,#ff3a6a33);mix-blend-mode:color-dodge;opacity:.55;animation:holoSpin 6s linear infinite;-webkit-mask:linear-gradient(160deg,#000 0 40%,transparent 70%);mask:linear-gradient(160deg,#000 0 40%,transparent 70%)}
+@keyframes holoSpin{to{filter:hue-rotate(360deg)}}
+.pk2-crimp{position:absolute;left:0;right:0;height:calc(12px*var(--ps));background:repeating-linear-gradient(90deg,#ffffff33 0 calc(3px*var(--ps)),#00000033 calc(3px*var(--ps)) calc(6px*var(--ps)));opacity:.8}.pk2-crimp.t{top:0;border-radius:calc(14px*var(--ps)) calc(14px*var(--ps)) 0 0}.pk2-crimp.b{bottom:0;border-radius:0 0 calc(14px*var(--ps)) calc(14px*var(--ps))}
+.pk2-in{position:absolute;inset:calc(14px*var(--ps)) calc(10px*var(--ps));display:flex;flex-direction:column;align-items:center;justify-content:space-between;color:#fff;text-align:center}
+.pk2-brand{font-family:Orbitron,sans-serif;font-size:calc(11px*var(--ps));letter-spacing:.25em;font-weight:900;color:#ffffffcc}.pk2-brand b{display:block;font-size:calc(15px*var(--ps));color:#fff;letter-spacing:.12em;text-shadow:0 0 calc(10px*var(--ps)) var(--pb)}
+.pk2-emb{filter:drop-shadow(0 calc(6px*var(--ps)) calc(10px*var(--ps)) #000a);transform:scale(var(--ps));transform-origin:center}
+.pk2-name{font-family:Orbitron,sans-serif;font-weight:900;font-style:italic;font-size:calc(26px*var(--ps));letter-spacing:.06em;line-height:1;background:linear-gradient(180deg,#fff,color-mix(in srgb,var(--pb) 70%,#fff));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 4px #000)}
+.pk2-sub{font-size:calc(10px*var(--ps));color:#ffffffbb}
+.pk2-tag{font-family:Orbitron,sans-serif;font-size:calc(8px*var(--ps));font-weight:900;letter-spacing:.15em;background:var(--pb);color:#111;padding:calc(2px*var(--ps)) calc(8px*var(--ps));border-radius:calc(10px*var(--ps))}
+.pk2-edge{position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 calc(-30px*var(--ps)) calc(40px*var(--ps)) #0008;pointer-events:none}
+#packFx .pk.float{animation:pkFloat2 2.4s ease-in-out infinite}@keyframes pkFloat2{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+#packFx .pk.charge,#packFx .pk.shake{animation:pkShake .09s linear infinite}@keyframes pkShake{0%{transform:translate(1px,-1px) rotate(-1deg)}50%{transform:translate(-2px,1px) rotate(1.5deg)}100%{transform:translate(1px,1px) rotate(-1deg)}}
+/* ===== v3.01 ストア ===== */
+.st-wrap{display:flex;flex-direction:column;gap:8px}
+.st-head{display:flex;align-items:center;justify-content:center;position:relative}.st-head b{font-family:Orbitron,sans-serif;font-size:26px;font-weight:900;letter-spacing:.08em;background:linear-gradient(180deg,#ffe58a,#ffb300);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 #7a4a00)}
+.st-cur{position:absolute;right:0;display:flex;gap:6px}.st-cur i{font-style:normal;background:#2a1a4a;border:1px solid #6a4aa0;border-radius:6px;padding:2px 10px;font-weight:900;font-size:13px}
+.st-row{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x mandatory}
+.st-sec{flex:0 0 auto;scroll-snap-align:start;border:3px solid var(--sc);border-radius:10px;background:linear-gradient(180deg,#1a3a8a,#0f2560);position:relative;padding:0 8px 10px;animation:mtIn .4s both}
+.st-sh{position:relative;text-align:center;padding:6px 60px;margin:0 -8px 8px;background:linear-gradient(180deg,#14306e,#0b1d4a);border-bottom:2px solid #ffffff22}
+.st-sh b{font-size:17px;font-weight:900;color:#ffe58a;text-shadow:0 2px 0 #3a2400}
+.st-timer{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;padding:0 16px 0 10px;background:linear-gradient(90deg,#5ad1ff,#2a8cd0);color:#fff;font-weight:900;font-family:Orbitron,sans-serif;clip-path:polygon(0 0,100% 0,82% 100%,0 100%)}
+.st-new{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:#2fdc7a;color:#fff;font-size:11px;font-weight:900;padding:1px 8px;border:2px solid #0a5a2a}
+.st-cards{display:flex;gap:8px}
+.st-card{position:relative;width:200px;flex:0 0 200px;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--cc) 35%,#3a8cff) 0%,#1e5ad0 45%,#123a9a 100%);border:3px solid #9ad8ff55;border-radius:8px;padding:8px 8px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;animation:stIn .45s cubic-bezier(.2,.9,.3,1.2) both;transition:transform .18s,box-shadow .2s}
+@keyframes stIn{from{opacity:0;transform:translateY(16px) scale(.94)}}
+.st-card:hover{transform:translateY(-4px);box-shadow:0 10px 24px #0009,0 0 0 2px var(--cc)}
+.st-ct{font-weight:900;font-size:15px;color:#ffe58a;text-shadow:0 2px 0 #00000088;min-height:22px}.st-cd{font-weight:800;font-size:11px;color:#fff;min-height:30px;line-height:1.3;margin-top:2px}
+.st-badge{position:absolute;font-size:11px;font-weight:900;padding:1px 7px;border:2px solid #0006}.st-badge.new{left:6px;top:64px;background:#2fdc7a;color:#fff}.st-badge.sale{right:6px;top:64px;background:#e8202a;color:#fff}
+.st-art{flex:1;min-height:120px;display:flex;align-items:center;justify-content:center;gap:4px;margin:26px 0 4px;position:relative;filter:drop-shadow(0 8px 10px #0008);animation:artBob 2.6s ease-in-out infinite}
+@keyframes artBob{50%{transform:translateY(-5px)}}
+.st-chip{position:relative;display:inline-flex}.st-chip em{position:absolute;right:-4px;bottom:-4px;font-style:normal;font-weight:900;font-size:12px;background:#000a;padding:0 4px;border-radius:4px}
+.st-yen{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe58a,#c98a00);color:#5a3a00;font-weight:900;font-size:24px;align-items:center;justify-content:center;border:2px solid #7a5200}
+.st-boxart .pk{margin-left:-34px;transform:rotate(-8deg)}.st-boxart .pk:first-child{margin-left:0;transform:rotate(-14deg)}.st-boxart .pk:nth-child(3){transform:rotate(4deg)}
+.st-x10{position:absolute;bottom:-6px;right:14px;font-family:Orbitron,sans-serif;font-weight:900;font-size:22px;color:#fff;text-shadow:0 2px 0 #000}
+.st-gem{font-size:30px;letter-spacing:-6px;filter:drop-shadow(0 0 10px #9ad8ff)}
+.st-old{font-weight:900;font-size:13px;color:#cfe3ff;text-decoration:line-through;text-decoration-color:#ff3a3a;text-decoration-thickness:2px;margin:2px 0 6px}
+.st-buy{width:100%;border:3px solid #1a5a0a;border-radius:6px;background:linear-gradient(180deg,#8af04a,#3aa81a);color:#fff;font-weight:900;font-size:17px;padding:8px 6px;text-shadow:0 2px 0 #1a4a0a;box-shadow:inset 0 2px 0 #ffffff66,0 3px 0 #0a3a00;transition:transform .1s,filter .15s;position:relative;overflow:hidden}
+.st-buy::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,#ffffff66,transparent);transform:skewX(-20deg);animation:buyShine 2.8s ease-in-out infinite}
+@keyframes buyShine{0%,60%{left:-60%}100%{left:130%}}
+.st-buy:hover{filter:brightness(1.1)}.st-buy:active{transform:translateY(2px)}.st-buy:disabled{background:linear-gradient(180deg,#8a8f9a,#5a5f6a);border-color:#3a3f4a;box-shadow:none}.st-buy:disabled::after{display:none}
+.st-bubble{position:absolute;right:-8px;bottom:-10px;background:#e8b84a;border:2px solid #7a5200;color:#3a2400;font-weight:900;font-size:11px;padding:2px 8px;border-radius:10px;transform:rotate(-30deg);box-shadow:0 2px 4px #0008}
+.st-tabs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding-top:4px}
+.st-tabs button{background:none;border:0;color:#fff;font-weight:900;font-size:16px;padding:6px 12px;border-radius:8px;text-shadow:0 2px 0 #000}.st-tabs button.on{color:#ffe58a;background:#ffffff14}
+.nm-store{border-color:#ffcf3d88!important;background:linear-gradient(90deg,#3a2a00,#1a1408)!important}
