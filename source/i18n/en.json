@@ -3168,5 +3168,15 @@
 "枚以上": " Epic+ card",
 "確定で入っています。": " guaranteed.",
 "購入して開ける": "Buy and open",
-"ストア": "Store"
+"ストア": "Store",
+"期間限定パック": "Limited-Time Packs",
+"このパックから獲得可能なコンテンツ": "Contents available from this pack",
+"出現率": "Drop rates",
+"メイン": "Main",
+"パーツ・車・称号": "Parts, cars, titles",
+"クリスマス限定": "Christmas limited",
+"限定車のカードだけが入っています": "Contains only limited car cards",
+"クリスマス限定車のカードと限定アイテム": "Christmas car cards and limited items",
+"本日は受取済み": "Already claimed today",
+"重複したアイテムはレア度に応じたお金に変換されます（車カードは枚数が増えます）": "Duplicate items convert to money by rarity (car cards stack)"
 }

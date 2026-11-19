@@ -110,8 +110,8 @@ function grantBundle(b) { const d = SAVE.data, out = [], packs = [];
   return { out, packs }; }
 Object.assign(UI, {
   r_store() { $('panelTitle').textContent = 'STORE'; $('panelBody').classList.add('wide'); const d = SAVE.data; if (!this.stTab) this.stTab = 'offers'; this.show.setCar(SAVE.cur());
-    const T = [['offers', '🔥 オファー'], ['box', '📦 パックBOX'], ['dia', '💎 ダイヤ両替'], ['daily', '🗓 日替わり']];
-    let h = `<div class="st-wrap"><div class="st-head"><b>STORE</b><span class="st-cur"><i>💎 ${(d.diamonds || 0).toLocaleString()}</i><i>${yen(d.money)}</i></span></div><div class="st-row">`;
+    const T = [['offers', '🔥 オファー'], ['packs', '🃏 カードパック'], ['box', '📦 パックBOX'], ['daily', '🗓 日替わり'], ['diamond', '💎 ダイヤ'], ['dia', '💱 ダイヤ両替'], ['col', '📚 コレクション'], ['bg', '🖼 ホーム背景']];
+    let h = `<div class="st-wrap"><div class="st-head"><b>STORE</b><span class="st-cur"><i>💎 ${(d.diamonds || 0).toLocaleString()}</i><i>${yen(d.money)}</i></span></div><div class="st-tabs top">${T.map(([k, l]) => `<button class="${this.stTab === k ? 'on' : ''}" data-a="stTab" data-v="${k}">${l}</button>`).join('')}</div><div class="st-row">`;
     const sec = (title, tag, timer, inner, col) => `<section class="st-sec" style="--sc:${col || '#ffcf3d'}"><div class="st-sh">${timer ? `<span class="st-timer">${timer}</span>` : ''}<b>${title}</b>${tag ? `<span class="st-new">${tag}</span>` : ''}</div><div class="st-cards">${inner}</div></section>`;
     const price = (cur, p) => cur === 'dia' ? `💎 ${p.toLocaleString()}` : yen(p);
     const left = weekLeft(), tl = Math.floor(left / 86400000) ? Math.floor(left / 86400000) + 'd' : Math.floor(left / 3600000) + 'h';
@@ -124,13 +124,17 @@ Object.assign(UI, {
     if (this.stTab === 'box') h += sec('カードパック BOX（10パック入り・20%オフ）', 'BOX', '', this.boxCards(true), '#5ad1ff');
     if (this.stTab === 'dia') h += sec('ダイヤをお金に両替', 'BONUS', '', DIA_EX.map(([n, b], i) => { const get = Math.round(n * DIA_RATE * (1 + b / 100)), can = (d.diamonds || 0) >= n;
       return `<div class="st-card dia" style="--cc:#9ad8ff;animation-delay:${i * 0.06}s"><div class="st-ct">💎 ${n} → ${yen(get)}</div><div class="st-cd">1ダイヤ = ${yen(DIA_RATE)}${b ? `　ボーナス +${b}%` : ''}</div>${b ? `<span class="st-badge sale">+${b}%</span>` : ''}<div class="st-art"><div class="st-gem">${'💎'.repeat(Math.min(5, 1 + i))}</div></div><button class="st-buy" data-a="stDia" data-v="${n}" ${can ? '' : 'disabled'}>${can ? '両替する' : 'ダイヤが足りません'}</button></div>`; }).join(''), '#9ad8ff');
-    if (this.stTab === 'daily') { h += `</div></div>`; return h + `<div class="note">日替わりショップはカードパック画面の「日替わり」タブです。</div><div class="btns"><button class="btn pri" data-a="stGoDaily">日替わりショップを開く</button></div>`; }
-    h += `</div><div class="st-tabs">${T.map(([k, l]) => `<button class="${this.stTab === k ? 'on' : ''}" data-a="stTab" data-v="${k}">${l}</button>`).join('')}</div></div>`;
+    const CH = { packs: 'chest', daily: 'shop', col: 'col', bg: 'bg' }; let inner = '';
+    if (CH[this.stTab]) { this.tab = CH[this.stTab]; inner = this.r_chest().replace(/^<div class="tabs">[\s\S]*?<\/div>/, ''); }
+    if (this.stTab === 'diamond') { if (['shop', 'races', 'how'].includes(this.tab)) this.dmTab = this.tab; this.tab = this.dmTab || 'shop'; inner = this.r_diamond(); }
+    $('panelTitle').textContent = 'STORE';
+    if (inner) h += `<div class="st-inner">${inner}</div>`;
+    h += `</div></div>`;
     return h; },
   boxCards(all) { return CHESTS.filter(c => !c.daily && (c.id !== 'xmaspack' || (typeof xmasPackOpen === 'function' && xmasPackOpen()))).slice(0, all ? 99 : 4).map((c, i) => { const full = c.price * 10, p = Math.round(full * 0.8 / 1000) * 1000;
     return `<div class="st-card box" style="--cc:${(PACK_ART[c.id] || {}).b};animation-delay:${i * 0.06}s"><div class="st-ct">${esc(c.name)} BOX</div><div class="st-cd">10パック入り</div><span class="st-badge sale">SALE 20%</span><div class="st-art st-boxart">${packHTML(c, 0.36)}${packHTML(c, 0.36)}${packHTML(c, 0.36)}<span class="st-x10">×10</span></div><div class="st-old">${yen(full)}</div><button class="st-buy" data-a="stBox" data-v="${c.id}">${yen(p)}</button><span class="st-bubble">10</span></div>`; }).join(''); },
   bundleArt(b) { return b.items.slice(0, 3).map(([k, a, n]) => { if (k === 'car' || k === 'card') return `<span class="st-chip">${itemIconSvg({ type: 'carcard', rarity: k === 'car' ? 'L' : 'E', cards: n || 1 }, 44)}</span>`; if (k === 'ticket') return `<span class="st-chip">${itemIconSvg(ITEM_BY_ID.tk_full, 44)}<em>×${a}</em></span>`; if (k === 'money') return `<span class="st-chip st-yen">¥</span>`; if (k === 'pack') { const c = CHESTS.find(x => x.id === a); return c ? `<span class="st-chip">${packHTML(c, 0.26)}<em>×${n}</em></span>` : ''; } return ''; }).join(''); },
-  a_stTab(v) { this.stTab = v; AUDIO.nav && AUDIO.nav(); this.render(); },
+  a_stTab(v) { this.stTab = v; if (v === 'diamond') this.tab = this.dmTab || 'shop'; AUDIO.nav && AUDIO.nav(); $('panelBody').scrollTop = 0; this.render(); },
   a_stGoDaily() { this.open('chest'); this.tab = 'shop'; this.render(); },
   a_stDia(v) { const n = +v, d = SAVE.data, ex = DIA_EX.find(x => x[0] === n); if (!ex || (d.diamonds || 0) < n || this._stBusy) return; this._stBusy = true;
     try { d.diamonds -= n; const get = Math.round(n * DIA_RATE * (1 + ex[1] / 100)); SAVE.addMoney(get); SAVE.save(); AUDIO.buy && AUDIO.buy(); this.toast(`💎${n} を ${yen(get)} に両替しました`); } finally { this._stBusy = false; } this.refreshTop(); this.render(); },
@@ -157,3 +161,40 @@ Object.assign(UI, {
 BNAV_OF.store = 'shop';
 window.__DLX = Object.assign(window.__DLX || {}, { RP, BUNDLES, grantBundle });
 { const _q = UI.a_quit; UI.a_quit = function () { this.replayHud(false); return _q.apply(this, arguments); }; const _gm = UI.goMenu; UI.goMenu = function () { if (!(this.game && this.game.active && this.game.cfg && this.game.cfg.replay)) this.replayHud(false); return _gm.apply(this, arguments); }; }
+{ const _op = UI.open; UI.open = function (name, arg, push) { if (name === 'chest' || name === 'diamond') { this.stTab = name === 'diamond' ? 'diamond' : 'packs'; name = 'store'; } return _op.call(this, name, arg, push); }; }
+{ const _cl = PACKFX.close.bind(PACKFX); PACKFX.close = function () { const r = _cl(); if (UI.screen === 'store') UI.render(); return r; }; }
+// ---------------- v3.01：カードパック売り場（横並び＋詳細画面） ----------------
+function packPouch(c, size = 1) { const A = PACK_ART[c.id] || PACK_ART.silver;
+  return `<div class="pp" style="--pa:${A.a};--pb:${A.b};--s:${size}"><div class="pp-crimp t"></div><div class="pp-body"><div class="pp-stripes"></div><div class="pp-gloss"></div><div class="pp-logo">${chestIcon(c, Math.round(54 * size))}</div><div class="pp-name">${A.t}</div></div><div class="pp-crimp b"></div><i class="pp-spark"></i></div>`; }
+function packTimer(c) { if (c.daily) return { t: srvMsToMidnight(), lab: '' }; if (c.limited === 'xmas') { try { const e = EVENTS.find(x => x.id === 'xmas2026'); return { t: Math.max(0, (e.end || 0) - SRV.now()) }; } catch (x) { } } return null; }
+function fmtDH(ms) { const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60; return d ? `${String(d).padStart(2, '0')}日${String(h).padStart(2, '0')}時間` : `${String(h).padStart(2, '0')}時間${String(m).padStart(2, '0')}分`; }
+function packFeatured(c) { const def = c.pool;
+  let L = def === 'car' ? ITEMS.filter(i => i.type === 'carcard' && !i.lim) : def === 'prof' ? ITEMS.filter(i => PROF_TYPES.includes(i.type) && !i.lim) : def === 'xmas' ? ITEMS.filter(i => i.xmas) : ITEMS.filter(i => !i.lim && (c.odds[i.rarity] || 0) > 0);
+  L = L.slice().sort((a, b) => RAR_ORDER.indexOf(b.rarity) - RAR_ORDER.indexOf(a.rarity) || (b.type === 'car' || b.type === 'carcard') - (a.type === 'car' || a.type === 'carcard'));
+  const seen = new Set(), out = []; for (const it of L) { const k = it.type === 'carcard' ? it.car : it.id; if (seen.has(k)) continue; seen.add(k); out.push(it); if (out.length >= 4) break; } return out; }
+function featCard(it) { const R = RARITY[it.rarity], car = it.type === 'carcard' || it.type === 'car' ? CAR_BY_ID[it.car] : null;
+  const art = car ? `<div class="fc-car" style="--cc:${car.color || '#888'}">${ICO('carSide', car.color && car.color !== '#ffffff' ? car.color : '#e8e8ea', 92)}</div>` : `<div class="fc-it">${itemIconSvg(it, 70)}</div>`;
+  return `<div class="fc" style="--rc:${R.color}"><span class="fc-main">${car ? 'メイン' : (ITEM_TYPES[it.type] || '')}</span><div class="fc-top"><span class="fc-kind">${it.type === 'carcard' ? '車カード' : car ? '車' : 'アイテム'}</span>${it.cards ? `<b class="fc-x">x${it.cards}</b>` : ''}</div>${art}<div class="fc-bot"><span class="fc-r">${it.rarity}</span><b>${esc(car ? car.name : it.name.replace(/^.*?「|」$/g, ''))}</b><small>${car ? car.maker : R.name}</small></div></div>`; }
+Object.assign(UI, {
+  packStoreHTML() { const d = SAVE.data, freeOk = d.chest.freeDate !== srvDateKey(); const xm = typeof xmasPackOpen === 'function' && xmasPackOpen();
+    const list = CHESTS.filter(c => c.id !== 'xmaspack' || xm), lim = list.filter(c => c.limited || c.daily), reg = list.filter(c => !c.limited && !c.daily);
+    const card = (c, i) => { const tm = packTimer(c); const pr = c.daily ? (freeOk ? '無料' : '受取済み') : yen(c.price);
+      return `<button class="ps-card" data-a="psOpen" data-v="${c.id}" style="--pb:${(PACK_ART[c.id] || {}).b};animation-delay:${i * 0.05}s">${tm ? `<span class="ps-timer">⏱ ${fmtDH(tm.t)}</span>` : ''}<div class="ps-art">${packPouch(c, 1)}</div><b class="ps-nm">${esc((PACK_ART[c.id] || {}).t || '')} ${c.daily ? 'DAILY' : 'CARD PACK'}</b><span class="ps-sub">${esc(c.name)}</span><span class="ps-kind">${c.pool === 'car' ? '限定車カード' : c.pool === 'prof' ? 'プロフィール' : c.pool === 'xmas' ? 'クリスマス限定' : 'パーツ・車・称号'}</span><span class="ps-price ${c.daily && !freeOk ? 'off' : ''}">${pr}</span></button>`; };
+    let h = `<div class="ps-wrap">`;
+    if (lim.length) h += `<div class="ps-sec"><div class="ps-h">期間限定パック</div><div class="ps-row">${lim.map(card).join('')}</div></div>`;
+    h += `<div class="ps-sec"><div class="ps-h">カードパック</div><div class="ps-row">${reg.map(card).join('')}</div></div></div>`;
+    h += `<div class="h3">車カード</div>${carCardsHTML()}`;
+    return h; },
+  a_psOpen(id) { const c = CHESTS.find(x => x.id === id); if (!c) return; AUDIO.pkSelect && AUDIO.pkSelect(); const d = SAVE.data, freeOk = d.chest.freeDate !== srvDateKey(), tm = packTimer(c), F = packFeatured(c);
+    const buy = n => `<button class="pd-buy" data-a="psBuy" data-v="${c.id}:${n}">購入 <b>${n}</b> <span>${yen(c.price * n)}</span></button>`;
+    this.modal(`<div class="pd"><div class="pd-head"><div><h2>${c.limited || c.daily ? '期間限定パック' : 'カードパック'}</h2><small>このパックから獲得可能なコンテンツ</small></div>${tm ? `<span class="pd-timer">⏱ ${fmtDH(tm.t)}</span>` : ''}<button class="pd-x" data-a="closeModal">✕</button></div>
+      <div class="pd-body"><div class="pd-left"><div class="pd-pack">${packPouch(c, 1.5)}</div><button class="pd-odds" data-a="psOdds" data-v="${c.id}">出現率</button></div><div class="pd-arrow">»</div>
+      <div class="pd-right"><div class="pd-cards">${F.map(featCard).join('')}</div><div class="pd-note">${esc(c.name)}：${c.pool === 'car' ? '限定車のカードだけが入っています' : c.pool === 'prof' ? 'フレーム・エフェクト・バナー・アイコン・称号' : c.pool === 'xmas' ? 'クリスマス限定車のカードと限定アイテム' : 'レジェンダリー ' + (c.odds.L || 0) + '%'}</div>
+      <div class="pd-btns">${c.daily ? `<button class="pd-buy" data-a="psBuy" data-v="${c.id}:1" ${freeOk ? '' : 'disabled'}>${freeOk ? '無料で開ける' : '本日は受取済み'}</button>` : buy(1) + buy(5) + buy(10)}</div></div></div></div>`);
+    const m = document.querySelector('#overlay .modal'); if (m) m.classList.add('pd-modal'); },
+  a_psOdds(id) { const c = CHESTS.find(x => x.id === id); const box = document.querySelector('.pd-note'); if (box) box.innerHTML = `<table class="odds">${'<tr>' + RAR_ORDER.map(r => `<th style="color:${RARITY[r].color}">${RARITY[r].name}</th>`).join('') + '</tr><tr>' + RAR_ORDER.map(r => `<td>${c.odds[r] || 0}%</td>`).join('') + '</tr>'}</table><small>重複したアイテムはレア度に応じたお金に変換されます（車カードは枚数が増えます）</small>`; },
+  a_psBuy(v) { const [id, n] = v.split(':'); const c = CHESTS.find(x => x.id === id); if (!c) return; if (!c.daily && SAVE.data.money < c.price * (+n)) { AUDIO.locked && AUDIO.locked(); return this.toast('お金が足りません'); } this.closeModal(); AUDIO.pkButton && AUDIO.pkButton(); this.a_openChest(id + ':' + n); }
+});
+{ const _rs = UI.r_store; UI.r_store = function () { if (this.stTab === 'box') this.stTab = 'offers'; const isP = this.stTab === 'packs'; if (isP) this.stTab = '__packs'; let h = _rs.call(this); if (isP) { this.stTab = 'packs'; h = h.replace(`data-v="__packs"`, '').replace('<div class="st-inner"></div>', '') + `<div class="st-inner">${this.packStoreHTML()}</div>`; h = h.replace(/(<button class=")(" data-a="stTab" data-v="packs">)/, '$1on$2'); }
+    return h.replace(/<button class="[^"]*" data-a="stTab" data-v="box">[^<]*<\/button>/, ''); }; }
+setInterval(() => { if (UI.screen === 'store' && UI.stTab === 'packs') document.querySelectorAll('.ps-timer').forEach(() => { }); }, 60000);

@@ -10,7 +10,7 @@ with sync_playwright() as p:
         if nm=='pc':
             pg.click('.nm-card[data-m=race]'); pg.wait_for_timeout(300); print('race card ->', E("window.__DL.UI.screen+':'+window.__DL.UI.arg.mode")); E("window.__DL.UI.goMenu()"); pg.wait_for_timeout(300)
             pg.click('.nm-hero'); pg.wait_for_timeout(300); print('hero ->', E("window.__DL.UI.screen")); E("window.__DL.UI.goMenu()"); pg.wait_for_timeout(300)
-            pg.click('.nm-pill[data-m=chest]'); pg.wait_for_timeout(500); print('xmas pack visible', E("!!document.querySelector('.xp-ban')"), E("[...document.querySelectorAll('[data-a=openChest]')].map(e=>e.dataset.v).filter(v=>v.startsWith('xmas')).length"))
+            pg.click('.nm-pill[data-m=store]'); pg.click('.st-tabs.top [data-v=packs]'); pg.wait_for_timeout(500); print('xmas pack visible', E("!!document.querySelector('.xp-ban')"), E("[...document.querySelectorAll('[data-a=openChest]')].map(e=>e.dataset.v).filter(v=>v.startsWith('xmas')).length"))
             print('prof tab gone', not E("!!document.querySelector('[data-a=setTab][data-v=prof]')"))
             E("window.__DL.SAVE.data.money=1e8"); E("window.__DL.UI.a_openChest('xmaspack:10')"); pg.wait_for_timeout(400); print('xmas pack items', E("window.__DL.SAVE.data.packLog[0].items.map(x=>x[0])"))
             E("(()=>{const P=document.getElementById('packFx'); P.className=''; P.innerHTML='';})()")

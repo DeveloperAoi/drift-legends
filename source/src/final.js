@@ -36,7 +36,7 @@ Object.assign(UI, {
     try { d.carCards[id] -= cc.need; const c = SAVE.newCar(id); c.paid = 0; d.cars.push(c); SAVE.save(); AUDIO.buy && AUDIO.buy(); this.toast(CAR_BY_ID[id].name + ' と交換しました！ガレージに追加されました'); } finally { this._ccBusy = false; } this.render(); }
 });
 { const _rc = rollChest; rollChest = function (chest, rnd = Math.random) { const it = _rc(chest, rnd); if (it && it.type !== 'carcard' && chest.price > 0 && rnd() < 0.12) { const cc = ITEMS.find(i => i.type === 'carcard' && i.rarity === it.rarity); if (cc) return cc; } return it; }; }
-{ const _pc = UI.packChestHTML; UI.packChestHTML = function () { return `<div class="h3">車カード</div>${carCardsHTML()}` + _pc.call(this); }; }
+{ const _pc = UI.packChestHTML; UI.packChestHTML = function () { return _pc.call(this) + `<div class="h3">車カード</div>${carCardsHTML()}`; }; }
 
 // ---------------- リザルト画面の仕上げ ----------------
 {
