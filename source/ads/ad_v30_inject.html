@@ -1,0 +1,118 @@
+<style>
+body.ad-race #s-title,body.ad-race #s-menu,body.ad-race #s-panel,body.ad-race #overlay,body.ad-race #hud,
+body.ad-show #s-title,body.ad-show #s-menu,body.ad-show #s-panel,body.ad-show #overlay,body.ad-show #hud,
+body.ad-ui #s-title,body.ad-ui #s-menu,body.ad-ui #hud,
+body.ad-menu #s-title,body.ad-menu #s-panel,body.ad-menu #overlay,body.ad-menu #hud,
+#touch,#musicToast,#toast,#rotateHint{display:none!important}
+body.ad-ui #topbar,body.ad-race #topbar,body.ad-show #topbar{pointer-events:none}
+body.ad-race #topbar,body.ad-show #topbar,body.ad-intro #topbar{display:none!important}
+#s-panel,#overlay{pointer-events:none!important}
+#adT{position:fixed;inset:0;pointer-events:none;z-index:70;font-family:'Noto Sans JP',sans-serif}
+#adT .l{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%) scale(1.08) skewX(-8deg);text-align:center;opacity:0;transition:opacity .45s,transform .45s;font-weight:900;text-shadow:0 4px 24px #000,0 0 6px #000}
+#adT .l.on{opacity:1;transform:translateY(-50%) scale(1) skewX(-8deg)}
+#adT .l.right{left:auto;right:2%;width:54%;top:auto;bottom:9%;transform:translateY(0) scale(1.08) skewX(-8deg)}
+#adT .l.right.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .l.top{top:20%;transform:translateY(0) scale(1.08) skewX(-8deg)}#adT .l.top.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .l.intro{top:52%;transform:translateY(0) scale(1.08) skewX(-8deg)}#adT .l.intro.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .l.low{top:auto;bottom:10%;transform:translateY(0) scale(1.08) skewX(-8deg)}#adT .l.low.on{transform:translateY(0) scale(1) skewX(-8deg)}
+#adT .big{font-family:Orbitron;font-size:clamp(38px,10vw,116px);letter-spacing:.06em;line-height:1}
+#adT .red{color:#e10600}#adT .gold{color:#ffcf3d}
+#adT .mid{font-size:clamp(22px,5vw,54px);line-height:1.25}#adT .sm{font-size:clamp(13px,2.4vw,24px);color:#e8e8f0;margin-top:6px}
+#adT .tag{display:inline-block;font-family:Orbitron;font-weight:900;font-size:clamp(12px,2vw,20px);letter-spacing:.3em;background:#e10600;color:#fff;padding:4px 14px;margin-bottom:10px}
+#adT .rr{display:inline-block;font-size:clamp(11px,1.8vw,18px);padding:2px 9px;margin:6px 3px 0;color:#000}
+#adBar{position:fixed;left:0;bottom:0;height:4px;background:#e10600;width:0;z-index:71}
+#adRe{position:fixed;right:14px;bottom:14px;background:#e10600;color:#fff;border:0;padding:10px 16px;font-weight:900;display:none;cursor:pointer;z-index:72;font-family:'Noto Sans JP',sans-serif}
+#adStart{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:rgba(0,0,0,.82);cursor:pointer;color:#fff;font-family:'Noto Sans JP',sans-serif}
+#adStart button{font-family:Orbitron,sans-serif;font-weight:900;font-size:clamp(18px,4vw,30px);letter-spacing:.15em;color:#fff;background:linear-gradient(90deg,#e10600,#900);border:0;padding:18px 40px;cursor:pointer}
+#adCover{position:fixed;inset:0;background:#000;z-index:69;transition:opacity .35s;pointer-events:none}
+#adFlash{position:fixed;inset:0;background:#fff;z-index:68;opacity:0;pointer-events:none;transition:opacity .5s}
+#adT .tag.x{background:linear-gradient(90deg,#c8102e,#0f7a3a)}#adT .grn{color:#2fdc7a}
+
+#s-menu{pointer-events:none!important}
+#bnav,#updCd,.ann-ban,.ann-pop,#rvTalk{display:none!important}
+#adT .l .mid{background:linear-gradient(90deg,transparent,rgba(0,0,0,.55) 15%,rgba(0,0,0,.55) 85%,transparent);padding:2px 24px}
+</style>
+<div id="adCover"></div><div id="adFlash"></div><div id="adT"></div><div id="adBar"></div><button id="adRe">↻ もう一度見る</button>
+<div id="adStart"><div style="font-family:Orbitron;font-weight:900;letter-spacing:.3em;color:#e10600">DRIFT LEGENDS</div><div style="font-size:clamp(16px,3vw,26px);font-weight:900">大型アップデート v3.0 紹介動画（約56秒）</div><button>▶ PLAY</button><div style="font-size:12px;color:#aab">音が出ます</div></div>
+<script>
+(function(){
+const D=window.__DL; if(!D) return; const {game,UI,SAVE,Input,wrapAngle,clamp,AUDIO,LOADER}=D; const show=D.show; const B=document.body;
+SAVE.save=()=>{};
+const d=SAVE.data; d.money=48800000; d.settings.assist=3; d.settings.bg='garage'; d.tutDone=true; d.seenVersion=D.GAME_VERSION||'3.0'; UI._newsShown=true; UI._logChk=true;
+const mk=(id,look,tune)=>{const c=SAVE.newCar(id); Object.assign(c.look,look||{}); Object.assign(c.tune,tune||{}); return c;};
+const C4=mk('ak_raijin4',{color:'#ff7a10',paint:'pearl',wheel:'stock'},{engine:'twin',diff:'2way',tire:'drift',nos:2,ecu:3,reinforce:3});
+const CS=mk('hk_s3',{color:'#f2f2f4',paint:'pearl'},{engine:'turbo',diff:'2way',tire:'drift',nos:2});
+const CT=mk('se_tempest22',{},{engine:'bigturbo',diff:'2way',nos:2});
+const CF=mk('pk_f1',{}), CK=mk('pk_tank',{}), CB=mk('pk_brick',{}), CTR=mk('hk_kt_ft',{});
+d.cars.push(C4,CS,CT,CF,CK,CB,CTR); d.current=C4.uid;
+['pf_18','pe_12','pb_8','pi_9','tt_24','pf_14','pe_6','pf_16','pfx_3','pb_14','pe_10'].forEach(i=>d.inv[i]=1); d.prof={frame:'pf_18',effect:'pe_12',banner:'pb_8',icon:'pi_9',bio:'峠で会おう。'}; d.title='tt_24';
+d.carCards={hk_van:22,pk_tank:31,pk_f1:12,pk_brick:30,xc_frost:9};
+const T=56;
+const TXT=[
+ [0.3,4,'<div class="tag">BIG UPDATE</div><div class="mid">すべてが、新しくなる。</div>','intro'],
+ [4,8,'<div class="big">DRIFT</div><div class="big red">LEGENDS</div><div class="mid" style="margin-top:10px">大型アップデート <span class="gold">v3.0</span></div>',''],
+ [8,13.5,'<div class="tag">NEW MAP</div><div class="mid">明神峠</div><div class="sm">トンネル・4連ヘアピン・Z字ヘアピン・展望台<br>高低差 約100m の本格派の峠</div>','right'],
+ [13.5,19,'<div class="tag">NEW MAP</div><div class="mid">東京メトロポリタン高速</div><div class="sm">高架・地下トンネル・JCT・ゲート<br>ネオンの夜景を全開で</div>','right'],
+ [19,24,'<div class="tag">NEW MAP</div><div class="mid">雷鳴峠</div><div class="sm">道幅8m・名物の5連ヘアピン　上級者向け</div>','low'],
+ [24,29,'<div class="tag">REMODEL</div><div class="mid">日本車を作り直し</div><div class="sm">専用のライト・テール・ウイング<br>RAIJIN・SAKURA・TEMPEST・ZEPHYR ほか</div>','right'],
+ [29,34,'<div class="tag">PROFILE</div><div class="mid">プロフィールを<br>自分らしく</div><div class="sm">フレーム・動くエフェクト・バナー・称号<br><span class="gold">90種類以上</span></div>','right'],
+ [34,39,'<div class="tag">CARD PACKS</div><div class="mid">車カードを集めて<br>限定車と交換</div><div class="sm">ビークル・プロフィール・クリスマス<br>専用カードパック登場</div>','right'],
+ [39,44,'<div class="tag" style="background:#ffb300;color:#000">PACK LIMITED</div><div class="mid">戦車・フォーミュラ<br>ブロックの車・軽トラ</div><div class="sm">カードパック限定車が続々</div>','low'],
+ [44,48,'<div class="tag">NEW UI</div><div class="mid">新メインメニュー</div><div class="sm">下部ナビ・新リザルト・湾岸風の車選択</div>','right'],
+ [48,51.5,'<div class="tag">MORE</div><div class="mid">RACEモード・ストーリーのセリフ<br>フルチューンチケット・リアルなエンジン音</div>','top'],
+ [51.5,T,'<div class="big" style="font-size:clamp(30px,8vw,92px)">DRIFT <span class="red">LEGENDS</span></div><div class="mid">v3.0 配信中</div><div class="sm">いますぐプレイ！</div>','top']
+];
+const SCN=[
+ [0,4,'intro'],[4,8,'logo'],
+ [8,13.5,'race',{map:'myojin',time:'night',weather:'clear',car:CS,cams:[0,4],at:'hp',sp:20}],
+ [13.5,19,'race',{map:'metrox',time:'night',weather:'clear',car:C4,cams:[0,1],at:'jct',sp:38}],
+ [19,24,'race',{map:'kaminari',time:'evening',weather:'clear',car:CT,cams:[4,0],at:'hp5',sp:18}],
+ [24,29,'remodel'],[29,34,'profile'],[34,39,'packs'],[39,44,'limited'],[44,48,'menu'],[48,51.5,'carsel'],[51.5,T+5,'end']
+];
+const el=document.getElementById('adT'),bar=document.getElementById('adBar'),cov=document.getElementById('adCover'),re=document.getElementById('adRe'),fl=document.getElementById('adFlash');
+let t0=0,ti=-1,si=-1,run=false,timers=[];
+const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
+function mode(m){B.classList.remove('ad-race','ad-show','ad-ui','ad-intro','ad-menu');if(m)B.classList.add('ad-'+m);}
+let botNitro=false;
+function bot(){const g=game,v=g.veh,tr=g.track;if(!tr||!v)return{};const L=tr.locate(v.x,v.z,g.loc.i);const a=tr.pointAt(L.prog+Math.max(5,v.speed*0.6),0);
+ const err=wrapAngle(Math.atan2(a.x-v.x,a.z-v.z)-v.heading);const k=Math.abs(tr.K[(L.i+8)%tr.n]);const vmax=tr.vmax[(L.i+Math.floor(v.speed*1.2))%tr.n]*0.95;
+ return{throttle:v.speed<vmax?1:0.4,brake:v.speed>vmax+6?1:0,steer:v.air?0:clamp(-err*3.2-L.lat*0.12,-1,1),hand:!v.air&&k>1/45&&v.speed>12&&Math.abs(v.beta)<0.35,analog:true,steerRate:3,nitro:botNitro};}
+Input.read=()=>bot();
+function clearUI(){timers.forEach(clearTimeout);timers=[];try{UI.closeModal();}catch(e){}}
+function toMenu(){if(game.active)game.exit();UI.goMenu();UI.screen='ad';show.active=true;}
+function startRace(c,setup){cov.style.opacity=1;setTimeout(()=>{try{mode('race');game.start({mode:'free',mapId:c.map,time:c.time,weather:c.weather,laps:9,carInst:c.car,rivals:[]});setup();}catch(e){console.error(e)}cov.style.opacity=0;},220);}
+function place(sp0,sp,cam){const g=game,p=g.track.pointAt(sp0,0);g.veh.reset(p.x,p.z,p.y,p.hd);g.veh.vx=Math.sin(p.hd)*sp;g.veh.vz=Math.cos(p.hd)*sp;g.veh.gear=3;g.loc=g.track.locate(p.x,p.z,-1);g.lastProg=g.loc.prog;g.camMode=cam;g.camDir=[Math.sin(p.hd),Math.cos(p.hd)];for(let k=0;k<20;k++)g.update(1/60);}
+function startPos(c){const tr=game.track,S=D.STEP||2;if(c.at==='hp'){const k=tr.corners.find(x=>x.type==='ヘアピン');return (k.start-40)*S;}if(c.at==='jct'&&tr.jcts&&tr.jcts[0])return (tr.jcts[0].i-170)*S;if(c.at==='hp5'){const ks=tr.corners.filter(x=>x.type==='ヘアピン');return ((ks[2]||ks[0]).start-35)*S;}return 10;}
+function whoosh(){AUDIO.noiseBurst(0.6,900,0.7,0.35,0,'bandpass');AUDIO.noiseBurst(0.4,3000,1,0.15,0.05,'bandpass');}
+function hit(){[392,523,784].forEach((f,i)=>AUDIO.tone(f,0.35,'sawtooth',0.07,i*0.05));}
+function flash(){fl.style.transition='none';fl.style.opacity=0.9;requestAnimationFrame(()=>{fl.style.transition='opacity .6s';fl.style.opacity=0;});}
+function scene(k){
+ const [s0,s1,type,c]=SCN[k]; clearUI(); whoosh();
+ if(type==='intro'){mode('intro');toMenu();LOADER.show('VERSION 3.0');cov.style.opacity=0;}
+ else if(type==='logo'){LOADER.hide(0);mode('show');toMenu();show.rebuildStudio&&show.rebuildStudio();show.dist=7.2;show.setCar(C4,true);show.rot=0.7;flash();hit();cov.style.opacity=0;}
+ else if(type==='race'){startRace(c,()=>place(startPos(c),c.sp,c.cams[0]));later(()=>{botNitro=true;},1800);later(()=>botNitro=false,3600);}
+ else if(type==='remodel'){botNitro=false;mode('show');toMenu();show.dist=6.2;show.setCar(C4,true);show.rot=2.6;cov.style.opacity=0;
+   later(()=>{show.setCar(CS,true);show.rot=-0.6;flash();},1700); later(()=>{show.setCar(CT,true);show.rot=0.5;flash();},3400);}
+ else if(type==='profile'){mode('ui');toMenu();UI.open('profEdit');cov.style.opacity=0;
+   const seq=[['pframe','pf_16'],['peffect','pe_10'],['pframe','pfx_3'],['pbanner','pb_14'],['pframe','pf_18']];seq.forEach(([t,id],i)=>later(()=>{UI.tab=t;UI.a_pfSet(t+':'+id);AUDIO.click&&AUDIO.click();},500+i*900));}
+ else if(type==='packs'){mode('ui');toMenu();UI.open('chest');cov.style.opacity=0;const p=document.getElementById('panelBody');later(()=>p.scrollTo({top:240,behavior:'smooth'}),1400);later(()=>p.scrollTo({top:520,behavior:'smooth'}),3200);}
+ else if(type==='limited'){mode('show');toMenu();show.dist=6.4;show.setCar(CK,true);show.rot=0.7;cov.style.opacity=0;
+   later(()=>{show.setCar(CF,true);show.rot=-0.8;flash();},1300);later(()=>{show.setCar(CB,true);show.rot=0.6;flash();},2600);later(()=>{show.setCar(CTR,true);show.rot=-0.5;flash();},3800);}
+ else if(type==='menu'){mode('menu');if(game.active)game.exit();UI.goMenu();show.setCar(C4,true);cov.style.opacity=0;}
+ else if(type==='carsel'){mode('ui');toMenu();UI.open('carsel',{mode:'time',mapId:'kaminari',weather:'clear',time:'evening',laps:1});cov.style.opacity=0;
+   [CS.uid,CT.uid,C4.uid].forEach((u,i)=>later(()=>{UI.a_selCarSel(u);},500+i*1000));}
+ else if(type==='end'){botNitro=false;mode('show');toMenu();show.dist=8.4;show.setCar(C4,true);show.rot=0.6;flash();AUDIO.fanfare&&AUDIO.fanfare();hit();cov.style.opacity=0;}
+}
+let lastT=0;
+function f(now){requestAnimationFrame(f);if(!run)return;if(!t0)t0=now;const s=(now-t0)/1000;
+ const i=TXT.findIndex(x=>s>=x[0]&&s<x[1]);if(i!==ti){ti=i;el.innerHTML=i>=0?`<div class="l ${TXT[i][3]}">${TXT[i][2]}</div>`:'';requestAnimationFrame(()=>{const e=el.firstChild;e&&e.classList.add('on')})}
+ const j=SCN.findIndex(x=>s>=x[0]&&s<x[1]);if(j!==si&&j>=0){si=j;scene(j);}
+ if(j>=0&&SCN[j][2]==='race'&&game.active){const c=SCN[j][3],seg=(SCN[j][1]-SCN[j][0])/c.cams.length;game.camMode=c.cams[Math.min(c.cams.length-1,Math.floor((s-SCN[j][0])/seg))];}
+ bar.style.width=Math.min(100,s/T*100)+'%';if(s>=T)re.style.display='block';}
+function startAll(){AUDIO.init();AUDIO.resume();AUDIO.setVol({bgm:0.75,sfx:0.9,mute:false});AUDIO.play('t5');t0=0;ti=-1;si=-1;run=true;re.style.display='none';}
+AUDIO.playCat=()=>{};AUDIO.starter=()=>{};UI.toast=()=>{};
+document.getElementById('adStart').onclick=()=>{document.getElementById('adStart').style.display='none';startAll();};
+re.onclick=()=>{clearUI();startAll();};
+setTimeout(()=>{requestAnimationFrame(f);},300);
+})();
+</script>
