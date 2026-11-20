@@ -84,7 +84,7 @@ ITEM_TYPES.emoji = '絵文字';
 for (const e of EMO) if (!EMO_FREE.has(e.id)) addItem({ id: 'emj_' + e.id, type: 'emoji', emo: e.id, name: '絵文字「' + e.name + '」', en: 'Emoji "' + e.name + '"', rarity: e.r, lim: 1, emojiItem: 1, desc: 'チャットで使える絵文字（' + EMO_CAT[e.cat] + '）' });
 const emoOwned = id => EMO_FREE.has(id) || invHas('emj_' + id);
 { const _ic = itemIconSvg; itemIconSvg = function (it, size = 34) { if (it && it.type === 'emoji') return emoSvg(it.emo, size); return _ic(it, size); }; }
-const emoRender = s => esc(s || '').replace(/:(e\d{1,3}):/g, (m, id) => EMO_BY[id] ? `<span class="emo-in">${emoSvg(id, 26)}</span>` : m);
+let emoRender = s => esc(s || '').replace(/:(e\d{1,3}):/g, (m, id) => EMO_BY[id] ? `<span class="emo-in">${emoSvg(id, 26)}</span>` : m);
 
 // ---------------- ウィンターパック・新しい通常パック・絵文字パック ----------------
 const WINTER_W = { start: 0, end: JST('2027-02-28T23:59:59') }; const winterOpen = () => { const t = SRV.now(); return t >= WINTER_W.start && t <= WINTER_W.end; };

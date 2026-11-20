@@ -100,7 +100,7 @@ const MIRROR = { el: null, ang: 0, vel: 0, lastHd: null, lastSp: 0 };
 const mset = () => { const s = SAVE.data.settings; if (s.mirrorOn === undefined) s.mirrorOn = true; if (s.charmOn === undefined) s.charmOn = true; s.mirrorSize = s.mirrorSize || 1; s.charmSize = s.charmSize || 1; return s; };
 function mirrorEl() { if (!MIRROR.el) { const el = document.createElement('div'); el.id = 'mirrorUI'; el.innerHTML = `<div class="mr-frame"><i class="mr-glare"></i></div><div class="mr-charm"><i class="mr-string"></i><div class="mr-ch"></div></div>`; document.body.appendChild(el); MIRROR.el = el; } return MIRROR.el; }
 { const GP = Game.prototype, _rd = GP.render; GP.render = function (dt) { _rd.call(this, dt); const s = mset(), el = mirrorEl(), d = SAVE.data, ch = d.charm && invHas('ch_' + d.charm) ? d.charm : null;
-    const show = this.active && !(this.cfg && this.cfg.replay) && this.camMode !== 5 && (s.mirrorOn || (s.charmOn && ch)) && !document.querySelector('#overlay:not(.hidden) .modal');
+    const show = this.active && !document.body.classList.contains('photo') && !(this.cfg && this.cfg.replay) && this.camMode !== 5 && (s.mirrorOn || (s.charmOn && ch)) && !document.querySelector('#overlay:not(.hidden) .modal');
     el.style.display = show ? '' : 'none'; if (!show) return; el.style.setProperty('--ms', s.mirrorSize); el.style.setProperty('--cs', s.charmSize); el.classList.toggle('no-mirror', !s.mirrorOn);
     const chEl = el.querySelector('.mr-charm'); chEl.style.display = s.charmOn && ch ? '' : 'none'; if (ch && chEl.dataset.id !== ch) { chEl.dataset.id = ch; chEl.querySelector('.mr-ch').innerHTML = charmSvg(ch, 46); }
     // 飾りの揺れ（振り子）
