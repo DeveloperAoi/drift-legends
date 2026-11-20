@@ -181,7 +181,7 @@ function buildCarModel(R, car, look, opts = {}) {
     const glassCurve = (t, rnd) => { t = clamp(t, 0, 1); const k = 1 - rnd; return t < k ? t / k * (1 - rnd * 0.5) : (1 - rnd * 0.5) + rnd * 0.5 * Math.sin((t - k) / rnd * PI / 2); };
     const roofCrown = f => 0.018 * Math.sin(clamp((f - T.rr) / (T.rf - T.rr), 0, 1) * PI);
     const roofAt = f => { if (f <= T.rr) { const t = (f - T.rb) / (T.rr - T.rb); return lerp(beltAt(f), H, T.tailV ? Math.sin(clamp(t, 0, 1) * PI / 2) ** 0.5 : glassCurve(t, 0.32)); } if (f >= T.rf) { const t = (T.ws - f) / (T.ws - T.rf); return lerp(beltAt(f), H, glassCurve(t, 0.26)); } return H + roofCrown(f); };
-    const PC = cf.map(f => { const b = beltAt(f), r = Math.max(b + 0.02, roofAt(f)), hb = widthAt(f) * 0.925, ht = widthAt(f) * 0.745; const right = [[hb, b], [lerp(hb, ht, 0.42), b + (r - b) * 0.55], [ht, r - 0.03], [ht * 0.82, r - 0.004], [ht * 0.4, r + 0.006], [0, r + 0.008]]; return mirrorSec(right).map(([x, y]) => [x, y, Z(f)]); });
+    const PC = cf.map(f => { const b = beltAt(f), r = Math.max(b + 0.02, roofAt(f)), hb = widthAt(f) * (car.cabB || 0.925), ht = widthAt(f) * (car.cabT || 0.745); const right = [[hb, b], [lerp(hb, ht, 0.42), b + (r - b) * 0.55], [ht, r - 0.03], [ht * 0.82, r - 0.004], [ht * 0.4, r + 0.006], [0, r + 0.008]]; return mirrorSec(right).map(([x, y]) => [x, y, Z(f)]); });
     const mid = (T.rr + T.rf) / 2;
     loft(PC, (i, k, cx, cy, n) => {
       const f = (cf[i] + cf[i + 1]) / 2, kk = k < 5 ? k : 9 - k; // 0..4 片側インデックス
@@ -964,6 +964,7 @@ function buildCarModel(R, car, look, opts = {}) {
   }
   const model = {
     node, body, wheels, popups, steerWheel: sw, cockpit, needles, glassMat, glassAlpha, headMat, brakeMat, meshes, livTex, plateTex, shadow,
+    shape: { topAt, widthAt, beltAt, T, Z, noseH, hoodH, A }, gl,
     dims: { L, W, H, tireR, zF, zR, hood: Yhood, ws: Z(T.ws), deck: Yh(T.deck), nose: Yh(T.nose), clr }, glow: glowCol,
     lightsOn: false, popT: 0, wheelSpin: 0,
     setBrake(v) { this.brakeMat.emis = v ? 1.6 : (this.lightsOn ? 0.7 : 0.25); },

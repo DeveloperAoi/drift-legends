@@ -1,0 +1,65 @@
+import asyncio
+from playwright.async_api import async_playwright
+async def run(b, vw, tag, full):
+  pg=await b.new_page(viewport={'width':vw[0],'height':vw[1]},has_touch=vw[0]<900);errs=[];pg.on('pageerror',lambda e:errs.append(str(e)))
+  E=pg.evaluate
+  await pg.goto('file:///home/claude/dl/dist/index.html');await pg.wait_for_timeout(2500)
+  await E("()=>{const D=window.__DL;D.SAVE.data.tutDone=true;D.UI._newsShown=true;D.UI._logChk=true}")
+  await pg.click('#btnStart');await pg.wait_for_timeout(1200);await E("()=>{try{window.__DL.UI.closeModal()}catch(e){}}")
+  # 1) unlock via card trade (real button)
+  await E("()=>{const D=window.__DL;D.SAVE.data.carCards=D.SAVE.data.carCards||{};D.SAVE.data.carCards.hy_aurex=30;D.UI.stTab='packs';D.UI._vp.packs=4;D.UI.open('store')}")
+  await pg.wait_for_timeout(800)
+  await E("()=>{const b=document.querySelector('[data-a=ccTrade][data-v=hy_aurex]');b.click()}")
+  for ms in ([300,1100,2000,2900,4600] if full else [5600]):
+    await pg.wait_for_timeout(ms-(0 if ms in (300,5600) else [300,1100,2000,2900,4600][[300,1100,2000,2900,4600].index(ms)-1]))
+    await pg.screenshot(path=f'/tmp/u_{tag}_{ms}.png')
+  st=await E("()=>[document.querySelector('#carFx').className, window.__DL.SAVE.data.cars.some(c=>c.id==='hy_aurex')]")
+  await pg.mouse.click(vw[0]//2,vw[1]//2);await pg.wait_for_timeout(1500)
+  st2=await E("()=>[window.__DLX.ACQ.mode, document.querySelectorAll('#acqFx .aq-card').length, document.querySelector('#carFx').className]")
+  await pg.screenshot(path=f'/tmp/u_{tag}_acq.png')
+  await E("()=>{const n=document.querySelector('#acqFx .aq-next');n&&n.click()}");await pg.wait_for_timeout(900)
+  print(tag,'unlock',st,st2)
+  # 2) star up
+  await E("()=>{const D=window.__DL;D.SAVE.data.starCards=D.SAVE.data.starCards||{};D.SAVE.data.starCards.hy_aurex=10;D.SAVE.data.money=9e9;D.UI.open('garage')}");await pg.wait_for_timeout(600)
+  await E("()=>window.__DL.UI.a_starUp('hy_aurex')")
+  for ms in ([1200,2700,3200,4200] if full else [4200]):
+    await pg.wait_for_timeout(ms-([0,1200,2700,3200][[1200,2700,3200,4200].index(ms)] if full else 0)); await pg.screenshot(path=f'/tmp/s_{tag}_{ms}.png')
+  await pg.mouse.click(vw[0]//2,vw[1]//2);await pg.wait_for_timeout(700)
+  print(tag,'star',await E("()=>[window.__DL.SAVE.data.carStars.hy_aurex, document.body.classList.contains('cine'), document.querySelector('#starFx2').className]"))
+  # 3) menu engine
+  await E("()=>{const D=window.__DL;const X=window.__DLX;X.grant(X.ITEM_BY_ID.key_fobred);X.grant(X.ITEM_BY_ID.kc_dice);D.SAVE.data.keyCh='dice';D.UI.goMenu()}");await pg.wait_for_timeout(700)
+  await pg.screenshot(path=f'/tmp/m_{tag}_menu.png')
+  await E("()=>document.getElementById('engBtn').click()");await pg.wait_for_timeout(500);await pg.screenshot(path=f'/tmp/m_{tag}_ign0.png')
+  await pg.mouse.click(vw[0]//2,vw[1]//2);await pg.wait_for_timeout(1500);await pg.screenshot(path=f'/tmp/m_{tag}_ign1.png')
+  await pg.wait_for_timeout(1300);await pg.screenshot(path=f'/tmp/m_{tag}_ign2.png')
+  await pg.wait_for_timeout(1200)
+  print(tag,'menuEng',await E("()=>[window.__DLX.MENUENG.on, !!window.__DLX.MENUENG.eng, document.querySelectorAll('.ign').length]"))
+  await pg.screenshot(path=f'/tmp/m_{tag}_on.png')
+  # fob key shown; try fob key -> blade key
+  await E("()=>{window.__DL.SAVE.data.keyX='fobred'}")
+  await E("()=>document.getElementById('engBtn').click()");await pg.wait_for_timeout(1200)
+  print(tag,'menuOff',await E("()=>window.__DLX.MENUENG.on"))
+  # 4) key tab
+  await E("()=>{const D=window.__DL;D.SAVE.data.keyX='std';D.UI.cmTab='key';D.UI.open('charm')}");await pg.wait_for_timeout(700);await pg.screenshot(path=f'/tmp/k_{tag}_tab.png')
+  # 5) race manual start (blade key)
+  await E("()=>{const D=window.__DL;D.SAVE.data.settings.manualStart=true;D.UI.launch({mode:'free', mapId:'x_city', weather:'clear', time:'day', laps:1, carInst:D.SAVE.cur(), rivals:[]})}")
+  await pg.wait_for_function("window.__DL.game.active", timeout=60000);await pg.wait_for_timeout(1500)
+  await pg.screenshot(path=f'/tmp/r_{tag}_wait.png')
+  w=await E("()=>[window.__DL.game._keyWait, window.__DL.game.started, !!document.querySelector('.ign.race')]")
+  await pg.keyboard.press('Enter');await pg.wait_for_timeout(1100);await pg.screenshot(path=f'/tmp/r_{tag}_turn.png')
+  await pg.wait_for_timeout(2600)
+  w2=await E("()=>[window.__DL.game._keyWait, !!window.__DL.game.engine, !!document.querySelector('.ign.race')]")
+  await pg.wait_for_timeout(3500); w3=await E("()=>window.__DL.game.started")
+  print(tag,'race',w,w2,w3)
+  await E("()=>{window.__DL.SAVE.data.settings.manualStart=false; window.__DL.game.started=true; window.__DL.game.finish('goal')}")
+  await pg.wait_for_timeout(1500)
+  print(tag,'errs',errs[:5])
+  await pg.close()
+async def main():
+  async with async_playwright() as p:
+    b=await p.chromium.launch(args=['--use-gl=swiftshader','--enable-unsafe-swiftshader','--autoplay-policy=no-user-gesture-required'])
+    await run(b,(1280,720),'d',True)
+    await run(b,(860,395),'l',False)
+    await run(b,(390,844),'p',False)
+    await b.close()
+asyncio.run(main())
