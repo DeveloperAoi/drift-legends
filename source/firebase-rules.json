@@ -207,6 +207,15 @@
           }
         }
       }
+    },
+    "dm": {
+      "$pair": {
+        ".read": "auth != null && $pair.contains(auth.uid)",
+        "$m": {
+          ".write": "auth != null && $pair.contains(auth.uid) && !data.exists() && newData.child('u').val() == auth.uid",
+          ".validate": "newData.hasChildren(['u','m','t']) && newData.child('m').isString() && newData.child('m').val().length <= 160"
+        }
+      }
     }
   }
 }
