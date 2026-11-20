@@ -11800,12 +11800,13 @@ WHEEL_STYLES.push({ id: 'shademesh', name: 'ゴールドメッシュ', price: 0,
 
 // ---------------- メインメニューの曲（全員に反映・開発者メニューから変更） ----------------
 const MENU_MUSIC = { src: '' };
-{ const _st = ADM.start; ADM.start = async function () { const r = await _st.apply(this, arguments); try { if (window.DL_FB) { await DL_FB.ready(); DL_FB.db().ref('admin/menuMusic').on('value', s => { const v = s.val(); const nv = (v && v.src) || ''; const ch = nv !== MENU_MUSIC.src; MENU_MUSIC.src = nv; if (ch && AUDIO.music && AUDIO.music.cat === 'menu') AUDIO.playCat('menu', true); }, () => { }); } } catch (e) { } return r; }; }
-{ const _pc = AUDIO.playCat.bind(AUDIO); AUDIO.playCat = function (cat, force = false) { const src = MENU_MUSIC.src; if (cat !== 'menu' || !src) return _pc(cat, force);
-    this.music.cat = 'menu';
+const menuLike = cat => cat === 'menu' || (cat === 'xmas' && !(UI.screen && ['garage', 'tuning'].includes(UI.screen)) && !(UI.game && UI.game.active));
+{ const _st = ADM.start; ADM.start = async function () { const r = await _st.apply(this, arguments); try { if (window.DL_FB) { await DL_FB.ready(); DL_FB.db().ref('admin/menuMusic').on('value', s => { const v = s.val(); const nv = (v && v.src) || ''; const ch = nv !== MENU_MUSIC.src; MENU_MUSIC.src = nv; if (ch && AUDIO.music && menuLike(AUDIO.music.cat)) AUDIO.playCat(AUDIO.music.cat, true); }, () => { }); } } catch (e) { } return r; }; }
+{ const _pc = AUDIO.playCat.bind(AUDIO); AUDIO.playCat = function (cat, force = false) { const src = MENU_MUSIC.src; if (!menuLike(cat) || !src) return _pc(cat, force);
+    this.music.cat = cat;
     if (src.startsWith('mp3:')) { const file = src.slice(4); let tr = this.mp3.list.find(t => t.file === file); if (!tr) { tr = { id: src, file, mp3: true, cat: 'menu', name: file.replace(/\.mp3$/i, '').replace(/_/g, ' ') }; this.mp3.list.push(tr); }
       if (!force && this.mp3.cur === tr && this.mp3.el && !this.mp3.el.paused) return; return this.playMp3(tr); }
-    if (src.startsWith('tr:')) { const id = src.slice(3); if (!TRACKS.some(t => t.id === id)) return _pc(cat, force); if (!force && this.music.playing && this.music.track && this.music.track.id === id) return; this.stopMp3(); this.fadeMusic(1, 0.3); return this.play(id); }
+    if (src.startsWith('tr:')) { const id = src.slice(3); if (!TRACKS.some(t => t.id === id)) return _pc(cat, force); this.music.cat = cat; if (!force && this.music.playing && this.music.track && this.music.track.id === id) return; this.stopMp3(); this.fadeMusic(1, 0.3); return this.play(id); }
     return _pc(cat, force); }; }
 const menuMusicName = src => !src ? '自動（今まで通り）' : src.startsWith('mp3:') ? src.slice(4) : ((TRACKS.find(t => 'tr:' + t.id === src) || {}).name || src);
 { const _dp = UI.r_devPanel; UI.r_devPanel = function () { let h = _dp.call(this); if (!DEV.owner || !window.DL_FB) return h; h = h.replace('</div><div class="note">', `<button class="tab ${this.tab === 'mmusic' ? 'on' : ''}" data-a="setTab" data-v="mmusic">MENU MUSIC</button></div><div class="note">`); if (this.tab !== 'mmusic') return h;
@@ -11816,8 +11817,8 @@ const menuMusicName = src => !src ? '自動（今まで通り）' : src.startsWi
       <div class="mm-list">${row('', '自動（今まで通り）', 'menu で始まるMP3、なければゲーム内の曲')}<div class="h3">MP3（music/ フォルダ）</div>${mp3.length ? mp3.map(t => row('mp3:' + t.file, t.file, t.cat === 'menu' ? 'メニュー用' : t.cat === 'xmasRace' ? 'クリスマス用' : 'レース用')).join('') : '<div class="note">MP3 が見つかりません（ローカルのファイルで開いているときは読み込めません）</div>'}
       <div class="h3">ゲーム内の曲</div>${builtin.map(t => row('tr:' + t.id, t.name, t.cat === 'menu' ? 'メニュー用' : t.cat)).join('')}</div>`; }; }
 Object.assign(UI, {
-  a_mmSet(src) { this._adm(async () => { await ADM.write('admin/menuMusic', src ? { src, by: DL_FB.user.uid } : null); await ADM.log('menu-music', src || 'auto'); MENU_MUSIC.src = src; AUDIO.playCat('menu', true); this.render(); }, 'メニューの曲を変更しました（全員に反映）'); },
-  a_mmPrev(src) { const keep = MENU_MUSIC.src; MENU_MUSIC.src = src; AUDIO.playCat('menu', true); MENU_MUSIC.src = keep; this.toast('試聴中：' + menuMusicName(src)); }
+  a_mmSet(src) { this._adm(async () => { await ADM.write('admin/menuMusic', src ? { src, by: DL_FB.user.uid } : null); await ADM.log('menu-music', src || 'auto'); MENU_MUSIC.src = src; AUDIO.playCat(xmasThemeOn() ? 'xmas' : 'menu', true); this.render(); }, 'メニューの曲を変更しました（全員に反映）'); },
+  a_mmPrev(src) { const keep = MENU_MUSIC.src; MENU_MUSIC.src = src; AUDIO.playCat('menu', true); MENU_MUSIC.src = keep; AUDIO.music.cat = xmasThemeOn() ? 'xmas' : 'menu'; this.toast('試聴中：' + menuMusicName(src)); }
 });
 window.__DLX = Object.assign(window.__DLX || {}, { MENU_MUSIC, packPool });
 
