@@ -16,10 +16,10 @@ with sync_playwright() as p:
     E("(()=>{const S=window.__DLX.SRV; S._now=S.now; S.now=()=>Date.parse('2026-12-25T10:00:00+09:00');})()")
     print('pending', E(X+".giftsPending().map(g=>g.id)"))
     E("window.__DL.UI.goMenu()"); pg.wait_for_timeout(1800); pg.screenshot(path='test/v330_menu_gift.png'); print('popup', E("!!document.querySelector('.gf-pop')"), 'banner', E("!!document.querySelector('.nm-gift')"))
-    pg.click('[data-a=giftClaim]'); pg.wait_for_timeout(400); print('unopened gift', E("window.__DL.SAVE.data.unopened.packs.giftbox"), 'pending', E(X+".giftsPending().length"))
+    E("(window.__DLX.ACQ&&window.__DLX.ACQ.close&&window.__DLX.ACQ.close(),document.getElementById('acqFx')&&document.getElementById('acqFx').remove(),0)"); pg.click('[data-a=giftClaim]'); pg.wait_for_timeout(400); print('unopened gift', E("window.__DL.SAVE.data.unopened.packs.giftbox"), 'pending', E(X+".giftsPending().length"))
     # server gift simulation
     E("window.__DLX.GIFTS.srv={g1:{title:'テスト配布',msg:'hi',items:[{k:'money',a:500000,n:1},{k:'dia',a:50,n:1},{k:'cards',a:'nn_oni',n:5}],start:Date.parse('2026-12-24T00:00:00+09:00'),end:Date.parse('2026-12-30T00:00:00+09:00'),active:true}}")
-    E("window.__DL.UI.open('gifts')"); pg.wait_for_timeout(1200); E("window.__DL.UI.closeModal()"); pg.wait_for_timeout(300); pg.screenshot(path='test/v330_gifts.png'); m=E("window.__DL.SAVE.data.money"); pg.click('[data-a=giftClaim]'); pg.wait_for_timeout(300); print('srv gift money', E("window.__DL.SAVE.data.money")-m, E("window.__DL.SAVE.data.carCards.nn_oni"))
+    E("window.__DL.UI.open('gifts')"); pg.wait_for_timeout(1200); E("window.__DL.UI.closeModal()"); pg.wait_for_timeout(300); pg.screenshot(path='test/v330_gifts.png'); m=E("window.__DL.SAVE.data.money"); E("(window.__DLX.ACQ&&window.__DLX.ACQ.close&&window.__DLX.ACQ.close(),document.getElementById('acqFx')&&document.getElementById('acqFx').remove(),0)"); pg.click('[data-a=giftClaim]'); pg.wait_for_timeout(300); print('srv gift money', E("window.__DL.SAVE.data.money")-m, E("window.__DL.SAVE.data.carCards.nn_oni"))
     # eve event
     E("(()=>{const S=window.__DLX.SRV; S.now=()=>Date.parse('2026-12-24T10:00:00+09:00');})()"); print('eve', E("window.__DLX.evState(window.__DLX.EVENTS.find(e=>e.id==='xmaseve2026'))"))
     E("window.__DL.UI.open('evDetail',{id:'xmaseve2026'})"); pg.wait_for_timeout(600); pg.screenshot(path='test/v330_eve.png')

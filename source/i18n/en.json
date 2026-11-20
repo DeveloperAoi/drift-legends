@@ -4457,5 +4457,8 @@
 "さんにプレゼントを贈りました！": " received your gift!",
 "贈れませんでした（通信エラー）": "Could not send (connection error)",
 "受け取れませんでした（通信エラー）": "Could not claim (connection error)",
-"さんからのプレゼントを受け取りました（": "'s gift claimed ("
+"さんからのプレゼントを受け取りました（": "'s gift claimed (",
+"画面をタップしてスキップ": "Tap to skip",
+"獲得したもの：": "You got:",
+"未開封に保存": "Saved to unopened"
 }
