@@ -21,8 +21,8 @@
  ['mk_tsumuji', 'MIKAZUKI', 'TSUMUJI 4x4', '1990 直4ターボ・ホットハッチ4WD', '4WD', 230, 300, 1250, 230, 5, 7000, 1, 84, 64, 80, 2400000, 'hatch80', 3.9, 1.7, 1.38, '#ffffff', 0, 'i4', 2.45, 0.6, null]
 ].forEach(r => { const c = addCar(r); c.isNew = '3.2'; });
 // ---------------- 期間限定「ネオンナイト」カードパック ----------------
-const NEON_START = JST('2026-11-20T00:00:00'), NEON_END = JST('2026-12-13T23:59:59');
-function neonOpen() { const t = SRV.now(); return t >= NEON_START && t <= NEON_END; }
+const NEON_W = { start: JST('2026-11-20T00:00:00'), end: JST('2026-12-13T23:59:59') };
+function neonOpen() { const t = SRV.now(); return t >= NEON_W.start && t <= NEON_W.end; }
 [['nn_oni', 'EVENT', 'NEON ONI GT', 'ネオンナイト限定・鬼のV8ワイドボディ（カード限定）', '4WD', 760, 820, 1520, 325, 6, 8200, 1, 90, 84, 92, 0, 'gt', 4.7, 1.98, 1.28, '#ff2bd6', 0, 'v8', 2.72, 0.52, { chest: 1, cards: 1 }],
  ['nn_kitsune', 'EVENT', 'KITSUNE-BI RS', 'ネオンナイト限定・狐火ロータリー（カード限定）', 'FR', 520, 500, 1200, 300, 6, 9500, 1, 92, 96, 88, 0, 'fd', 4.29, 1.78, 1.22, '#00e5ff', 1, 'rotary', 2.43, 0.5, { chest: 1, cards: 1 }],
  ['nn_ryujin', 'EVENT', 'RYUJIN 4X', 'ネオンナイト限定・龍神の4WDセダン（カード限定）', '4WD', 680, 760, 1580, 315, 6, 8000, 1, 88, 80, 90, 0, 'gs4', 4.71, 1.9, 1.37, '#7a2aff', 0, 'v6', 2.78, 0.55, { chest: 1, cards: 1 }]
@@ -43,7 +43,7 @@ addItem({ id: 'nnb_0', type: 'pbanner', name: 'バナー「ネオンストリー
 CHESTS.push({ id: 'neonpack', name: 'ネオンナイト カードパック', price: 2500000, odds: { C: 0, U: 0, R: 55, E: 32, L: 13 }, color: '#ff2bd6', pool: 'neon', limited: 'neon' });
 PACK_ART.neonpack = { a: '#1a0030', b: '#ff2bd6', t: 'NEON NIGHT' }; CARD_PACKS.push('neonpack');
 { const _pp = packPool; packPool = function (c, rar) { if (c.pool === 'neon') return ITEMS.filter(i => i.rarity === rar && i.neon); return _pp(c, rar).filter(i => !i.neon); }; }
-{ const _pt = packTimer; packTimer = function (c) { if (c.limited === 'neon') return { t: Math.max(0, NEON_END - SRV.now()) }; return _pt(c); }; }
+{ const _pt = packTimer; packTimer = function (c) { if (c.limited === 'neon') return { t: Math.max(0, NEON_W.end - SRV.now()) }; return _pt(c); }; }
 { const _oc = UI.a_openChest; UI.a_openChest = function (v) { if (String(v).startsWith('neonpack') && !neonOpen()) return this.toast('ネオンナイト カードパックは期間限定です'); return _oc.call(this, v); }; }
 { const _ps = UI.packStoreHTML; if (_ps) UI.packStoreHTML = function () { if (neonOpen()) return _ps.apply(this, arguments); const i = CHESTS.findIndex(c => c.id === 'neonpack'); const s = i >= 0 ? CHESTS.splice(i, 1)[0] : null; try { return _ps.apply(this, arguments); } finally { if (s) CHESTS.splice(i, 0, s); } }; }
 
@@ -100,14 +100,14 @@ function offerArt(r, s = 1) { const [k, a, n] = r;
   if (k === 'ticket') return `<div class="of-ic" style="transform:scale(${s})">${itemIconSvg(ITEM_BY_ID.tk_full, 70)}<em>×${a}</em></div>`; return ''; }
 const carIconSvg = (c, w) => `<svg viewBox="0 0 120 50" width="${w}" height="${w * 0.42}"><path d="M6 36 L16 26 L40 20 L56 10 L86 10 L102 22 L114 26 L116 36 Z" fill="${c.color}" stroke="#0008" stroke-width="2"/><path d="M58 14 L84 14 L96 23 L46 23 Z" fill="#1a2030"/><circle cx="32" cy="38" r="8" fill="#111" stroke="#ccc" stroke-width="2"/><circle cx="94" cy="38" r="8" fill="#111" stroke="#ccc" stroke-width="2"/><path d="M104 27 h10" stroke="#fff" stroke-width="2"/></svg>`;
 Object.assign(UI, {
-  offersHTML() { if (!neonOpen()) return ''; const left = fmtDH(Math.max(0, NEON_END - SRV.now()));
+  offersHTML() { if (!neonOpen()) return ''; const left = fmtDH(Math.max(0, NEON_W.end - SRV.now()));
     const cards = OFFERS.map((o, i) => { const n = offerCnt(o), out = n >= o.lim, pr = (o.cur === 'dia' ? SICO.gem(22) + ' ' : '') + (o.cur === 'dia' ? o.price.toLocaleString() : yen(o.price));
       const rest = o.items.filter(r => r !== o.big && !(r[0] === o.big[0] && r[1] === o.big[1])).slice(0, 2);
       return `<div class="of-card ${out ? 'out' : ''}" style="animation-delay:${i * 0.06}s"><button class="of-face" data-a="ofOpen" data-v="${o.id}"><span class="of-timer">${left}</span><div class="of-title"><span>${esc(o.t1)}</span><span class="b">${esc(o.t2)}</span></div><div class="of-art"><div class="of-sub">${rest.map(r => offerArt(r, 0.7)).join('')}</div><div class="of-big">${offerArt(o.big, 1)}</div></div><div class="of-lab" style="--lc:${o.labC}">${esc(o.lab)}</div></button><button class="of-buy" data-a="ofOpen" data-v="${o.id}" ${out ? 'disabled' : ''}>${out ? '購入済み' : '購入する　' + pr}</button><small class="of-lim">あと ${o.lim - n} 回購入できます</small></div>`; }).join('');
     return `<section class="of-sec"><div class="of-main"><div class="of-h"><span class="of-kick">NEON NIGHT SPOTLIGHT</span><b>NEON ONI GT</b><span class="of-hl">⏱ 終了まで ${left}</span></div><div class="of-row">${cards}</div></div></section>`; },
   a_ofOpen(id) { const o = OFFERS.find(x => x.id === id); if (!o) return; const n = offerCnt(o), out = n >= o.lim;
     const pr = o.cur === 'dia' ? SICO.gem(24) + ' ' + o.price.toLocaleString() : yen(o.price);
-    this.modal(`<div class="of-md"><div class="of-mh"><div><span>${esc(o.t1)}</span><b>${esc(o.t2)}</b></div><div class="of-mt">終了まで <span class="of-timer">${fmtDH(Math.max(0, NEON_END - SRV.now()))}</span></div><button class="of-x" data-a="closeModal">✕</button></div><div class="of-items">${o.items.map((r, k) => `${k ? '<span class="of-plus">＋</span>' : ''}<div class="of-it">${offerArt(r, 0.9)}<b>${offerAmt(r)}</b><small>${esc(rwLabel(r))}</small></div>`).join('')}</div><div class="of-val">${esc(o.lab)}</div><button class="of-pay" data-a="ofBuy" data-v="${o.id}" ${out ? 'disabled' : ''}><b>${out ? '購入済み' : pr}</b><small>あと ${o.lim - n} 回</small></button></div>`);
+    this.modal(`<div class="of-md"><div class="of-mh"><div><span>${esc(o.t1)}</span><b>${esc(o.t2)}</b></div><div class="of-mt">終了まで <span class="of-timer">${fmtDH(Math.max(0, NEON_W.end - SRV.now()))}</span></div><button class="of-x" data-a="closeModal">✕</button></div><div class="of-items">${o.items.map((r, k) => `${k ? '<span class="of-plus">＋</span>' : ''}<div class="of-it">${offerArt(r, 0.9)}<b>${offerAmt(r)}</b><small>${esc(rwLabel(r))}</small></div>`).join('')}</div><div class="of-val">${esc(o.lab)}</div><button class="of-pay" data-a="ofBuy" data-v="${o.id}" ${out ? 'disabled' : ''}><b>${out ? '購入済み' : pr}</b><small>あと ${o.lim - n} 回</small></button></div>`);
     const m = document.querySelector('#overlay .modal'); m && m.classList.add('of-modal'); },
   a_ofBuy(id) { const o = OFFERS.find(x => x.id === id), d = SAVE.data; if (!o || offerCnt(o) >= o.lim || this._stBusy || !neonOpen()) return;
     if (o.cur === 'dia') { if ((d.diamonds || 0) < o.price) return this.toast('ダイヤが足りません'); } else if (d.money < o.price) return this.toast('お金が足りません');

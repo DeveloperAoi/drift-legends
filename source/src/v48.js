@@ -87,7 +87,7 @@ const emoOwned = id => EMO_FREE.has(id) || invHas('emj_' + id);
 const emoRender = s => esc(s || '').replace(/:(e\d{1,3}):/g, (m, id) => EMO_BY[id] ? `<span class="emo-in">${emoSvg(id, 26)}</span>` : m);
 
 // ---------------- ウィンターパック・新しい通常パック・絵文字パック ----------------
-const WINTER_END = JST('2027-02-28T23:59:59'); const winterOpen = () => SRV.now() <= WINTER_END;
+const WINTER_W = { start: 0, end: JST('2027-02-28T23:59:59') }; const winterOpen = () => { const t = SRV.now(); return t >= WINTER_W.start && t <= WINTER_W.end; };
 { const c = addCar(['wt_aurora', 'EVENT', 'AURORA GLACIER GT', 'ウィンターパック限定・オーロラ色の4WDグランツーリスモ（カード限定）', '4WD', 640, 700, 1580, 315, 6, 7800, 1, 90, 82, 90, 0, 'gt', 4.7, 1.95, 1.3, '#9ad8ff', 0, 'v8', 2.72, 0.52, { chest: 1, cards: 1 }]); c.isNew = '3.8'; }
 CAR_CARDS.wt_aurora = { need: 30, winter: 1 }; for (const [n, r] of [[1, 'R'], [3, 'E'], [10, 'L']]) addItem({ id: `cc_wt_aurora_${n}`, type: 'carcard', car: 'wt_aurora', cards: n, rarity: r, lim: 1, winter: 1, name: `AURORA GLACIER GT カード ×${n}`, en: `AURORA GLACIER GT card x${n}` });
 const WI = o => addItem(Object.assign({ lim: 1, winter: 1 }, o));
@@ -121,7 +121,7 @@ CARD_PACKS.push('winterpack'); PACK_CAR.winterpack = 'wt_aurora'; Object.assign(
     if (c.pool === 'winter') return ITEMS.filter(i => ok(i) && i.winter); if (c.pool === 'emoji') return ITEMS.filter(i => ok(i) && i.emojiItem);
     if (T[c.pool]) return ITEMS.filter(i => ok(i) && T[c.pool].includes(i.type) && !i.lim && !i.mythic).concat(ITEMS.filter(i => ok(i) && (i.type === 'cash' || i.type === 'dia')));
     return _pp(c, rar).filter(i => !i.winter && !i.emojiItem); }; }
-{ const _pt = packTimer; packTimer = function (c) { if (c.limited === 'winter') return { t: Math.max(0, WINTER_END - SRV.now()) }; return _pt(c); }; }
+{ const _pt = packTimer; packTimer = function (c) { if (c.limited === 'winter') return { t: Math.max(0, WINTER_W.end - SRV.now()) }; return _pt(c); }; }
 { const _oc = UI.a_openChest; UI.a_openChest = function (v) { const [id, ns] = String(v).split(':'), c = CHESTS.find(x => x.id === id); if (c && c.limited === 'winter' && !winterOpen()) return this.toast('ウィンターカードパックは期間限定です');
     if (c && c.dia) { const n = Math.max(1, Math.min(10, +ns || 1)), cost = c.dia * n, d = SAVE.data; if (PACKFX.o && PACKFX.o.classList.contains('show')) return; if ((d.diamonds || 0) < cost) { AUDIO.locked && AUDIO.locked(); return this.toast(`ダイヤが足りません（${cost}必要）`); } d.diamonds -= cost; SAVE.save(); this.refreshTop(); }
     return _oc.call(this, v); }; }

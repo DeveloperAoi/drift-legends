@@ -1,0 +1,76 @@
+// =====================================================================
+// v51.js — v3.92：車カード交換の車プレビュー・新アイテム／新しい飾り・開発者がイベントや期間限定の期間を変更
+// =====================================================================
+// ---------------- 車カード交換：車のプレビュー ----------------
+Object.assign(UI, {
+  a_ccPrev(id) { const c = CAR_BY_ID[id]; if (!c) return; const inst = { id, tune: defaultTune(c), look: defaultLook(c) }; this.show.setCar(inst); this._ccPv = id;
+    let el = document.getElementById('ccPv'); if (!el) { el = document.createElement('div'); el.id = 'ccPv'; document.body.appendChild(el); }
+    const cc = CAR_CARDS[id] || { need: 0 }, n = carCards(id), own = SAVE.data.cars.some(x => x.id === id), sp = computeSpec(c, inst.tune);
+    el.innerHTML = `<div class="cpv-top"><button class="cpv-x" data-a="ccPvClose">✕ もどる</button><div class="cpv-t">${clsBadge(c)} <b>${esc(c.name)}</b><small>${esc(c.maker)} ・ ${c.drive} ・ ${Math.round(c.hp)}PS ・ 最大★${carMaxStars(c)}</small></div></div>
+      <div class="cpv-card"><small>${esc(c.era || '')}</small><div class="cpv-stats">${this.statBars(sp)}</div><div class="cc2-bar"><i style="width:${cc.need ? Math.min(100, n / cc.need * 100) : 0}%"></i><span>${own ? '所有中' : `カード ${n} / ${cc.need}`}</span></div>${own ? '' : `<button class="btn ${n >= cc.need ? 'pri' : ''}" data-a="ccTrade" data-v="${id}" ${n >= cc.need ? '' : 'disabled'}>${n >= cc.need ? '交換する' : `あと ${cc.need - n} 枚`}</button>`}<div class="cpv-hint">ドラッグで車を回せます</div></div>`;
+    document.body.classList.add('ccpv'); AUDIO.confirm && AUDIO.confirm(); },
+  a_ccPvClose() { document.body.classList.remove('ccpv'); const el = document.getElementById('ccPv'); if (el) el.remove(); this._ccPv = null; this.show.setCar(SAVE.cur()); this.render(); }
+});
+{ const _tr = UI.a_ccTrade; UI.a_ccTrade = function (v) { const r = _tr.apply(this, arguments); if (document.body.classList.contains('ccpv')) { document.body.classList.remove('ccpv'); const el = document.getElementById('ccPv'); if (el) el.remove(); } return r; }; }
+{ const _o = UI.open; UI.open = function () { if (document.body.classList.contains('ccpv')) { document.body.classList.remove('ccpv'); const el = document.getElementById('ccPv'); if (el) el.remove(); } return _o.apply(this, arguments); }; }
+
+// ---------------- 新しい飾り（チャーム） ----------------
+{ const C = (id, nm, en, r, svg) => { CHARMS.push({ id, nm, en, r, svg }); addItem({ id: 'ch_' + id, type: 'charm', charm: id, name: '飾り「' + nm + '」', en: 'Charm "' + en + '"', rarity: r, lim: 1, desc: 'レース中のミラーの下に吊り下げる飾り（メインメニューの「飾り」で変更）' }); };
+  C('onigiri', 'おにぎり', 'Onigiri', 'C', '<path d="M24 4 L44 40 a4 4 0 0 1 -4 6 H8 a4 4 0 0 1 -4 -6z" fill="#fff" stroke="#ddd" stroke-width="2"/><rect x="12" y="30" width="24" height="16" rx="2" fill="#1a2a1a"/>');
+  C('sushi', 'おすしストラップ', 'Sushi Strap', 'U', '<rect x="6" y="24" width="36" height="18" rx="9" fill="#fff" stroke="#ddd" stroke-width="2"/><path d="M6 26 q18 -18 36 0 v4 h-36z" fill="#ff6a3a"/><path d="M12 22 l4 6 M22 18 l4 8 M32 18 l4 8" stroke="#fff" stroke-width="2"/>');
+  C('panda', 'パンダ', 'Panda', 'R', '<circle cx="12" cy="12" r="7" fill="#111"/><circle cx="36" cy="12" r="7" fill="#111"/><circle cx="24" cy="26" r="18" fill="#fff" stroke="#ddd" stroke-width="2"/><ellipse cx="17" cy="24" rx="5" ry="6" fill="#111"/><ellipse cx="31" cy="24" rx="5" ry="6" fill="#111"/><circle cx="17" cy="24" r="1.6" fill="#fff"/><circle cx="31" cy="24" r="1.6" fill="#fff"/><ellipse cx="24" cy="33" rx="3" ry="2" fill="#111"/>');
+  C('fox', 'きつねのお面', 'Fox Mask', 'E', '<path d="M6 4 L18 16 H30 L42 4 L40 30 Q24 50 8 30z" fill="#fff" stroke="#ddd" stroke-width="2"/><path d="M10 10 l6 8 M38 10 l-6 8" stroke="#e10600" stroke-width="3"/><path d="M14 24 q4 -4 8 0 M26 24 q4 -4 8 0" stroke="#e10600" stroke-width="2.5" fill="none"/><circle cx="24" cy="36" r="2.5" fill="#111"/>');
+  C('lantern', 'ちょうちん', 'Paper Lantern', 'R', '<rect x="16" y="2" width="16" height="5" fill="#222"/><ellipse cx="24" cy="26" rx="18" ry="19" fill="#e10600"/><path d="M8 18 h32 M6 26 h36 M8 34 h32" stroke="#a00" stroke-width="1.5"/><rect x="16" y="44" width="16" height="5" fill="#222"/><text x="24" y="31" font-size="14" font-weight="900" text-anchor="middle" fill="#fff">祭</text>');
+  C('koi', 'こいのぼり', 'Koi Streamer', 'U', '<path d="M4 14 H36 L44 24 L36 34 H4 L10 24z" fill="#1e5aff" stroke="#0a3aaa" stroke-width="2"/><circle cx="34" cy="22" r="3" fill="#fff"/><circle cx="34" cy="22" r="1.3" fill="#111"/><path d="M14 18 q4 6 0 12 M22 18 q4 6 0 12" stroke="#fff" stroke-width="2" fill="none"/>');
+  C('dango', 'おだんご', 'Dango', 'C', '<path d="M24 2 V50" stroke="#a86a2a" stroke-width="3"/><circle cx="24" cy="12" r="8" fill="#ffb0c8"/><circle cx="24" cy="26" r="8" fill="#fff" stroke="#ddd"/><circle cx="24" cy="40" r="8" fill="#7ad07a"/>');
+  C('gear', 'ギアシフトノブ', 'Shift Knob', 'U', '<rect x="20" y="28" width="8" height="22" fill="#333"/><circle cx="24" cy="20" r="16" fill="#111" stroke="#444" stroke-width="2"/><path d="M16 14 v12 M24 14 v12 M32 14 v12 M16 20 h16" stroke="#fff" stroke-width="2"/>');
+  C('flag', 'チェッカーフラッグ', 'Checkered Flag', 'U', '<path d="M6 4 V50" stroke="#888" stroke-width="3"/>' + Array.from({ length: 12 }, (_, k) => `<rect x="${8 + (k % 4) * 9}" y="${6 + Math.floor(k / 4) * 9}" width="9" height="9" fill="${(k + Math.floor(k / 4)) % 2 ? '#111' : '#fff'}"/>`).join(''));
+  C('piston', 'ピストン', 'Piston', 'R', '<rect x="10" y="4" width="28" height="22" rx="3" fill="#c8ccd2" stroke="#888" stroke-width="2"/><path d="M10 10 h28 M10 15 h28" stroke="#666" stroke-width="2"/><path d="M20 26 L18 46 h12 L28 26" fill="#9aa0a8" stroke="#666" stroke-width="2"/><circle cx="24" cy="44" r="4" fill="#666"/>');
+  C('rocket', 'ミニロケット', 'Mini Rocket', 'E', '<path d="M24 2 q12 12 8 32 h-16 q-4 -20 8 -32z" fill="#f4f4f4" stroke="#bbb" stroke-width="2"/><circle cx="24" cy="18" r="4" fill="#5ad1ff"/><path d="M16 30 l-6 10 h6z M32 30 l6 10 h-6z" fill="#e10600"/><path d="M20 36 q4 14 8 0z" fill="#ffb000"/>');
+  C('snow', 'ゆきだるま', 'Snowman', 'U', '<circle cx="24" cy="34" r="13" fill="#fff" stroke="#cde" stroke-width="2"/><circle cx="24" cy="15" r="9" fill="#fff" stroke="#cde" stroke-width="2"/><circle cx="21" cy="13" r="1.5" fill="#222"/><circle cx="27" cy="13" r="1.5" fill="#222"/><path d="M24 16 l6 2 -6 1z" fill="#ff8a00"/><path d="M15 22 h18" stroke="#e10600" stroke-width="3"/>');
+  C('ufo', 'ミニUFO', 'Mini UFO', 'E', '<ellipse cx="24" cy="18" rx="9" ry="8" fill="#9ad8ff" stroke="#fff" stroke-width="1.5" opacity=".9"/><ellipse cx="24" cy="26" rx="22" ry="7" fill="#b8bcc4" stroke="#777" stroke-width="2"/><circle cx="12" cy="27" r="2" fill="#ffcf3d"/><circle cx="24" cy="29" r="2" fill="#2fdc7a"/><circle cx="36" cy="27" r="2" fill="#ff5a8a"/><path d="M16 34 l-4 14 h24 l-4 -14z" fill="#9ad8ff" opacity=".35"/>');
+  C('trophy', 'ミニトロフィー', 'Mini Trophy', 'L', '<path d="M12 4 h24 v12 a12 12 0 0 1 -24 0z" fill="#ffcf3d" stroke="#c88a00" stroke-width="2"/><path d="M12 8 h-6 a6 6 0 0 0 6 10 M36 8 h6 a6 6 0 0 1 -6 10" stroke="#c88a00" stroke-width="2.5" fill="none"/><rect x="20" y="28" width="8" height="10" fill="#c88a00"/><rect x="12" y="38" width="24" height="8" rx="2" fill="#3a2a10"/>');
+  C('phoenix', 'ほうおうの羽', 'Phoenix Feather', 'L', '<path d="M24 50 C10 34 10 14 24 2 C38 14 38 34 24 50z" fill="#ff6a00"/><path d="M24 46 C16 34 16 18 24 8 C32 18 32 34 24 46z" fill="#ffcf3d"/><path d="M24 50 V8" stroke="#c83000" stroke-width="2"/>');
+  C('neonheart', 'ネオンハート', 'Neon Heart', 'E', '<path d="M24 44 L6 26 a10 10 0 0 1 18 -14 a10 10 0 0 1 18 14z" fill="none" stroke="#ff2bd6" stroke-width="4"/><path d="M24 36 L12 24 a6 6 0 0 1 12 -8 a6 6 0 0 1 12 8z" fill="none" stroke="#00e5ff" stroke-width="2.5"/>');
+}
+for (const it of ITEMS) ITEM_BY_ID[it.id] = it;
+
+// ---------------- 新しいアイテム ----------------
+{ const RR = ['C', 'C', 'U', 'U', 'R', 'R', 'E', 'L'], r = i => RR[i % RR.length];
+  [['NO DRIFT NO LIFE', '#111', '#ffcf3d'], ['TOUGE SPIRIT', '#0b3a1a', '#7aff9a'], ['KANSAI STYLE', '#ff6a00', '#111'], ['OSAKA NIGHT', '#1a0a3a', '#ff5ad8'], ['FULL THROTTLE', '#e10600', '#fff'], ['ZERO COUNTER', '#fff', '#111'], ['疾風', '#111', '#5ad1ff', 'serif'], ['雷神', '#2a2000', '#ffcf3d', 'serif'], ['夜桜', '#2a0a1a', '#ffb0c8', 'serif'], ['峠最速', '#111', '#ff3a3a', 'serif'], ['BOOST UP', '#2a8aff', '#fff'], ['SLIDE MASTER', '#3a1a6a', '#fff'], ['APEX HUNTER', '#ffcf3d', '#111'], ['LATE BRAKER', '#111', '#ff8a2a'], ['MIDNIGHT RUN', '#000', '#9ad0ff'], ['STREET KING', '#6a0000', '#ffcf3d']]
+    .forEach(([t, bg, fg, font], i) => addItem({ id: 'dc392_' + i, type: 'decal', name: '「' + t + '」ステッカー', rarity: r(i), kind: 'text', text: t, bg, fg, font: font || 'Arial' }));
+  [['チェリーレッド', 'Cherry Red', '#b0001a', 'candy'], ['ミッドナイトグリーン', 'Midnight Green', '#0a3a2a', 'pearl'], ['アイスシルバー', 'Ice Silver', '#d8e4ee', 'metallic'], ['サンセットゴールド', 'Sunset Gold', '#e0a030', 'pearl'], ['マットブラック', 'Matte Black', '#18181a', 'matte'], ['ローズピンク', 'Rose Pink', '#ff7aa8', 'gloss'], ['ディープオーシャン', 'Deep Ocean', '#0a2a6a', 'candy'], ['ラバオレンジ', 'Lava Orange', '#ff4a00', 'diamond']]
+    .forEach(([nm, en, c, p], i) => addItem({ id: 'pt392_' + i, type: 'paint', name: nm, en, rarity: r(i + 1), color: c, paint: p }));
+  [['ゴールド20本メッシュ', 'Gold 20-Mesh', 20, 1, '#d8b04a'], ['ホワイト6本', 'White 6-Spoke', 6, 0, '#f4f4f4'], ['ブロンズ10本', 'Bronze 10-Spoke', 10, 1, '#9a6a2a'], ['レッドリム5本', 'Red-Rim 5-Spoke', 5, 1, '#e10600'], ['ガンメタ12本', 'Gunmetal 12-Spoke', 12, 0, '#4a4e56'], ['ネオンパープル', 'Neon Purple', 7, 1, '#b05aff']].forEach(([nm, en, sp, deep, rim], i) => addItem({ id: 'wh392_' + i, type: 'wheel', name: nm, en, rarity: r(i + 2), spokes: sp, deep, rim }));
+  [['チェリー', [1, 0.2, 0.4], 'U'], ['アクア', [0.2, 1, 0.9], 'R'], ['ゴールド', [1, 0.8, 0.2], 'E']].forEach(([nm, rgb, rr], i) => addItem({ id: 'ne392_' + i, type: 'neon', name: nm + 'ネオン', rarity: rr, rgb }));
+  [['ライム', '#9aff2a', 'U'], ['パープル', '#8a2aff', 'R'], ['ホワイト', '#f4f4f4', 'C'], ['ローズゴールド', '#e8a090', 'E']].forEach(([nm, c, rr], i) => addItem({ id: 'cp392_' + i, type: 'caliper', name: nm + 'キャリパー', rarity: rr, color: c }));
+  [['ネオンピンク', [1, 0.3, 0.8], 'R'], ['スカイ', [0.4, 0.8, 1], 'U'], ['レインボー', [1, 1, 1], 'L', 1]].forEach(([nm, rgb, rr, rb], i) => addItem({ id: 'pl392_' + i, type: 'plate', name: '光るナンバー「' + nm + '」', rarity: rr, rgb, rainbow: !!rb }));
+  [['ミラーの主', 'Mirror Master', 'R'], ['チャームコレクター', 'Charm Collector', 'E'], ['銀幕のレーサー', 'Silver Screen Racer', 'E'], ['夜明けのドリフター', 'Dawn Drifter', 'R'], ['南港の風', 'Nanko Wind', 'U']].forEach(([nm, en, rr], i) => addItem({ id: 'tt392_' + i, type: 'title', name: '称号「' + nm + '」', en: 'Title "' + en + '"', rarity: rr, title: nm, titleEn: en, desc: 'プロフィールとメニューに表示される称号' }));
+}
+for (const it of ITEMS) { ITEM_BY_ID[it.id] = it; if (it.type === 'wheel' && !WHEEL_STYLES.some(w => w.id === it.id)) WHEEL_STYLES.push({ id: it.id, name: it.name, price: 0, spokes: it.spokes, deep: it.deep, rim: it.rim }); }
+
+// ---------------- 開発者：イベント・期間限定の期間を変更 ----------------
+const PERIODS = { srv: {}, base: {} };
+const periodTargets = () => {
+  const L = EVENTS.map(e => ({ key: 'ev:' + e.id, name: (e.jp || e.title) + '（イベント）', obj: e }));
+  L.push({ key: 'pk:neon', name: 'ネオンナイトカードパック', obj: NEON_W }, { key: 'pk:winter', name: 'ウィンターカードパック', obj: WINTER_W }, { key: 'pk:xshop', name: 'クリスマス限定ショップ', obj: XSHOP_W });
+  return L; };
+function applyPeriods() { for (const t of periodTargets()) { if (!PERIODS.base[t.key]) PERIODS.base[t.key] = { start: t.obj.start, end: t.obj.end }; const o = PERIODS.srv[t.key.replace(':', '_')], b = PERIODS.base[t.key]; t.obj.start = o && o.start != null ? o.start : b.start; t.obj.end = o && o.end != null ? o.end : b.end; } }
+applyPeriods();
+{ const _st = ADM.start; ADM.start = async function () { const r = await _st.apply(this, arguments); try { if (window.DL_FB) { await DL_FB.ready(); DL_FB.db().ref('admin/periods').on('value', s => { PERIODS.srv = s.val() || {}; applyPeriods(); if (UI.screen !== 'menu' && !(UI.game && UI.game.active)) try { UI.render(); } catch (e) { } }, () => { }); } } catch (e) { } return r; }; }
+{ const _dp = UI.r_devPanel; UI.r_devPanel = function () { let h = _dp.call(this); if (!DEV.owner || !window.DL_FB) return h; h = h.replace('</div><div class="note">', `<button class="tab ${this.tab === 'periods' ? 'on' : ''}" data-a="setTab" data-v="periods">EVENT PERIODS</button></div><div class="note">`); if (this.tab !== 'periods') return h;
+    const f = t => t ? new Date(t + 9 * 3600000).toISOString().slice(0, 16) : '', fmt = t => t ? new Date(t).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—', now = SRV.now();
+    return h + `<div class="note">イベントや期間限定パック・ショップの開始と終了を変更できます。保存すると全プレイヤーにすぐ反映されます（日本時間）。ムービーパックは「MOVIE PACK」タブで設定します。</div><div class="pd-list">${periodTargets().map(t => { const k = t.key.replace(':', '_'), o = t.obj, live = now >= (o.start || 0) && now <= o.end, ov = !!PERIODS.srv[k];
+      return `<div class="pd-it ${live ? 'live' : ''}"><div class="pd-h"><b>${esc(t.name)}</b><span class="pd-st">${live ? '開催中' : now < (o.start || 0) ? '開催前' : '終了'}</span>${ov ? '<span class="pd-ov">開発者が変更</span>' : ''}</div><small>${fmt(o.start)} 〜 ${fmt(o.end)}</small>
+        <div class="pd-f"><label>開始<input type="datetime-local" id="pdS_${k}" value="${f(o.start)}"></label><label>終了<input type="datetime-local" id="pdE_${k}" value="${f(o.end)}"></label></div>
+        <div class="btns"><button class="btn pri" data-a="pdSave" data-v="${k}">保存</button><button class="btn" data-a="pdExt" data-v="${k}:1">+1日</button><button class="btn" data-a="pdExt" data-v="${k}:7">+7日</button><button class="btn" data-a="pdNow" data-v="${k}:7">今から7日間</button><button class="btn" data-a="pdEnd" data-v="${k}">今すぐ終了</button>${ov ? `<button class="btn" data-a="pdReset" data-v="${k}">初期値に戻す</button>` : ''}</div></div>`; }).join('')}</div>`; }; }
+Object.assign(UI, {
+  pdObj(k) { return periodTargets().find(t => t.key.replace(':', '_') === k); },
+  pdWrite(k, st, en, msg) { const t = this.pdObj(k); if (!t) return; if (!(en > st)) return this.toast('開始と終了を正しく入力してください'); this._adm(async () => { await ADM.write('admin/periods/' + k, { start: st, end: en, by: DL_FB.user.uid }); await ADM.log('period', k + ' ' + new Date(st).toISOString() + ' - ' + new Date(en).toISOString()); PERIODS.srv[k] = { start: st, end: en }; applyPeriods(); this.render(); }, msg); },
+  a_pdSave(k) { this.pdWrite(k, this._dt('pdS_' + k), this._dt('pdE_' + k), '期間を保存しました（全員に反映）'); },
+  a_pdExt(v) { const [k, d] = v.split(':'), t = this.pdObj(k); if (!t) return; this.pdWrite(k, t.obj.start || 0, Math.max(t.obj.end, SRV.now()) + (+d) * 86400000, `終了を ${d} 日延長しました`); },
+  a_pdNow(v) { const [k, d] = v.split(':'), st = SRV.now(); this.pdWrite(k, st, st + (+d) * 86400000, `今から ${d} 日間に設定しました`); },
+  a_pdEnd(k) { const t = this.pdObj(k), n = SRV.now(); if (!t) return; this.pdWrite(k, Math.min(t.obj.start || 0, n - 2000), n - 1000, '終了しました'); },
+  a_pdReset(k) { this._adm(async () => { await ADM.write('admin/periods/' + k, null); await ADM.log('period', k + ' reset'); delete PERIODS.srv[k]; applyPeriods(); this.render(); }, '初期値に戻しました'); }
+});
+window.__DLX = Object.assign(window.__DLX || {}, { PERIODS, applyPeriods, periodTargets, EVENTS });

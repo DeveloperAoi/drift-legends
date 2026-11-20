@@ -73,11 +73,11 @@ Object.assign(UI, {
 });
 
 // ---------------- クリスマス限定ショップ ----------------
-const XSHOP_END = JST('2026-12-26T23:59:59'); const xshopOpen = () => SRV.now() <= XSHOP_END;
+const XSHOP_W = { start: 0, end: JST('2026-12-26T23:59:59') }; const xshopOpen = () => { const t = SRV.now(); return t >= XSHOP_W.start && t <= XSHOP_W.end; };
 const XSHOP = [{ id: 'xs1', n: 1, cur: 'yen', price: 1500000, name: 'プレゼントボックス ×1' }, { id: 'xs5', n: 5, cur: 'yen', price: 6800000, old: 7500000, name: 'プレゼントボックス ×5' }, { id: 'xs10', n: 10, cur: 'dia', price: 1200, name: 'プレゼントボックス ×10', tag: 'エピック以上1つ確定' },
   { id: 'xsbag', n: 10, cur: 'dia', price: 2400, name: 'サンタの大袋', extra: [['cards', 'xc_frost', 10], ['pack', 'xmaspack', 3]], lim: 1, tag: '期間中1回' }];
 Object.assign(UI, {
-  xshopHTML() { const d = SAVE.data; d.xshop = d.xshop || {}; const left = fmtDH(Math.max(0, XSHOP_END - SRV.now()));
+  xshopHTML() { const d = SAVE.data; d.xshop = d.xshop || {}; const left = fmtDH(Math.max(0, XSHOP_W.end - SRV.now()));
     let h = `<div class="xs"><div class="xs-head"><div class="xs-snow">${Array.from({ length: 24 }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</div><div><small>CHRISTMAS LIMITED SHOP</small><b>クリスマス限定ショップ</b><span>⏱ 終了まで ${left}</span></div><div class="xs-hgift">${giftBoxHTML(0.62)}</div></div><div class="xs-grid">`;
     h += XSHOP.map((s, i) => { const out = s.lim && (d.xshop[s.id] || 0) >= s.lim; return `<div class="xs-card ${out ? 'out' : ''}" style="animation-delay:${i * 0.06}s">${s.tag ? `<span class="xs-tag">${s.tag}</span>` : ''}<div class="xs-art">${Array.from({ length: Math.min(3, s.n > 1 ? 3 : 1) }, (_, k) => `<span style="--k:${k}">${giftBoxHTML(s.n > 1 ? 0.42 : 0.52)}</span>`).join('')}${s.n > 1 ? `<em>×${s.n}</em>` : ''}</div><b>${esc(s.name)}</b><small>${s.extra ? s.extra.map(rwLabel).join(' ＋ ') + ' ＋ プレゼントボックス×' + s.n : '中身はランダム（お金・ダイヤ・限定車カード・パーツ・ペイントなど）'}</small>${s.old ? `<s>${yen(s.old)}</s>` : ''}<button class="xs-buy" data-a="xsBuy" data-v="${s.id}" ${out ? 'disabled' : ''}>${out ? '購入済み' : s.cur === 'dia' ? SICO.gem(18) + ' ' + s.price.toLocaleString() : yen(s.price)}</button></div>`; }).join('');
     h += `</div><div class="xs-odds"><b>プレゼントボックスの出現率</b>${Object.entries(CHESTS.find(c => c.id === 'giftbox').odds).filter(([, v]) => v).map(([r, v]) => `<span style="color:${RARITY[r].color}">${RARITY[r].name} ${v}%</span>`).join('')}</div></div>`; return h; },
