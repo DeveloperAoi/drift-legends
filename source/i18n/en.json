@@ -3181,5 +3181,20 @@
 "重複したアイテムはレア度に応じたお金に変換されます（車カードは枚数が増えます）": "Duplicate items convert to money by rarity (car cards stack)",
 "集めたアイテム": "Items collected",
 "メインメニュー（ガレージ）の背景を変更。限定背景はカードパックや日替わりショップで入手できます": "Change the main menu (garage) background. Limited backgrounds come from card packs and the daily shop",
-"毎日 0:00（日本時間）に6つの品揃えが入れ替わります": "Six items rotate every day at 0:00 JST"
+"毎日 0:00（日本時間）に6つの品揃えが入れ替わります": "Six items rotate every day at 0:00 JST",
+"ミシック": "Mythic",
+"パーツカードパック": "Parts Card Pack",
+"スタイルカードパック": "Style Card Pack",
+"ミシックカードパック": "Mythic Card Pack",
+"3Dで見る": "View in 3D",
+"ドラッグで回転 ・ タップで閉じる": "Drag to rotate · Tap to close",
+"種類": " kinds",
+"ほか": "+",
+"お金": "Money",
+"ミシック限定カラー": "Mythic limited color",
+"ミシックのフレーム": "Mythic frame",
+"ミシックのエフェクト": "Mythic effect",
+"ミシックのバナー": "Mythic banner",
+"ミシックの称号": "Mythic title",
+"ミシック限定・虹色に輝くハイパーカー（カード限定）": "Mythic limited: iridescent hypercar (cards only)"
 }
