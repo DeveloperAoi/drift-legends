@@ -1621,3 +1621,19 @@ body.ccpv .panel-wrap .panel,body.ccpv #bnav,body.ccpv #menuList,body.ccpv .stag
 .pd-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pd-st{font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.1)}.pd-it.live .pd-st{background:#2fdc7a;color:#111}.pd-ov{font-size:10px;color:#ffcf3d}
 .pd-it>small{opacity:.7;font-size:11px}.pd-f{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}.pd-f label{font-size:11px;display:flex;flex-direction:column;gap:2px}
 @media (max-width:600px) and (orientation:portrait){.cpv-stats{display:none}}
+/* v3.94 custom items */
+.cm-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}.cm-tabs .tab{flex:none}
+.cm-it{position:relative}.cm-pv{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:#ffcf3d;color:#111;font-size:11px;display:grid;place-items:center;font-weight:900}
+.pd-img{display:block;width:84px;height:42px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.5)}.pd-big{width:150px;height:75px;border-radius:6px;box-shadow:0 3px 10px rgba(0,0,0,.6);flex:none}
+.gf-cover{display:grid;place-items:center}.cm-chk{display:flex;gap:6px;align-items:center;font-size:12px;margin:4px 0 8px}
+.np-cover{display:flex;flex-direction:column;align-items:center;gap:4px}.np-cover img{width:84px;height:42px;border-radius:3px;box-shadow:0 2px 5px #000a}.np-cover img:nth-child(2){transform:rotate(-6deg)}.np-cover img:nth-child(3){transform:rotate(5deg)}
+#goalFx{position:fixed;inset:0;width:100vw;height:100vh;z-index:9500;pointer-events:none}
+#hornBtn{position:fixed;left:calc(16px + env(safe-area-inset-left));top:calc(196px + env(safe-area-inset-top));z-index:45;width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.45);background:rgba(20,22,28,.55);display:grid;place-items:center;touch-action:none;cursor:pointer}
+#hornBtn.hit{animation:hornHit .35s}@keyframes hornHit{30%{transform:scale(1.18);background:rgba(255,207,61,.6)}}
+@media (max-height:560px){#hornBtn{top:calc(146px + env(safe-area-inset-top));width:44px;height:44px;left:calc(14px + env(safe-area-inset-left))}}
+@media (max-width:600px) and (orientation:portrait){
+  .vp{height:clamp(360px,calc(100vh - 420px),640px)!important;min-height:360px}
+  .vp-page{height:100%!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden}
+  .vp-body{overflow-y:visible!important;overflow-x:hidden!important;flex:none}
+  .vp .ps-row{gap:8px}.vp .ps-card{flex:0 0 calc(50% - 4px)!important;min-width:0;box-sizing:border-box}
+}
