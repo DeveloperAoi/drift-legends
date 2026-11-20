@@ -132,7 +132,7 @@ Object.assign(UI, {
     if (evState(e) !== 'live') return this.toast('イベント期間外のため受け取れません'); if (evMissionProg(e, m) < m.goal) return;
     D.claimed[mid] = SRV.now(); const r = m.rw; if (r.item) D.got.push(r.item); const s = grantReward({ money: r.money, dia: r.dia, item: r.item }); if (r.xp) addXp(r.xp, 'イベント'); SAVE.save(); AUDIO.chestOpen(3); this.toast('ミッション報酬：' + s); this.showLvUps && this.showLvUps(); this.render(); },
   a_evRace(v) { const [id, i] = v.split(':'); const e = EVENTS.find(x => x.id === id), r = e && e.races[+i]; if (!r || evState(e) !== 'live' || !evData(id).joined) return this.toast('イベント期間外です'); const m = MAP_BY_ID[r.map];
-    const base = { mapId: r.map, weather: m.weather, time: m.time, laps: 1, carInst: SAVE.cur(), evId: id, music: 'newyear' };
+    const base = { mapId: r.map, weather: m.weather, time: m.time, laps: 1, carInst: SAVE.cur(), evId: id, music: e.music || 'newyear' };
     if (r.k === 'race') this.launch(Object.assign(base, { mode: 'event', evRace: { title: r.title, prize: r.prize }, rivals: [r.rival] }));
     else this.launch(Object.assign(base, { mode: r.k === 'time' ? 'time' : 'free', rivals: [] })); },
   a_nyTest() { NYFX.on = false; NYFX.show(); }
