@@ -180,6 +180,16 @@
         "$id": {
           ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true) && !data.exists()"
         }
+      },
+      "gifts": {
+        ".read": true,
+        ".indexOn": [
+          "start"
+        ],
+        "$id": {
+          ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+          ".validate": "newData.hasChildren(['title','items','start','end'])"
+        }
       }
     },
     "replays": {

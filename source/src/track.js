@@ -95,7 +95,7 @@ class Track {
       const [x, , z] = pts[i]; const cx = Math.floor(x / cell), cz = Math.floor(z / cell);
       for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
         const arr = grid.get((cx + a + 5000) * 10000 + (cz + b + 5000)); if (!arr) continue;
-        for (const j of arr) { let di = Math.abs(i - j); di = Math.min(di, n - di); if (di < 45) continue; const dx = pts[j][0] - x, dz = pts[j][2] - z; if (dx * dx + dz * dz < minSep * minSep) return false; }
+        for (const j of arr) { let di = Math.abs(i - j); di = Math.min(di, n - di); if (di < 45) continue; if (this.def.stack && Math.abs(pts[j][1] - pts[i][1]) > 9) continue; const dx = pts[j][0] - x, dz = pts[j][2] - z; if (dx * dx + dz * dz < minSep * minSep) return false; }
       }
     }
     // 最小旋回半径
@@ -111,7 +111,7 @@ class Track {
     const X = new Float32Array(n), Y = new Float32Array(n), Z = new Float32Array(n);
     pts.forEach((p, i) => { X[i] = p[0]; Y[i] = p[1]; Z[i] = p[2]; });
     // 勾配制限＆スムージング
-    const maxG = this.env === 'mountain' ? 0.11 : 0.06;
+    const maxG = this.def.maxG || (this.env === 'mountain' ? 0.11 : 0.06);
     for (let pass = 0; pass < 6; pass++) {
       const T = Float32Array.from(Y);
       for (let i = 0; i < n; i++) { let s = 0; for (let k = -6; k <= 6; k++) s += T[(i + k + n) % n]; Y[i] = s / 13; }
@@ -718,6 +718,7 @@ function buildWorld(track, R, opts) {
   }
 
   // ---- メッシュ化 ----
+  if (def.custom && typeof CUSTOM_SCENE !== 'undefined' && CUSTOM_SCENE[def.custom]) CUSTOM_SCENE[def.custom]({ track, def, ch, P, G, water, addGlow, lamps, groundY, rng, night, snow, wet, dens, vary, wallOff, hw, n, building, tree, X, Y, Z });
   const out = { chunks: [], lamps, tunnelLights, groundY, seaY };
   // ジャンプ台
   if (track.ramps) for (const r of track.ramps) {
