@@ -122,9 +122,9 @@ function dashUpdate(g, dt) { const d = SAVE.data, s = dset(), id = d.dash && inv
   DSH.vel += (-DSH.ang * 30 - DSH.vel * 3 + lat * 14 + bump * 6 + (crash ? (Math.random() - 0.5) * 60 : 0)) * step; DSH.ang = clamp(DSH.ang + DSH.vel * step, -1.2, 1.2);
   DSH.bobV += (-DSH.bob * 60 - DSH.bobV * 4 - lon * 8 + bump * 10 + (crash ? 40 : 0)) * step; DSH.bob = clamp(DSH.bob + DSH.bobV * step, -1, 1);
   const D = DASH_BY[id], svg = el.querySelector('svg'), B = svg && svg.querySelector('#b'), H = svg && svg.querySelector('#h');
-  if (D.k === 'cup') { DSH.sloshV += (-DSH.slosh * 40 - DSH.sloshV * 2.2 + lat * 22 + lon * 6 + (crash ? (Math.random() < 0.5 ? -1 : 1) * 40 : 0)) * step; DSH.slosh = clamp(DSH.slosh + DSH.sloshV * step, -1.6, 1.6);
+  if (D.k === 'cup') { DSH.sloshV += (-DSH.slosh * 40 - DSH.sloshV * 2.2 + lat * 22 + lon * 6) * step; DSH.slosh = clamp(DSH.slosh + DSH.sloshV * step, -1.6, 1.6);
     const wv = svg.querySelector('.dw'); if (wv && wv.tagName === 'polygon') wv.setAttribute('points', cupPoly(DSH.water, -DSH.slosh * 0.55));
-    const lim = 0.55 + DSH.water * 0.6; if ((Math.abs(DSH.slosh) > lim || crash) && DSH.water > 0.05 && performance.now() - (DSH._sp || 0) > 400) { DSH._sp = performance.now(); const amt = crash ? 0.22 : 0.07 + Math.abs(DSH.slosh) * 0.04; DSH.water = Math.max(0, DSH.water - amt); DSH.spills++; dashSpill(el, DSH.slosh > 0 ? 1 : -1, D.id === 'coffee'); }
+    const wall = g._wallVn || 0; g._wallVn = 0; if (wall) { DSH.sloshV += (DSH.slosh >= 0 ? 1 : -1) * Math.min(60, wall * 4); } DSH.slosh = clamp(DSH.slosh, wall ? -1.6 : -0.75, wall ? 1.6 : 0.75); if (wall && DSH.water > 0.05 && performance.now() - (DSH._sp || 0) > 400) { DSH._sp = performance.now(); const amt = clamp(wall / 30, 0.08, 0.35); DSH.water = Math.max(0, DSH.water - amt); DSH.spills++; dashSpill(el, DSH.slosh > 0 ? 1 : -1, D.id === 'coffee'); }
     if (B) B.setAttribute('transform', `rotate(${(DSH.ang * 6).toFixed(1)} 30 74) translate(0 ${(DSH.bob * 2).toFixed(1)})`); }
   else if (D.k === 'bob') { if (H) H.setAttribute('transform', `rotate(${(DSH.ang * 28).toFixed(1)} 30 56) translate(0 ${(DSH.bob * 6).toFixed(1)})`); }
   else if (D.k === 'sway') { if (B) B.setAttribute('transform', `rotate(${(DSH.ang * 22 + Math.sin(DSH.t * 3) * (D.id === 'flower' ? 6 : 3)).toFixed(1)} 30 70)`); }
@@ -149,7 +149,7 @@ COVER_SVG.dashpack = `<path d="M4 72 Q50 52 96 72 V86 H4z" fill="#1a1a20"/><path
 CM_TABS.push(['dash', 'ダッシュボード']);
 { const _rc = UI.r_charm; UI.r_charm = function () { if (this.cmTab !== 'dash') return _rc.apply(this, arguments); $('panelTitle').textContent = 'CUSTOM'; const d = SAVE.data, s = dset(); this.show.setCar(SAVE.cur());
     const tabs = this.nyTabFix(`<div class="cm-tabs">${CM_TABS.map(([k, n]) => `<button class="tab ${k === 'dash' ? 'on' : ''}" data-a="cmTab" data-v="${k}">${n}</button>`).join('')}</div>`), all = ITEMS.filter(i => i.type === 'dashorn');
-    return tabs + `<div class="cm-hero"><div class="gf-cover dsh-prev">${dashSvg(d.dash && invHas('dsh_' + d.dash) ? d.dash : 'cup', 64)}</div><div><b>ダッシュボードの飾り</b><small>レース中、画面上のダッシュボードに置かれて車の動きで揺れます。水のコップや缶コーヒーは、カーブや壁にぶつかると中身がこぼれます（一滴もこぼさずゴールを目指そう）。</small><button class="btn" data-a="goPackSp" data-v="dashpack">ダッシュボード飾りパックへ</button></div></div>
+    return tabs + `<div class="cm-hero"><div class="gf-cover dsh-prev">${dashSvg(d.dash && invHas('dsh_' + d.dash) ? d.dash : 'cup', 64)}</div><div><b>ダッシュボードの飾り</b><small>レース中、画面上のダッシュボードに置かれて車の動きで揺れます。水のコップや缶コーヒーは、壁にぶつかったときだけ中身がこぼれます（一滴もこぼさずゴールを目指そう）。</small><button class="btn" data-a="goPackSp" data-v="dashpack">ダッシュボード飾りパックへ</button></div></div>
       <div class="row"><label>ダッシュボードの飾りを表示</label><button class="btn ${s.dashOn ? 'pri' : ''}" data-a="dashTog">${s.dashOn ? 'ON' : 'OFF'}</button></div><div class="row"><label>大きさ</label><input type="range" min="0.6" max="1.6" step="0.05" value="${s.dashSize}" data-in="dashSz"><span class="val">${Math.round(s.dashSize * 100)}%</span></div>
       <div class="h3">${all.filter(i => invHas(i.id)).length} / ${all.length} 所持</div><div class="cm-grid"><button class="cm-it ${!d.dash ? 'on' : ''}" data-a="setDash" data-v=""><span class="cm-none">なし</span><b>飾りなし</b></button>${all.map(it => { const o = invHas(it.id); return `<button class="cm-it ${d.dash === it.dashX ? 'on' : ''} ${o ? '' : 'lock'}" data-a="${o ? 'setDash' : 'cmLocked'}" data-v="${it.dashX}" style="--rc:${RCOL(it.rarity)}">${dashSvg(it.dashX, 38)}<b>${esc(it.name.replace(/^[^「]*「|」$/g, ''))}</b><small>${RARITY[it.rarity].name}</small></button>`; }).join('')}</div>`; }; }
 Object.assign(UI, {
@@ -171,3 +171,7 @@ Object.assign(UI, {
 }
 for (const it of ITEMS) { ITEM_BY_ID[it.id] = it; if (it.type === 'wheel' && !WHEEL_STYLES.some(w => w.id === it.id)) WHEEL_STYLES.push({ id: it.id, name: it.name, price: 0, spokes: it.spokes, deep: it.deep, rim: it.rim }); }
 window.__DLX = Object.assign(window.__DLX || {}, { packPool, CBFX, DSH, DASH_BY, BOX_X, boxXPrice });
+// コップ・缶コーヒー：壁にぶつかったときだけこぼれる（カーブや車同士の接触ではこぼれない）
+{ const GP = Game.prototype, _cr = GP.collideRivals, _im = GP.impact;
+  GP.collideRivals = function () { this._inRiv = true; try { return _cr.apply(this, arguments); } finally { this._inRiv = false; } };
+  GP.impact = function (vn, n) { if (!this._inRiv && vn >= 2.5) this._wallVn = Math.max(this._wallVn || 0, vn); return _im.apply(this, arguments); }; }
