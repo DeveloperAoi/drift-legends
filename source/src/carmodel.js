@@ -29,7 +29,7 @@ const BODY_TYPES = {
   ktruck: { nose: .5, hood: .6, deck: .7, ws: .66, rf: .6, rr: .3, rb: .1 }
 };
 
-const CUSTOM_BODY = { bus: 1, van: 1, sleigh: 1, tank: 1, formula: 1, brick: 1, ktruck: 1 };
+const CUSTOM_BODY = { bus: 1, van: 1, sleigh: 1, tank: 1, formula: 1, brick: 1, ktruck: 1, candy: 1 };
 function hex2rgb(h) { h = String(h).replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
 function drawDecalShape(g, d, look) {
     const it = typeof ITEM_BY_ID !== 'undefined' ? ITEM_BY_ID[d] : null;
@@ -683,9 +683,19 @@ function buildCarModel(R, car, look, opts = {}) {
   const inch = opts.wheelIn || 17, rimR = inch * 0.0254 / 2 * 1.02, tireW = 0.21 + (opts.tireW || 0) * 0.02;
   const rimCol = ws.xmas ? [0.95, 0.95, 0.95] : hexToRgb(ws.rim || look.wheelColor || '#c8c8cc');
   const wg = new GB(); wg.cylX(0, 0, 0, tireR, tireW, 24, [0.06, 0.06, 0.065], true, [0.05, 0.05, 0.055]);
-  for (let k = 0; k < 36; k++) { const a = k / 36 * TAU; for (const o of [-1, 1]) wg.box(o * tireW * 0.22, Math.cos(a) * (tireR + 0.002), Math.sin(a) * (tireR + 0.002), tireW * 0.32, 0.008, 0.03, [0.04, 0.04, 0.045]); } // トレッドのブロック
+  if (ws.cookie) { // クッキーのタイヤ（チョコチップ入り）
+    wg.a.length = 0; const ck = [0.82, 0.56, 0.27], ck2 = [0.7, 0.44, 0.2], chip = [0.22, 0.11, 0.05]; wg.cylX(0, 0, 0, tireR, tireW, 28, ck, true, ck2);
+    let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let k = 0; k < 26; k++) { const a = rnd() * TAU, r = Math.sqrt(rnd()) * tireR * 0.9, o = rnd() < 0.5 ? -1 : 1; wg.box(o * (tireW / 2 + 0.006), Math.cos(a) * r, Math.sin(a) * r, 0.014, 0.05, 0.05, chip); }
+    for (let k = 0; k < 22; k++) { const a = k / 22 * TAU + rnd() * 0.2, xo = (rnd() - 0.5) * tireW * 0.8; wg.box(xo, Math.cos(a) * (tireR + 0.006), Math.sin(a) * (tireR + 0.006), 0.05, 0.016, 0.05, chip); }
+  } else { for (let k = 0; k < 36; k++) { const a = k / 36 * TAU; for (const o of [-1, 1]) wg.box(o * tireW * 0.22, Math.cos(a) * (tireR + 0.002), Math.sin(a) * (tireR + 0.002), tireW * 0.32, 0.008, 0.03, [0.04, 0.04, 0.045]); } } // トレッドのブロック
   const rg = new GB(); const fx = tireW / 2 + 0.003;
-  if (ws.spokes === 0) { rg.cylX(fx - 0.015, 0, 0, rimR, 0.04, 16, [0.62, 0.62, 0.66]); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; rg.box(fx + 0.008, Math.cos(a) * rimR * 0.6, Math.sin(a) * rimR * 0.6, 0.01, 0.05, 0.05, [0.15, 0.15, 0.15]); } }
+  if (ws.cookie) { // まん中はクリームとキャンディ
+    const cream = [0.98, 0.95, 0.9]; rg.cylX(fx + 0.004, 0, 0, rimR * 0.62, 0.016, 18, cream);
+    for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; rg.box(fx + 0.014, Math.cos(a) * rimR * 0.62, Math.sin(a) * rimR * 0.62, 0.02, 0.06, 0.06, cream); }
+    rg.cylX(fx + 0.016, 0, 0, rimR * 0.28, 0.014, 14, hexToRgb(ws.rim || '#ff4a8a'));
+    for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + 0.4; rg.box(fx + 0.024, Math.cos(a) * rimR * 0.14, Math.sin(a) * rimR * 0.14, 0.006, 0.05, 0.016, [1, 1, 1]); }
+  } else if (ws.spokes === 0) { rg.cylX(fx - 0.015, 0, 0, rimR, 0.04, 16, [0.62, 0.62, 0.66]); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; rg.box(fx + 0.008, Math.cos(a) * rimR * 0.6, Math.sin(a) * rimR * 0.6, 0.01, 0.05, 0.05, [0.15, 0.15, 0.15]); } }
   else {
     rg.cylX(fx - 0.04, 0, 0, rimR, 0.06, 18, [0.12, 0.12, 0.13]); // 奥
     for (let k = 0; k < 18; k++) { const a0 = k / 18 * TAU, a1 = (k + 1) / 18 * TAU; const r0 = rimR * 0.92; rg.quad([fx, Math.cos(a0) * r0, Math.sin(a0) * r0], [fx, Math.cos(a1) * r0, Math.sin(a1) * r0], [fx, Math.cos(a1) * rimR, Math.sin(a1) * rimR], [fx, Math.cos(a0) * rimR, Math.sin(a0) * rimR], rimCol); }
@@ -698,20 +708,20 @@ function buildCarModel(R, car, look, opts = {}) {
     }
     rg.cylX(fx + 0.004, 0, 0, rimR * 0.18, 0.012, 10, [0.2, 0.2, 0.22]);
   }
-  for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; rg.box(fx + 0.008, Math.cos(a) * rimR * 0.27, Math.sin(a) * rimR * 0.27, 0.016, 0.022, 0.022, [0.75, 0.76, 0.8]); } rg.box(fx + 0.012, 0, 0, 0.006, rimR * 0.12, rimR * 0.12, rimCol); // ナット・センターキャップ
+  if (!ws.cookie) for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; rg.box(fx + 0.008, Math.cos(a) * rimR * 0.27, Math.sin(a) * rimR * 0.27, 0.016, 0.022, 0.022, [0.75, 0.76, 0.8]); } if (!ws.cookie) rg.box(fx + 0.012, 0, 0, 0.006, rimR * 0.12, rimR * 0.12, rimCol); // ナット・センターキャップ
   // ブレーキキャリパー
   const cg = new GB(); cg.box(fx - 0.06, rimR * 0.55, rimR * 0.35, 0.05, rimR * 0.45, rimR * 0.5, hexToRgb(look.caliper || '#cc1010'));
   cg.cylX(fx - 0.09, 0, 0, rimR * 0.85, 0.02, 20, [0.42, 0.42, 0.45], true); cg.cylX(fx - 0.085, 0, 0, rimR * 0.4, 0.03, 12, [0.3, 0.3, 0.33], true);
   for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; cg.box(fx - 0.079, Math.cos(a) * rimR * 0.62, Math.sin(a) * rimR * 0.62, 0.004, 0.014, 0.014, [0.12, 0.12, 0.13]); } // ドリルドローター
   const tireMesh = new Mesh(gl, wg.a), rimMesh = new Mesh(gl, rg.a), calMesh = new Mesh(gl, cg.a); meshes.push(tireMesh, rimMesh, calMesh);
-  const tireMat = Mat(Object.assign({ spec: 0.04, rough: 0.95 }, A)), rimMat = Mat(Object.assign({ refl: 0.55, spec: 1.3, shin: 90, metal: 0.85, rough: 0.18, clear: 0.4 }, A)), calMat = Mat(Object.assign({ spec: 0.6, shin: 50, clear: 0.8 }, A));
+  const tireMat = Mat(Object.assign(ws.cookie ? { spec: 0.15, rough: 0.8 } : { spec: 0.04, rough: 0.95 }, A)), rimMat = Mat(Object.assign(ws.cookie ? { spec: 0.5, shin: 40, clear: 0.5 } : { refl: 0.55, spec: 1.3, shin: 90, metal: 0.85, rough: 0.18, clear: 0.4 }, A)), calMat = Mat(Object.assign({ spec: 0.6, shin: 50, clear: 0.8 }, A));
   const wheels = []; const txAt = z => widthAt((z - z0) / L) - tireW / 2 + 0.035 + wide * 0.05 + (opts.track || 0) * 0.01;
   for (const [x, z, front] of [[txAt(zF), zF, 1], [-txAt(zF), zF, 1], [txAt(zR), zR, 0], [-txAt(zR), zR, 0]]) {
     const hub = new Node(); hub.pos = [x, tireR, z]; const side = x > 0 ? 1 : -1;
     const spin = new Node(); spin.rot = [side > 0 ? 0 : PI, 0, 0];
     spin.addMesh(tireMesh, tireMat).addMesh(rimMesh, rimMat);
     const cal = new Node(); cal.rot = [side > 0 ? 0 : PI, 0, 0]; cal.addMesh(calMesh, calMat);
-    hub.add(cal); hub.add(spin); node.add(hub);
+    if (!ws.cookie) hub.add(cal); hub.add(spin); node.add(hub);
     wheels.push({ hub, spin, front, side, x, z });
   }
   // 影
@@ -793,6 +803,51 @@ function buildCarModel(R, car, look, opts = {}) {
     for (let i = 0; i < gN.a.length; i += VSTRIDE) gN.a[i + 9] = 1;
     add(gS, Mat(Object.assign({ refl: 0.35, spec: 1.0, shin: 70 }, A))); add(gD, Mat(Object.assign({ spec: 0.15 }, A))); add(gG, Mat(Object.assign({ refl: 0.7, spec: 2, shin: 160 }, A)));
     add(gC, Mat(Object.assign({ refl: 0.85, spec: 2, shin: 160 }, A))); add(gN, Mat(Object.assign({ spec: 0 }, A))); add(gL, headMat); add(gT, brakeMat);
+  }
+
+  if (car.body === 'candy') { // お菓子の車：チョコのシャシー・フロスティング・スプリンクル・チェリー・キャンディケインのウイング
+    body.parts.length = 0; body.children.length = 0;
+    const fr = hexToRgb(look.color || '#ff8ac8'), choc = [0.33, 0.17, 0.08], choc2 = [0.24, 0.12, 0.05], wafer = [0.9, 0.7, 0.42], cream = [0.99, 0.96, 0.92], red = [0.9, 0.06, 0.12], white = [0.98, 0.98, 0.98];
+    const gC = new GB(), gF = new GB(), gW = new GB(), gG = new GB(), gN = new GB(), gL = new GB(), gT = new GB(), gS = new GB();
+    const hw = W / 2, zf = L / 2, zr = -L / 2; let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    // チョコレートのシャシー（板チョコ）
+    gC.box(0, 0.5, 0, W, 0.34, L - 0.1, choc); gC.box(0, 0.5, zf - 0.08, W - 0.12, 0.3, 0.16, choc); gC.box(0, 0.5, zr + 0.08, W - 0.12, 0.3, 0.16, choc);
+    for (let k = 1; k < 6; k++) { const z = zr + k * L / 6; for (const s2 of [-1, 1]) gS.box(s2 * (hw + 0.004), 0.5, z, 0.01, 0.3, 0.035, choc2); }
+    for (const s2 of [-1, 1]) gS.box(s2 * (hw + 0.004), 0.5, 0, 0.01, 0.03, L - 0.2, choc2);
+    // ウエハースのサイドパネル
+    for (const s2 of [-1, 1]) { gW.box(s2 * (hw + 0.012), 0.5, 0, 0.012, 0.16, L * 0.5, wafer); for (let k = 0; k < 10; k++) gS.box(s2 * (hw + 0.02), 0.5, -L * 0.25 + k * L * 0.05 + 0.03, 0.006, 0.16, 0.012, [0.72, 0.52, 0.28]); }
+    // 上のケーキ（スポンジ）とフロスティング
+    const cz = -0.15, cl = L * 0.62, ch = 0.42, cy = 0.67 + ch / 2;
+    gW.box(0, cy, cz, W - 0.2, ch, cl, [0.98, 0.86, 0.6]);
+    gF.box(0, 0.67 + ch + 0.06, cz, W - 0.14, 0.12, cl + 0.08, fr); gF.box(0, 0.67 + ch + 0.15, cz, W - 0.34, 0.08, cl - 0.16, fr);
+    for (let k = 0; k < 16; k++) { const z = cz - cl / 2 + (k + 0.5) * cl / 16, d = 0.08 + rnd() * 0.16; for (const s2 of [-1, 1]) gF.box(s2 * (hw - 0.07), 0.67 + ch + 0.02 - d / 2, z, 0.04, d, 0.09, fr); }
+    for (let k = 0; k < 6; k++) { const x = -hw + 0.2 + (k + 0.5) * (W - 0.4) / 6, d = 0.08 + rnd() * 0.12; for (const z2 of [cz - cl / 2 - 0.02, cz + cl / 2 + 0.02]) gF.box(x, 0.67 + ch + 0.02 - d / 2, z2, 0.1, d, 0.04, fr); }
+    // ホイップクリームの絞り
+    for (let k = 0; k < 9; k++) for (const s2 of [-1, 1]) gW.sphere(s2 * (hw - 0.2), 0.67 + ch + 0.24, cz - cl / 2 + 0.15 + k * (cl - 0.3) / 8, 0.075, cream, 5);
+    // グミの窓
+    for (const s2 of [-1, 1]) gG.box(s2 * (hw - 0.095), cy + 0.04, cz + 0.05, 0.012, ch * 0.55, cl * 0.62, [0.3, 0.75, 0.95]);
+    gG.box(0, cy + 0.04, cz + cl / 2 + 0.005, W - 0.5, ch * 0.55, 0.012, [0.3, 0.75, 0.95]); gG.box(0, cy + 0.04, cz - cl / 2 - 0.005, W - 0.6, ch * 0.5, 0.012, [0.3, 0.75, 0.95]);
+    // スプリンクル
+    const SP = [[1, 0.2, 0.3], [1, 0.85, 0.1], [0.2, 0.8, 1], [0.3, 0.9, 0.4], [0.7, 0.4, 1], [1, 1, 1]];
+    for (let k = 0; k < 70; k++) { const x = (rnd() - 0.5) * (W - 0.5), z = cz + (rnd() - 0.5) * (cl - 0.3), long = rnd() < 0.5; gS.box(x, 0.67 + ch + 0.2, z, long ? 0.09 : 0.025, 0.02, long ? 0.025 : 0.09, SP[k % SP.length]); }
+    // チェリー
+    gN.sphere(0, 0.67 + ch + 0.36, cz - 0.1, 0.13, red, 7); gC.box(0.04, 0.67 + ch + 0.53, cz - 0.12, 0.02, 0.2, 0.02, [0.2, 0.45, 0.1]);
+    // フロント：ウエハースのグリル・グミのライト・マシュマロのバンパー
+    gW.box(0, 0.52, zf + 0.01, W * 0.5, 0.18, 0.02, wafer); for (let k = 0; k < 5; k++) gS.box(-W * 0.2 + k * W * 0.1, 0.52, zf + 0.024, 0.012, 0.18, 0.006, [0.72, 0.52, 0.28]);
+    for (const s2 of [-1, 1]) { gL.sphere(s2 * (hw - 0.22), 0.58, zf + 0.02, 0.1, [1, 0.95, 0.6], 6); gT.sphere(s2 * (hw - 0.2), 0.58, zr - 0.02, 0.09, [1, 0.1, 0.15], 6); }
+    for (const z2 of [zf + 0.08, zr - 0.08]) gW.box(0, 0.34, z2, W - 0.1, 0.14, 0.14, cream);
+    // キャンディケインのリアウイング
+    const wy = 0.67 + ch + 0.2, wz = zr + 0.22;
+    for (const s2 of [-1, 1]) for (let k = 0; k < 4; k++) (k % 2 ? gW : gN).box(s2 * (hw - 0.25), 0.76 + k * (wy - 0.76) / 4 + 0.04, wz, 0.07, (wy - 0.76) / 4, 0.07, k % 2 ? white : red);
+    for (let k = 0; k < 10; k++) (k % 2 ? gW : gN).box(-hw + 0.15 + (k + 0.5) * (W - 0.3) / 10, wy + 0.06, wz, (W - 0.3) / 10, 0.07, 0.28, k % 2 ? white : red);
+    // ペロペロキャンディのアンテナ
+    gW.box(-hw + 0.3, 0.67 + ch + 0.4, cz - cl / 2 + 0.25, 0.025, 0.5, 0.025, white);
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; gN.box(-hw + 0.3, 0.67 + ch + 0.72 + Math.cos(a) * 0.08, cz - cl / 2 + 0.25 + Math.sin(a) * 0.08, 0.03, 0.07, 0.07, k % 2 ? [1, 0.85, 0.1] : [1, 0.3, 0.6]); }
+    gW.sphere(-hw + 0.3, 0.67 + ch + 0.72, cz - cl / 2 + 0.25, 0.05, white, 4);
+    // ホイールアーチ（チョコ）
+    for (const zz of [zF, zR]) for (const s2 of [-1, 1]) gC.box(s2 * (hw + 0.006), 0.66, zz, 0.02, 0.06, 0.9, choc2);
+    add(gC, Mat(Object.assign({ refl: 0.25, spec: 0.9, shin: 60 }, A))); add(gF, Mat(Object.assign({ refl: 0.2, spec: 1.2, shin: 80, clear: 0.6 }, A))); add(gW, Mat(Object.assign({ spec: 0.25, shin: 20 }, A)));
+    add(gG, Mat(Object.assign({ refl: 0.5, spec: 1.6, shin: 120, blend: true, alpha: 0.75 }, A))); add(gN, Mat(Object.assign({ refl: 0.4, spec: 1.6, shin: 120, clear: 0.9 }, A))); add(gS, Mat(Object.assign({ spec: 0.4 }, A))); add(gL, headMat); add(gT, brakeMat);
   }
 
   if (car.body === 'van') { // オリジナルのワンボックス（キャブオーバー）
