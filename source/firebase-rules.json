@@ -232,6 +232,15 @@
           ".validate": "newData.hasChildren(['u','m','t']) && newData.child('m').isString() && newData.child('m').val().length <= 160"
         }
       }
+    },
+    "fgift": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        "$gid": {
+          ".write": "auth != null && ((!data.exists() && newData.child('from').val() == auth.uid && root.child('friends/' + $uid + '/' + auth.uid).exists()) || (auth.uid == $uid && !newData.exists()))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['from','k','id','t']) && newData.child('k').isString() && newData.child('id').isString() && newData.child('id').val().length < 40)"
+        }
+      }
     }
   }
 }

@@ -1781,3 +1781,12 @@ body.photo #hud,body.photo #touch,body.photo #mirrorUI,body.photo #hornBtn,body.
 @media (max-width:600px) and (orientation:portrait){#dashUI{top:calc(150px + env(safe-area-inset-top));left:calc(50% + 100px * var(--ms, 1) + 6px);width:calc(44px * var(--ds))}#dashUI .dsh-orn{width:calc(40px * var(--ds))}}
 .dsh-prev svg{overflow:visible}
 .cb-tip{top:auto!important;bottom:calc(84px + env(safe-area-inset-bottom))}.cb-bar{top:auto!important;bottom:calc(70px + env(safe-area-inset-bottom))}
+/* v4.2 */
+#freshUI{position:fixed;z-index:39;pointer-events:none;top:calc(8px + env(safe-area-inset-top));left:calc(50% - 125px - 36px);transform-origin:50% 0;display:flex;flex-direction:column;align-items:center}
+#freshUI .fr-str{width:2px;height:14px;background:#ddd}#freshUI .fr-tag svg{display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+@media (max-height:560px){#freshUI{left:calc(50% - 95px - 28px)}#freshUI .fr-tag svg{width:24px;height:30px}}
+@media (max-width:600px) and (orientation:portrait){#freshUI{top:calc(150px + env(safe-area-inset-top));left:calc(50% - 100px - 26px)}#freshUI .fr-tag svg{width:22px;height:28px}}
+.fg-badge{display:inline-block;margin-left:4px;min-width:16px;padding:0 4px;border-radius:8px;background:#ff3a6a;color:#fff;font-style:normal;font-size:10px;line-height:16px}
+.fg-row .fg-ic{flex:none;width:44px;height:52px;display:grid;place-items:center;overflow:hidden}.fg-tx{flex:1;min-width:0;display:flex;flex-direction:column}.fg-tx small{font-size:11px;opacity:.8}
+.fg-m{width:min(520px,92vw);max-height:84vh;overflow-y:auto}.fg-m h2{display:flex;align-items:center;gap:6px}.fg-msg{width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;margin:6px 0 10px}
+.fg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.fg-it{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;cursor:pointer}.fg-it:disabled{opacity:.4}.fg-it .fg-ic{height:52px;display:grid;place-items:center;overflow:hidden}.fg-it b{font-size:11px;text-align:center}.fg-it small{font-size:10px;opacity:.7}
