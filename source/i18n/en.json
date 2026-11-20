@@ -4283,5 +4283,11 @@
 "ペットカードを集めて交換すると、メニューのガレージで車のとなりにいてくれます（ガレージだけに出てきます）。もう持っているペットのカードはお金に変わります。": "Collect pet cards and exchange them to get a pet that stays next to your car in the garage (garage only). Cards for pets you already own become money.",
 "連れている": "With you",
 "連れていく": "Bring along",
-"ペットカード（集めて交換）": "Pet cards (collect & exchange)"
+"ペットカード（集めて交換）": "Pet cards (collect & exchange)",
+"さんのプロフィールを読み込み中…": "'s profile is loading...",
+"読み込めませんでした。通信状況を確認してください。": "Could not load. Please check your connection.",
+"所有車": "Cars",
+"連れているペット": "Pet",
+"このプレイヤーはまだ新しいバージョンで遊んでいないため、一部の情報だけ表示しています。": "This player has not played the latest version yet, so only some information is shown.",
+"自分の免許証": "My License"
 }

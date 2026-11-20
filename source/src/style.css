@@ -1730,3 +1730,12 @@ body.photo #hud,body.photo #touch,body.photo #mirrorUI,body.photo #hornBtn,body.
 .st-row.st-full{overflow:visible!important;scrollbar-width:none}.st-row.st-full::-webkit-scrollbar{display:none}
 .pet-it{display:flex;flex-direction:column;align-items:center;gap:3px}.pet-it .btn{padding:4px 8px;font-size:11px;margin-top:2px}.pet-it.lock2>svg{filter:grayscale(.8) brightness(.7)}.pet-bar{display:block;position:relative;width:100%;height:12px;border-radius:6px;background:rgba(0,0,0,.4);overflow:hidden}.pet-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff9ad8,#ffcf3d)}.pet-bar span{position:relative;display:block;text-align:center;font:800 9px/12px Arial}
 .pc-card{position:relative;display:inline-block}.pc-card em{position:absolute;right:-6px;bottom:-4px;font-style:normal;font-size:10px;font-weight:900;background:#111;color:#ffcf3d;border-radius:7px;padding:0 4px}
+/* v4.0 profile viewer */
+.pv-wrap{width:min(520px,92vw);max-height:86vh;overflow-y:auto}.pv-top{display:flex;align-items:center;justify-content:space-between}.pv-top h2{margin:0}.pv-tabs{display:flex;gap:6px;margin:8px 0}
+.pv-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}.pv-st{text-align:center;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.06)}.pv-st b{display:block;font-size:17px;color:#ffcf3d}.pv-st small{font-size:10px;opacity:.7}
+.pv-row{display:flex;gap:8px;flex-wrap:wrap}.pv-box{flex:1;min-width:150px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px;border-radius:12px;background:rgba(255,255,255,.05)}.pv-box small{font-size:10px;opacity:.7}.pv-box span{font-size:11px;opacity:.8}
+.fr-pf{flex:none;padding:0;border:0;background:none;cursor:pointer;margin-right:4px}.fr-nm,.msg-nm{cursor:pointer}.fr-nm:hover,.msg-nm:hover{text-decoration:underline}
+@media (max-width:600px){.pv-stats{grid-template-columns:repeat(3,1fr)}}
+.fr{flex-wrap:wrap;row-gap:6px}.fr b,.fr small,.fr .btn{white-space:nowrap}.fr .btn{padding:6px 10px;font-size:12px}.fr>b.noi18n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.clan-cols .fr>small{margin-right:auto}
+.pv-wrap .pcard2{max-width:100%;box-sizing:border-box}.pv-wrap .lic{max-width:100%}
