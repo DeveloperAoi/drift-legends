@@ -4,7 +4,7 @@
 // ---------------- 車カード交換：車のプレビュー ----------------
 Object.assign(UI, {
   a_ccPrev(id) { const c = CAR_BY_ID[id]; if (!c) return; const inst = { id, tune: defaultTune(c), look: defaultLook(c) }; this.show.setCar(inst); this._ccPv = id;
-    let el = document.getElementById('ccPv'); if (!el) { el = document.createElement('div'); el.id = 'ccPv'; document.body.appendChild(el); }
+    let el = document.getElementById('ccPv'); if (!el) { el = document.createElement('div'); el.id = 'ccPv'; el.addEventListener('click', e => this.onAction(e)); document.body.appendChild(el); }
     const cc = CAR_CARDS[id] || { need: 0 }, n = carCards(id), own = SAVE.data.cars.some(x => x.id === id), sp = computeSpec(c, inst.tune);
     el.innerHTML = `<div class="cpv-top"><button class="cpv-x" data-a="ccPvClose">✕ もどる</button><div class="cpv-t">${clsBadge(c)} <b>${esc(c.name)}</b><small>${esc(c.maker)} ・ ${c.drive} ・ ${Math.round(c.hp)}PS ・ 最大★${carMaxStars(c)}</small></div></div>
       <div class="cpv-card"><small>${esc(c.era || '')}</small><div class="cpv-stats">${this.statBars(sp)}</div><div class="cc2-bar"><i style="width:${cc.need ? Math.min(100, n / cc.need * 100) : 0}%"></i><span>${own ? '所有中' : `カード ${n} / ${cc.need}`}</span></div>${own ? '' : `<button class="btn ${n >= cc.need ? 'pri' : ''}" data-a="ccTrade" data-v="${id}" ${n >= cc.need ? '' : 'disabled'}>${n >= cc.need ? '交換する' : `あと ${cc.need - n} 枚`}</button>`}<div class="cpv-hint">ドラッグで車を回せます</div></div>`;
