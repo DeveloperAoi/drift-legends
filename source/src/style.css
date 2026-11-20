@@ -1387,3 +1387,14 @@ body:has(#loading:not(.hidden)) #bnav{display:none!important}
 /* 修正：3D化でカードの表面が隠れる問題 */
 .cx-edge{display:none!important}
 .cx-glare{transform:none!important;backface-visibility:visible}
+/* v3.5 パック表紙のエンブレム・限定車アイコン */
+.pk2-emb .pk-emb2{display:block;animation:pkEmb 3s ease-in-out infinite}@keyframes pkEmb{50%{filter:drop-shadow(0 0 8px var(--pb))}}
+.pk2-carEmb{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.pk2-carEmb .pk-car{display:block;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--pb) 70%,transparent));animation:pkCar 2.6s ease-in-out infinite}@keyframes pkCar{50%{transform:translateX(3px)}}
+.pk2-lim{font-family:Orbitron,sans-serif;font-size:8px;font-weight:900;letter-spacing:.18em;color:#111;background:linear-gradient(90deg,#ffe24a,#ffb000);padding:1px 7px;border-radius:3px;transform:skewX(-10deg)}
+.pk2-carNm{font-size:9px;font-weight:900;color:#fff;letter-spacing:.06em;text-shadow:0 1px 3px #000;white-space:nowrap}
+/* v3.5 修正：開封時に後ろのカードが手前に重なる */
+#packFx.p3d .pfx-cards{transform-style:flat}
+#packFx.p3d .cardx.out:not(.focus){transform:translate(calc((var(--k) - (var(--n) - 1)/2) * min(24px, 60vw / var(--n))), calc(-10px * var(--k))) rotate(calc((var(--k) - (var(--n) - 1)/2) * 4deg)) scale(.62)!important}
+#packFx .cardx.focus{z-index:20!important}#packFx .cardx.out:not(.focus):not(.gone){z-index:1}
+.pp-carLogo{display:flex;flex-direction:column;align-items:center;gap:3px}.pp-carLogo .pk-car{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--pb) 70%,transparent))}.pp-carLogo .pk2-lim{font-size:calc(8px * var(--s,1))}
