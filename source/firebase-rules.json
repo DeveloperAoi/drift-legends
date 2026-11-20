@@ -195,6 +195,11 @@
         ".read": true,
         ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
         ".validate": "!newData.exists() || newData.hasChildren(['start','end'])"
+      },
+      "menuMusic": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
+        ".validate": "!newData.exists() || newData.hasChildren(['src'])"
       }
     },
     "replays": {
