@@ -11800,7 +11800,7 @@ WHEEL_STYLES.push({ id: 'shademesh', name: 'ゴールドメッシュ', price: 0,
 
 // ---------------- メインメニューの曲（全員に反映・開発者メニューから変更） ----------------
 const MENU_MUSIC = { src: '' };
-const menuLike = cat => cat === 'menu' || (cat === 'xmas' && !(UI.screen && ['garage', 'tuning'].includes(UI.screen)) && !(UI.game && UI.game.active));
+const menuLike = cat => ['menu', 'xmas', 'garage'].includes(cat) && !(UI.game && UI.game.active);
 { const _st = ADM.start; ADM.start = async function () { const r = await _st.apply(this, arguments); try { if (window.DL_FB) { await DL_FB.ready(); DL_FB.db().ref('admin/menuMusic').on('value', s => { const v = s.val(); const nv = (v && v.src) || ''; const ch = nv !== MENU_MUSIC.src; MENU_MUSIC.src = nv; if (ch && AUDIO.music && menuLike(AUDIO.music.cat)) AUDIO.playCat(AUDIO.music.cat, true); }, () => { }); } } catch (e) { } return r; }; }
 { const _pc = AUDIO.playCat.bind(AUDIO); AUDIO.playCat = function (cat, force = false) { const src = MENU_MUSIC.src; if (!menuLike(cat) || !src) return _pc(cat, force);
     this.music.cat = cat;
