@@ -1459,3 +1459,24 @@ button,[data-a],[data-m]{-webkit-tap-highlight-color:transparent}
 .cc2-nm{font-size:13px;font-weight:900;color:#fff;line-height:1.2}.cc2 small{font-size:10px;opacity:.65}
 .cc2-bar{position:relative;width:100%;height:14px;border-radius:7px;background:rgba(0,0,0,.45);overflow:hidden;margin:3px 0}.cc2-bar i{display:block;height:100%;background:linear-gradient(90deg,#ffb000,#ffe24a)}.cc2-bar span{position:absolute;inset:0;font-size:10px;font-weight:900;color:#fff;line-height:14px;text-shadow:0 1px 2px #000}
 .cc2-btn{width:100%;border:0;border-radius:9px;padding:8px;font-weight:900;font-size:13px;color:#111;background:linear-gradient(180deg,#ffe24a,#ffb000);box-shadow:0 3px 0 #a86a00}.cc2-btn:disabled{background:#3a3550;color:#aaa;box-shadow:none}
+/* v3.72 スマホ（横向き・高さが低い画面）でストアのページを小さく収める */
+@media (max-height:560px){
+  .vp-page{padding:6px 10px 6px}.vp-ph{margin-bottom:2px}.vp-ph b{font-size:15px}.vp-ph small,.vp-hint{display:none}
+  .vp-rail{flex-basis:38px;gap:6px;padding:6px 0}.vp-arr{width:30px;height:24px;font-size:14px}.vp-title{font-size:12px}
+  .vp-row{padding:12px 2px 4px!important;gap:10px}
+  .vp .ps-card{flex:0 0 132px;padding:8px 6px 0}.vp .ps-art{height:112px}.vp .pp{--s:.6!important}.vp .ps-sub,.vp .ps-kind{display:none}.vp .ps-nm{font-size:11px;margin:2px 0 4px}.vp .ps-price{font-size:15px;padding:6px 0;margin:0 -6px}.vp .ps-timer{font-size:10px;padding:2px 6px}
+  .vp .of-row{padding:4px 2px 2px;gap:10px}.vp .of-card{flex:0 0 172px;padding:6px}.vp .of-face{height:168px}.vp .of-art{top:46px;bottom:30px;transform:scale(.68)}.vp .of-title span{font-size:12px}.vp .of-title .b{font-size:9px}.vp .of-lab{font-size:11px;bottom:6px;padding:2px 9px}.vp .of-buy{padding:8px 4px;font-size:13px;margin-top:6px}.vp .of-lim{font-size:10px;margin-top:3px}.vp .of-timer{font-size:9px;top:6px;right:6px}
+  .vp .st-card{flex:0 0 156px;width:156px;padding:6px 6px 10px}.vp .st-card .st-art{transform:scale(.75);margin:-10px 0}.vp .st-card .st-cd{display:none}.vp .st-card .st-buy{font-size:14px;padding:6px 4px}
+  .vp .cc2{flex-basis:150px;padding:7px}.vp .cc2-thumb{height:64px}.vp .cc2-thumb svg{width:110px;height:auto}.vp .cc2 small{display:none}
+}
+@media (max-height:560px){
+  .st-wrap .st-head{display:none}
+  .st-tabs.top{padding:3px!important;margin-bottom:5px!important}.st-tabs.top button{padding:4px 10px!important;font-size:12px!important}
+  .vp .ps-nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .vp .ps-art{height:100px}.vp .pp{--s:.54!important}
+}
+@media (max-height:560px){
+  .vp .of-face{height:128px}.vp .of-art{top:34px;bottom:22px;transform:scale(.52)}.vp .of-title{top:6px;left:8px}.vp .of-lim{display:none}.vp .of-buy{margin-top:5px;padding:7px 4px}
+  .vp .st-card .st-art{transform:scale(.6);margin:-18px 0}.vp .st-card .st-ct{font-size:12px}.vp .st-old{font-size:10px}
+}
+@media (max-height:560px){ .vp .of-main{padding:0 2px}.vp .of-row{padding:2px 2px 4px!important}.vp-body .of-sec{height:auto} }

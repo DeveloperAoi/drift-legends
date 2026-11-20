@@ -5,7 +5,7 @@
 // ページの高さを一番高いページに合わせる（ムダな余白をなくす）
 { const _vb = vpBind; vpBind = function () { document.querySelectorAll('.vp').forEach(vp => { if (vp._h) return; vp._h = 1; const view = vp.querySelector('.vp-view'), pages = [...vp.querySelectorAll('.vp-page')]; if (!view || !pages.length) return;
       vp.classList.add('vp-measure'); let mx = 0; pages.forEach(p => { mx = Math.max(mx, p.scrollHeight); }); vp.classList.remove('vp-measure');
-      const rail = vp.querySelector('.vp-rail'), minH = rail ? Math.min(300, rail.scrollHeight) : 240; vp.style.height = Math.max(minH, Math.min(mx + 4, innerHeight - 140)) + 'px'; }); _vb(); }; }
+      const rail = vp.querySelector('.vp-rail'), minH = rail ? Math.min(300, rail.scrollHeight) : 240; const pb = document.getElementById('panelBody'), vr = vp.getBoundingClientRect(), pr = pb ? pb.getBoundingClientRect() : { bottom: innerHeight }, nav = document.getElementById('bnav'), nb = nav && getComputedStyle(nav).display !== 'none' && nav.getBoundingClientRect().height ? nav.getBoundingClientRect().top : innerHeight; const avail = Math.min(pr.bottom, nb) - vr.top - 6 + (pb ? pb.scrollTop : 0); vp.style.height = Math.max(Math.min(minH, 220), Math.min(mx + 4, Math.max(220, avail))) + 'px'; }); _vb(); }; }
 // 車カード交換：横スクロールのカード（サムネイル＋交換ボタン）
 carCardsHTML = function () { const list = Object.entries(CAR_CARDS).filter(([id, cc]) => CAR_BY_ID[id] && (!cc.xmas || carCards(id) > 0 || (typeof xmasPackOpen === 'function' && xmasPackOpen())));
   return `<div class="cc2-row">${list.map(([id, cc], i) => { const c = CAR_BY_ID[id], n = carCards(id), own = SAVE.data.cars.some(x => x.id === id), ok = n >= cc.need, pct = Math.min(100, n / cc.need * 100);
