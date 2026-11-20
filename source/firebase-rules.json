@@ -201,6 +201,10 @@
         ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
         ".validate": "!newData.exists() || newData.hasChildren(['src'])"
       },
+      "flags": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)"
+      },
       "periods": {
         ".read": true,
         ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)",
