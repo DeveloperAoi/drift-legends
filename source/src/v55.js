@@ -110,3 +110,4 @@ Object.assign(UI, {
 { const _mi = UI.menuItems; UI.menuItems = function () { _mi.apply(this, arguments); const el = $('menuList'), pills = el && el.querySelectorAll('.nm-pills')[0]; if (pills && !pills.querySelector('[data-m="minigame"]')) pills.insertAdjacentHTML('beforeend', `<button class="nm-pill" data-m="minigame"><span class="nmc-ic">${symSvg('crown', 20)}</span><span>ミニゲーム</span></button>`); }; }
 BNAV_OF.minigame = 'shop';
 window.__DLX = Object.assign(window.__DLX || {}, { packPool, ENGX_BY, previewEngine, MG, ROULETTE, SCR_SYM });
+{ const _po = UI.a_psOpen; UI.a_psOpen = function (id) { const r = _po.apply(this, arguments); const lg = document.querySelector('.pr-legend'); if (lg && !lg.children.length) { const parts = lg.textContent.split(/　+/).filter(Boolean); if (parts.length === 2) lg.innerHTML = `<span>${esc(parts[0])}</span><span>${esc(parts[1])}</span>`; } return r; }; }

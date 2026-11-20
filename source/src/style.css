@@ -1655,3 +1655,12 @@ body.ccpv .panel-wrap .panel,body.ccpv #bnav,body.ccpv #menuList,body.ccpv .stag
 .sc-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.sc-empty small{font-size:11px;opacity:.7}
 .sc-res{text-align:center;margin:8px 0;font-size:14px}.sc-res .ok{color:#0a6a2a}.sc-card .btns{display:flex;gap:8px;justify-content:center}
 .pr-grp{flex:0 0 auto!important}.pr-tag{flex:0 0 74px!important}.pr-scroll .fc{flex:0 0 126px!important}
+/* v3.961 pack contents: never shrink or overlap */
+.pr-scroll.one{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;overflow-x:auto;overflow-y:hidden}
+.pr-grp{flex:0 0 auto!important;width:max-content!important;min-width:max-content;overflow:visible!important;align-items:flex-start}
+.pr-grp>.fc,.pr-scroll .fc{flex:0 0 126px!important;width:126px!important;min-width:126px;max-width:126px;margin:0!important;transform:none!important;box-sizing:border-box}
+.pr-grp>.pr-tag{flex:0 0 74px!important;width:74px}.pr-grp>.pr-more{flex:0 0 100px!important}
+.fc{overflow:visible!important}
+.fc::after{left:0!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;border-radius:4px;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.5) 50%,transparent 58%)!important;background-size:300% 100%!important;animation:fcSw 3s ease-in-out infinite!important}
+@keyframes fcSw{0%{background-position:0% 0}60%,100%{background-position:100% 0}}
+.pr-list{width:100%;min-width:0}.pr-legend{width:100%;box-sizing:border-box}.pr-scroll.one{padding-top:22px!important}
