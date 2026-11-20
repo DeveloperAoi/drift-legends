@@ -1384,3 +1384,6 @@ body:has(#loading:not(.hidden)) #bnav{display:none!important}
 @keyframes gbShake{0%,100%{transform:rotateX(-30deg) rotateY(-34deg)}25%{transform:rotateX(-30deg) rotateY(-30deg) rotateZ(3deg)}75%{transform:rotateX(-30deg) rotateY(-38deg) rotateZ(-3deg)}}
 .xs-art{height:150px;padding-top:24px}
 .gf-items .gb-pouch,.gf-row .gb-pouch,.dv-rw .gb-pouch{min-height:0}
+/* 修正：3D化でカードの表面が隠れる問題 */
+.cx-edge{display:none!important}
+.cx-glare{transform:none!important;backface-visibility:visible}

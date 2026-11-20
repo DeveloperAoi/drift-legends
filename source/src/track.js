@@ -95,7 +95,7 @@ class Track {
       const [x, , z] = pts[i]; const cx = Math.floor(x / cell), cz = Math.floor(z / cell);
       for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
         const arr = grid.get((cx + a + 5000) * 10000 + (cz + b + 5000)); if (!arr) continue;
-        for (const j of arr) { let di = Math.abs(i - j); di = Math.min(di, n - di); if (di < 45) continue; if (this.def.stack && Math.abs(pts[j][1] - pts[i][1]) > 9) continue; const dx = pts[j][0] - x, dz = pts[j][2] - z; if (dx * dx + dz * dz < minSep * minSep) return false; }
+        for (const j of arr) { let di = Math.abs(i - j); di = Math.min(di, n - di); if (di < 45) continue; if (this.def.stack && Math.abs(pts[j][1] - pts[i][1]) > 5) continue; const dx = pts[j][0] - x, dz = pts[j][2] - z; if (dx * dx + dz * dz < minSep * minSep) return false; }
       }
     }
     // 最小旋回半径
@@ -520,7 +520,7 @@ function buildWorld(track, R, opts) {
       }
     });
     if (env === 'city') { // 歩道の街路樹
-      for (let i = 3; i < n; i += 12) for (const s of [-1, 1]) { const p = P(i, s * (wallOff + 1.6), 0); if (rng() < 0.5 * dens) tree(ch(i).scene, p[0], p[1], p[2], 0.55); }
+      for (let i = 3; i < n; i += 12) for (const s of [-1, 1]) { const p = P(i, s * (wallOff + 1.6), 0); if (def.stack && Y[i] - groundY > 2.5) continue; if (rng() < 0.5 * dens) tree(ch(i).scene, p[0], p[1], p[2], 0.55); }
     }
   }
   if (env === 'port') {

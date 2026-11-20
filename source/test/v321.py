@@ -4,7 +4,7 @@ with sync_playwright() as p:
     pg=b.new_page(viewport={'width':1280,'height':680}); errs=[]; pg.on('pageerror', lambda e: errs.append('PAGE '+str(e)))
     pg.goto('file:///home/claude/dl/dist/index.html'); pg.wait_for_timeout(500); E=pg.evaluate
     E("window.__DL.SAVE.data.tutDone=true; window.__DL.UI._newsShown=true; window.__DL.UI._logChk=true"); pg.click('#btnStart'); pg.wait_for_timeout(1500); E("window.__DL.UI.closeModal(); window.__DL.SAVE.data.money=2e8")
-    for mode in ['cut','back']:
+    for mode in ['cut']:
         E(f"window.__DL.SAVE.data.packFxMode='{mode}'; window.__DL.UI.a_openChest('gold:1')"); pg.wait_for_timeout(1200); pg.screenshot(path=f'test/v321_{mode}0.png')
         if mode=='cut':
             r=E("(()=>{const r=document.querySelector('.pfx-stage').getBoundingClientRect();return [r.left,r.top,r.width,r.height]})()")

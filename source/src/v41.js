@@ -112,7 +112,7 @@ EVENTS.push({ id: 'xmaseve2026', title: 'CHRISTMAS EVE 2026', jp: '聖夜のナ�
 
 // ---------------- 3D 演出（カード・パック） ----------------
 { const _open = PACKFX.open; PACKFX.open = function (c, res) { _open.call(this, c, res); const o = this.o; o.classList.add('p3d'); o.onpointermove = e => { const x = e.clientX / innerWidth - 0.5, y = e.clientY / innerHeight - 0.5; o.style.setProperty('--tx', (x * 26).toFixed(1) + 'deg'); o.style.setProperty('--ty', (-y * 20).toFixed(1) + 'deg'); }; }; }
-{ const _deal = PACKFX.deal; PACKFX.deal = function () { _deal.call(this); this.o.querySelectorAll('.cardx .cx-in').forEach(el => { if (!el.querySelector('.cx-edge')) el.insertAdjacentHTML('beforeend', '<div class="cx-edge"></div><div class="cx-glare"></div>'); }); }; }
+{ const _deal = PACKFX.deal; PACKFX.deal = function () { _deal.call(this); this.o.querySelectorAll('.cardx .cx-front').forEach(el => { if (!el.querySelector('.cx-glare')) el.insertAdjacentHTML('beforeend', '<div class="cx-glare"></div>'); }); }; }
 
 // ---------------- パーツをガレージに統合 ----------------
 { const _g = UI.r_garage; UI.r_garage = function (a) { const seg = `<div class="seg g-seg"><button class="${this.gTab !== 'parts' ? 'on' : ''}" data-a="gTab" data-v="cars">${ICO('carSide', 'currentColor', 15)} マイカー<small>車の選択・売却</small></button><button class="${this.gTab === 'parts' ? 'on' : ''}" data-a="gTab" data-v="parts">${ICO('gear', 'currentColor', 15)} パーツを買う<small>ホイール・タイヤ・キットなど</small></button></div>`;

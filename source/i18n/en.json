@@ -3471,5 +3471,18 @@
 "車の選択・売却": "Select & sell cars",
 "パーツを買う": "Buy Parts",
 "ホイール・タイヤ・キットなど": "Wheels, tires, kits & more",
-"のバックパック": "'s Backpack"
+"のバックパック": "'s Backpack",
+"修正パッチ": "Fix Patch",
+"カードパックやプレゼントボックスを開けたとき、カードの表面が真っ黒になって何も表示されないことがある問題を修正": "Fixed card faces sometimes showing up completely black (blank) when opening card packs or present boxes",
+"パック開封の「裏から開ける」演出を削除し、上部をカットして開ける演出に統一": "Removed the \"open from back\" pack animation; packs now always open by cutting the top",
+"眼鏡橋（千本松大橋）": "Megane Bridge (Senbonmatsu Bridge)",
+"大阪・木津川に架かる「めがね橋」こと千本松大橋がモデル。2階建てのらせんループを720度ぐるぐる登って水面から約36mの橋を渡り、反対側のループを下る。帰りは急坂から下流のアーチ橋に上がり、3重ループで工場街へ。": "Modeled on Osaka's Senbonmatsu Bridge, the \"Megane (eyeglasses) Bridge\" over the Kizu River. Spiral 720° up a two-level loop, cross about 36m above the water, then spiral down the other side. The return climbs a steep ramp to a downstream arch bridge and drops through a triple loop into the factory district.",
+"度らせんループ": "° spiral loop",
+"重ループ": "-level loop",
+"高さ約": "Height approx. ",
+"の橋": " bridge",
+"木津川・船": "Kizu River & ships",
+"工場・倉庫街": "Factories & warehouses",
+"夕暮れの大阪湾岸": "Osaka bayside at dusk",
+"めがね橋": "Megane Bridge"
 }

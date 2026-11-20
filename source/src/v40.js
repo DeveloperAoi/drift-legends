@@ -3,10 +3,10 @@
 //          （爆発・強いフラッシュはなし）
 // =====================================================================
 { const _open = PACKFX.open;
-  PACKFX.open = function (c, res) { _open.call(this, c, res); const o = this.o; this.mode = SAVE.data.packFxMode === 'back' ? 'back' : SAVE.data.packFxMode === 'cut' ? 'cut' : (Math.random() < 0.5 ? 'cut' : 'back');
+  PACKFX.open = function (c, res) { _open.call(this, c, res); const o = this.o; this.mode = 'cut';
     const tip = o.querySelector('.pfx-tip'); if (tip) tip.textContent = this.mode === 'cut' ? 'パックの上の点線をなぞってカット！（ボタンでもOK）' : 'ボタンを押してパックを裏返して開けよう';
     const st = o.querySelector('.pfx-stage'); if (this.mode === 'cut') st.insertAdjacentHTML('beforeend', '<div class="pc-guide"><i></i><span>✂</span></div>');
-    o.querySelector('.pfx-ui').insertAdjacentHTML('beforeend', `<div class="pfx-mode"><button data-p="mode:cut" class="${this.mode === 'cut' ? 'on' : ''}">✂ カット</button><button data-p="mode:back" class="${this.mode === 'back' ? 'on' : ''}">↻ 裏から開ける</button></div>`);
+    // （裏から開ける演出は削除）
     // なぞってカット
     let sx = null, sy = 0, maxX = 0; const rect = () => st.getBoundingClientRect();
     st.onpointerdown = e => { if (this.busy || this.i >= 0 || this.mode !== 'cut') return; const r = rect(); if (e.clientY > r.top + r.height * 0.42) return; sx = e.clientX; sy = e.clientY; maxX = 0; st.setPointerCapture && st.setPointerCapture(e.pointerId); };
