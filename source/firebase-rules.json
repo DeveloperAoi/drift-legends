@@ -241,6 +241,28 @@
           ".validate": "!newData.exists() || (newData.hasChildren(['from','k','id','t']) && newData.child('k').isString() && newData.child('id').isString() && newData.child('id').val().length < 40)"
         }
       }
+    },
+    "market": {
+      ".read": "auth != null",
+      ".indexOn": [
+        "t",
+        "s"
+      ],
+      "$id": {
+        ".write": "auth != null && ((!data.exists() && newData.child('s').val() == auth.uid) || (data.exists() && data.child('s').val() == auth.uid && !newData.exists()))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['s','sn','car','p','t']) && newData.child('p').isNumber() && newData.child('p').val() >= 10000 && newData.child('p').val() <= 999999999 && newData.child('sn').isString() && newData.child('sn').val().length <= 40)",
+        "b": {
+          ".write": "auth != null && !data.exists() && root.child('market/' + $id + '/s').exists() && ((newData.val() == auth.uid && root.child('market/' + $id + '/s').val() != auth.uid) || (root.child('market/' + $id + '/s').val() == auth.uid && newData.val() == 'cancel_' + auth.uid))"
+        },
+        "bn": {
+          ".write": "auth != null && !data.exists() && root.child('market/' + $id + '/b').val() == auth.uid",
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "bt": {
+          ".write": "auth != null && !data.exists() && root.child('market/' + $id + '/b').val() == auth.uid",
+          ".validate": "newData.isNumber()"
+        }
+      }
     }
   }
 }
