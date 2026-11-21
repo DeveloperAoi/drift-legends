@@ -16,12 +16,13 @@ UI.a_vpGo = function (v) { const [key, d] = v.split(':'), vp = document.querySel
   const i = d[0] === '=' ? +d.slice(1) : Math.max(0, Math.min(pg.length - 1, cur + +d)); if (pg[i]) view.scrollTo({ top: pg[i].offsetTop - pg[0].offsetTop, behavior: 'smooth' }); };
 { const _ps = UI.packStoreHTML; UI.packStoreHTML = function () { const h = _ps.apply(this, arguments); const cards = h.match(/<button class="ps-card"[\s\S]*?<\/button>/g) || []; const id = c => (c.match(/data-v="([^"]+)"/) || [])[1];
     const SPECIAL = ['parts', 'style', 'profpack', 'emojipack', 'charmpack', 'platepack', 'goalpack', 'gdecopack', 'hornpack', 'enginepack', 'smokepack', 'stamppack', 'hudpack', 'licensepack', 'xmaspartspack', 'rimpack', 'petpack', 'dashpack', 'freshpack', 'gstylepack'], VEH = CHESTS.filter(c => c.vehicle).map(c => c.id), limIds = CHESTS.filter(c => c.limited || c.daily).map(c => c.id);
-    const KEYP = ['keypack', 'keychainpack']; const lim = cards.filter(c => limIds.includes(id(c))), sp = cards.filter(c => SPECIAL.includes(id(c))), veh = cards.filter(c => VEH.includes(id(c))), kp = cards.filter(c => KEYP.includes(id(c))), reg = cards.filter(c => !limIds.includes(id(c)) && !SPECIAL.includes(id(c)) && !VEH.includes(id(c)) && !KEYP.includes(id(c)));
+    const KEYP = ['keypack', 'keychainpack'], GEARP = ['flamepack', 'bovpack', 'lightpack', 'knobpack', 'steerpack', 'stickerpack']; const lim = cards.filter(c => limIds.includes(id(c))), sp = cards.filter(c => SPECIAL.includes(id(c))), veh = cards.filter(c => VEH.includes(id(c))), kp = cards.filter(c => KEYP.includes(id(c))), gp = cards.filter(c => GEARP.includes(id(c))), reg = cards.filter(c => !limIds.includes(id(c)) && !SPECIAL.includes(id(c)) && !VEH.includes(id(c)) && !KEYP.includes(id(c)) && !GEARP.includes(id(c)));
     const row = L => `<div class="ps-row vp-row">${L.join('')}</div>`; const pages = [];
     if (lim.length) pages.push({ title: '期間限定パック', sub: '限定車のカードや期間限定アイテムが手に入る', html: row(lim) });
     pages.push({ title: 'カードパック', sub: 'ブロンズからミシックまで。上のパックほどレアが出やすい', html: row(reg) });
     if (veh.length) pages.push({ title: '車両パック', sub: '車のカードで星（ランク）を上げよう', html: row(veh) });
     pages.push({ title: 'パーツ・スタイル・プロフィール', sub: '絵文字・飾りなど、ほしいジャンルにしぼったパック', html: row(sp) });
+    if (gp.length) pages.push({ title: 'ドライビングギア', sub: '炎・ブローオフ音・ライト・シフトノブ・ハンドル・ステッカー帳', html: row(gp) });
     if (kp.length) pages.push({ title: 'キー・キーチェーン', sub: 'エンジンを始動するキーと、キーにつける飾り', html: row(kp) });
     pages.push({ title: '車カード交換', sub: '集めたカードで限定車と交換', html: carCardsHTML() });
     setTimeout(vpBind, 0); return vpHTML('packs', pages); }; }
