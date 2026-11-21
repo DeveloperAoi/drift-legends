@@ -2097,3 +2097,17 @@ body.wheelon #tLeft,body.wheelon #tRight,body.wheelon #tPad{display:none!importa
 .tk-lv{position:absolute;top:10px;right:10px;color:#ffcf3d}.tk-rw{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:900;color:#ffcf3d}.tk-rw em{font-style:normal;font-size:11px;color:#fff;background:#000;padding:2px 6px;margin-left:auto}
 .tk-bonus{float:right;font-size:12px;color:#a8ff1a}
 @media (max-width:600px){.tk-hero{flex-direction:column}}
+/* v5.1 creator */
+.cu{margin-top:10px}.cu-tabs{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.cu-form{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.cu-form .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.cu-form .row>label:first-child{min-width:150px;opacity:.8;font-size:13px}
+.cu-form input:not([type=checkbox]):not([type=color]),.cu-form select,.cu-it select{background:#1b1d24;color:#fff;border:1px solid #333;border-radius:8px;padding:6px 8px;min-width:160px}
+.cu-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.cu-it{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:4px 10px;background:rgba(255,255,255,.04);border-radius:10px;padding:6px 10px}
+.cu-it>b{font-size:14px}.cu-it>small{grid-column:2;opacity:.7;font-size:12px}.cu-it>div,.cu-it>select{grid-column:3;grid-row:1/3;display:flex;gap:6px}
+.cu-pv{grid-row:1/3;display:flex;align-items:center;justify-content:center;min-height:44px}
+.cu-img{object-fit:contain;border-radius:8px;background:repeating-conic-gradient(#2a2c33 0 25%,#1f2127 0 50%) 0 0/12px 12px}.cu-img.wide{object-fit:cover}
+.cu-noimg{font-size:11px;opacity:.6}.cu-tt{font-size:11px;padding:3px 6px;border-radius:6px;background:#ffcf3d;color:#000;font-weight:700}.cu-pt{width:36px;height:36px;border-radius:50%;display:inline-block;border:2px solid #fff3}
+.cu-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:240px;overflow:auto;margin:6px 0}
+.cu-pi{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border-radius:8px;padding:4px 6px;font-size:12px;cursor:pointer}
+@media (max-width:600px){.cu-form .row>label:first-child{min-width:100%}.cu-it{grid-template-columns:48px 1fr}.cu-it>div,.cu-it>select{grid-column:1/-1;grid-row:auto}}

@@ -1,0 +1,123 @@
+// =====================================================================
+// v70.js — v5.1：開発者クリエイター
+//   ・オリジナルアイテム（スタンプ・絵文字・ハンドル・エアフレッシュナー・プロフィール背景・飾り・称号・ペイント）を画像から作る
+//   ・オリジナルのパック／BOXを作ってショップに並べる（お金／ダイヤ・値段・名前・表紙画像）
+//   ・ショップの上下の欄を追加・既存のパックを別の欄へ移動
+//   データは Firebase の admin/custom に保存され、全プレイヤーに反映（端末にもキャッシュしてオフラインでも表示）
+// =====================================================================
+window.CUSTOM_SHOP = { sections: {}, place: {}, packSec: {} };
+const CU_TYPES = { stamp: ['スタンプ', 160, 'png'], emoji: ['絵文字', 96, 'png'], steerw: ['ハンドル', 200, 'png'], fresh: ['エアフレッシュナー', 120, 'png'], pbanner: ['プロフィール背景', 320, 'jpeg'], charm: ['ミラーの飾り', 110, 'png'], title: ['称号', 0], paint: ['ペイント', 0] };
+const CU = { data: {}, added: { items: [], chests: [], stamps: [], emos: [], charms: [] },
+  img(src, vb) { return `<image href="${src}" x="0" y="0" width="${vb}" height="${vb}" preserveAspectRatio="xMidYMid meet"/>`; },
+  purge() { const A = this.added; for (const id of A.items) { const i = ITEMS.findIndex(x => x.id === id); if (i >= 0) ITEMS.splice(i, 1); delete ITEM_BY_ID[id]; }
+    for (const id of A.chests) { const i = CHESTS.findIndex(x => x.id === id); if (i >= 0) CHESTS.splice(i, 1); delete PACK_ART[id]; delete COVER_SVG[id]; }
+    for (const id of A.stamps) { const i = STAMPS.findIndex(x => x.id === id); if (i >= 0) STAMPS.splice(i, 1); delete STAMP_BY[id]; }
+    for (const id of A.emos) { const i = EMO.findIndex(x => x.id === id); if (i >= 0) EMO.splice(i, 1); delete EMO_BY[id]; }
+    for (const id of A.charms) { const i = CHARMS.findIndex(x => x.id === id); if (i >= 0) CHARMS.splice(i, 1); }
+    this.added = { items: [], chests: [], stamps: [], emos: [], charms: [] }; },
+  itemId(k, v) { return { stamp: 'stp_cu' + k, emoji: 'emj_' + this.emoId(v), steerw: 'stw_cu' + k, fresh: 'frs_cu' + k, charm: 'ch_cu' + k }[v.t] || 'cu_' + k; },
+  emoId(v) { return 'e' + (800 + ((v.n || 0) % 199)); },
+  apply(data) { this.data = data || {}; this.purge(); const D = this.data, A = this.added; const add = o => { mkItem(Object.assign({ custom: 1 }, o)); A.items.push(o.id); };
+    for (const [k, v] of Object.entries(D.items || {})) { if (!v || !CU_TYPES[v.t]) continue; const nm = String(v.nm || '名前なし').slice(0, 30), r = RARITY[v.r] ? v.r : 'C', en = v.en || nm, id = this.itemId(k, v), base = { id, rarity: r, cuKey: k, en };
+      if (v.t === 'stamp') { const sid = 'cu' + k; STAMPS.push({ id: sid, nm, r, an: v.an || 'bounce', svg: v.img ? this.img(v.img, 80) : '' }); STAMP_BY[sid] = STAMPS[STAMPS.length - 1]; A.stamps.push(sid); add(Object.assign(base, { type: 'stamp', stamp: sid, name: 'スタンプ「' + nm + '」', en: 'Stamp "' + en + '"', desc: 'チャットで送れるスタンプ（オリジナル）' })); }
+      else if (v.t === 'emoji') { const eid = this.emoId(v); EMO.push({ id: eid, cat: 'face', name: nm, r, body: v.img ? this.img(v.img, 64) : '' }); EMO_BY[eid] = EMO[EMO.length - 1]; A.emos.push(eid); add(Object.assign(base, { type: 'emoji', emo: eid, emojiItem: 1, name: '絵文字「' + nm + '」', en: 'Emoji "' + en + '"', desc: 'チャットで使える絵文字（オリジナル）' })); }
+      else if (v.t === 'steerw') { STEER_BY['cu' + k] = { id: 'cu' + k, nm, c1: '#222', c2: '#fff', sh: 'img', img: v.img }; add(Object.assign(base, { type: 'steerw', swX: 'cu' + k, name: 'ハンドル「' + nm + '」', en: 'Steering Wheel "' + en + '"', desc: 'ハンドル操作UIのデザイン（オリジナル）' })); }
+      else if (v.t === 'fresh') { const c = v.col || '#2fbf71'; FRESH_BY['cu' + k] = { id: 'cu' + k, nm, sh: 'img', col: c, rgb: hexToRgb(c), img: v.img }; add(Object.assign(base, { type: 'fresh', freshX: 'cu' + k, name: 'エアフレッシュナー「' + nm + '」', en: 'Air Freshener "' + en + '"', desc: 'ミラーに吊るすエアフレッシュナー（オリジナル）' })); }
+      else if (v.t === 'charm') { CHARMS.push({ id: 'cu' + k, nm, en, r, svg: v.img ? this.img(v.img, 48) : '' }); A.charms.push('cu' + k); add(Object.assign(base, { type: 'charm', charm: 'cu' + k, name: '飾り「' + nm + '」', en: 'Charm "' + en + '"', desc: 'レース中のミラーの下に吊り下げる飾り（オリジナル）' })); }
+      else if (v.t === 'pbanner') add(Object.assign(base, { type: 'pbanner', cuImg: v.img, c1: v.col || '#14151a', c2: v.col || '#14151a', bk: 'grad', name: 'バナー「' + nm + '」', en: 'Banner "' + en + '"', desc: 'プロフィールカードの背景（オリジナル）' }));
+      else if (v.t === 'title') add(Object.assign(base, { type: 'title', title: nm, titleEn: en, name: '称号「' + nm + '」', en: 'Title "' + en + '"', desc: 'プロフィールとメニューに表示される称号（オリジナル）' }));
+      else if (v.t === 'paint') add(Object.assign(base, { type: 'paint', color: v.col || '#e10600', paint: v.fin || 'metallic', name: 'ペイント「' + nm + '」', en: 'Paint "' + en + '"', desc: 'オリジナルのペイント' })); }
+    const CS = window.CUSTOM_SHOP = { sections: Object.assign({}, D.sections || {}), place: Object.assign({}, D.place || {}), packSec: {} };
+    for (const [k, v] of Object.entries(D.packs || {})) { if (!v) continue; const id = 'cp_' + k, list = (v.items || []).map(x => ITEM_BY_ID[x] ? x : null).filter(Boolean), rars = [...new Set(list.map(x => ITEM_BY_ID[x].rarity))];
+      const W = { C: 40, U: 30, R: 18, E: 9, L: 3, M: 1 }, tot = rars.reduce((a, r) => a + (W[r] || 1), 0) || 1, odds = {}; for (const r of RAR_ORDER) odds[r] = rars.includes(r) ? Math.round((W[r] || 1) / tot * 1000) / 10 : 0;
+      const dia = v.cur === 'dia', price = Math.max(0, Math.round(+v.price || 0)), col = v.col || '#ff6a2a';
+      CHESTS.push({ id, name: String(v.nm || 'オリジナルパック').slice(0, 30), price: dia ? 0 : price, dia: dia ? price : undefined, odds, color: col, pool: 'cu:' + k, custom: 1, cuList: list, boxOnly: !!v.box, boxPrice: price, boxDia: dia });
+      PACK_ART[id] = { a: v.col2 || '#14151a', b: col, t: String(v.tag || v.nm || 'ORIGINAL').slice(0, 14).toUpperCase() }; PACK_TIER[id] = 3; if (v.cover) COVER_SVG[id] = `<image href="${v.cover}" x="0" y="0" width="100" height="90" preserveAspectRatio="xMidYMid slice"/>`;
+      A.chests.push(id); if (v.sec) CS.packSec[id] = v.sec; }
+    for (const it of ITEMS) ITEM_BY_ID[it.id] = it;
+    try { if (['store', 'charm', 'dev', 'bag', 'colbook'].includes(UI.screen)) UI.render(); } catch (e) { } },
+  cache(d) { try { localStorage.setItem('dl_custom', JSON.stringify(d || {})); } catch (e) { } },
+  load() { try { const s = localStorage.getItem('dl_custom'); if (s) this.apply(JSON.parse(s)); } catch (e) { } }
+};
+// 描画のフック
+{ const _ss = steerSvg; steerSvg = function (id, s = 120) { const K = STEER_BY[id]; if (K && K.img) return `<svg viewBox="0 0 120 120" width="${s}" height="${s}">${CU.img(K.img, 120)}</svg>`; return _ss.apply(this, arguments); }; }
+{ const _fs = freshSvg; freshSvg = function (id, s = 40) { const F = FRESH_BY[id]; if (F && F.img) return `<svg viewBox="0 0 48 48" width="${s}" height="${s}"><path d="M24 0 v6" stroke="#ddd" stroke-width="1.5"/>${CU.img(F.img, 48).replace('y="0"', 'y="5"').replace('height="48"', 'height="43"')}</svg>`; return _fs.apply(this, arguments); }; }
+{ const _bc = bannerCSS; bannerCSS = function (b) { if (b && b.cuImg) return `background:url("${b.cuImg}") center/cover,${b.c1}`; return _bc.apply(this, arguments); }; }
+{ const _pp = packPool; packPool = function (c, rar) { if (String(c.pool).startsWith('cu:')) return (c.cuList || []).map(x => ITEM_BY_ID[x]).filter(i => i && i.rarity === rar); return _pp(c, rar).filter(i => !i.custom); }; }
+// BOX専用のオリジナルは通常のパック売り場に出さない／BOX売り場に出す
+{ const _ps = UI.packStoreHTML; UI.packStoreHTML = function () { const hid = CHESTS.filter(c => c.boxOnly); hid.forEach(c => CHESTS.splice(CHESTS.indexOf(c), 1)); let h; try { h = _ps.apply(this, arguments); } finally { CHESTS.push(...hid); } for (const c of CHESTS) if (c.custom && !c.boxOnly) h = h.replace(new RegExp('(data-v="' + c.id + '"[\\s\\S]*?<span class="ps-kind">)[^<]*'), '$1オリジナル・' + (c.cuList || []).length + '種'); return h; }; }
+const cuBoxPrice = c => c.boxDia ? `${SICO.gem(16)} ${c.boxPrice}` : yen(c.boxPrice);
+{ const _bc = UI.boxCards; UI.boxCards = function (all) { const h = _bc.apply(this, arguments); const L = CHESTS.filter(c => c.custom && c.boxOnly); if (!L.length) return h;
+    return L.map((c, i) => `<div class="st-card box" style="--cc:${(PACK_ART[c.id] || {}).b};animation-delay:${i * 0.06}s"><div class="st-ct">${esc(c.name)}</div><div class="st-cd">オリジナルBOX・10パック入り</div><span class="st-badge sale">NEW</span><div class="st-art bx-art">${boxHTML(c, 0.6)}</div><button class="st-buy" data-a="stBox" data-v="${c.id}">${cuBoxPrice(c)}</button><span class="st-bubble">10</span></div>`).join('') + h; }; }
+{ const _sb = UI.a_stBox; UI.a_stBox = function (id) { const c = CHESTS.find(x => x.id === id); if (!c || !c.custom || !c.boxOnly) return _sb.apply(this, arguments);
+    this.modal(`<div class="bxm"><div class="bxm-art">${boxHTML(c, 1)}</div><div><h2>${esc(c.name)}</h2><div class="note">オリジナルBOX・10パック入り：<b>${cuBoxPrice(c)}</b></div><div class="btns" style="flex-direction:column"><button class="btn pri" data-a="stBoxBuy" data-v="${id}:open">購入して今すぐ開ける</button><button class="btn" data-a="stBoxBuy" data-v="${id}:save">購入してインベントリに保存</button><button class="btn" data-a="closeModal">やめる</button></div></div></div>`); }; }
+{ const _bb = UI.a_stBoxBuy; UI.a_stBoxBuy = function (v) { const [id, how] = v.split(':'), c = CHESTS.find(x => x.id === id); if (!c || !c.custom || !c.boxOnly) return _bb.apply(this, arguments); const d = SAVE.data; this.closeModal();
+    if (c.boxDia) { if ((d.diamonds || 0) < c.boxPrice) return this.toast('ダイヤが足りません'); d.diamonds -= c.boxPrice; } else if (!SAVE.spend(c.boxPrice)) return; AUDIO.buy && AUDIO.buy(); this.refreshTop();
+    if (how === 'save') { const u = unopened(); u.boxes[id] = (u.boxes[id] || 0) + 1; SAVE.save(); this.toast('BOXをインベントリに保存しました（ストア → 未開封）'); return this.render(); } SAVE.save(); BOXFX.show(c); }; }
+// Firebase から受け取る（オフラインでは端末のキャッシュ）
+CU.load();
+{ const _st = ADM.start; ADM.start = async function () { const r = await _st.apply(this, arguments); try { if (window.DL_FB) { await DL_FB.ready(); DL_FB.db().ref('admin/custom').on('value', s => { const v = s.val() || {}; CU.cache(v); CU.apply(v); }, () => { }); } } catch (e) { } return r; }; }
+
+// =====================================================================
+// 開発者メニュー「CREATOR」
+// =====================================================================
+const cuNewId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+function cuResize(file, size, fmt, w, h) { return new Promise((ok, ng) => { const rd = new FileReader(); rd.onerror = ng; rd.onload = () => { const im = new Image(); im.onerror = ng; im.onload = () => { const W = w || size, H = h || size, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const s = fmt === 'jpeg' ? Math.max(W / im.width, H / im.height) : Math.min(W / im.width, H / im.height), dw = im.width * s, dh = im.height * s; g.drawImage(im, (W - dw) / 2, (H - dh) / 2, dw, dh); ok(cv.toDataURL(fmt === 'jpeg' ? 'image/jpeg' : 'image/png', 0.82)); }; im.src = rd.result; }; rd.readAsDataURL(file); }); }
+const cuPrev = (v, s = 56) => { if (!v) return ''; if (v.t === 'title') return `<span class="cu-tt">${esc(v.nm || '')}</span>`; if (v.t === 'paint') return `<span class="cu-pt" style="background:${v.col || '#e10600'}"></span>`; return v.img ? `<img class="cu-img ${v.t === 'pbanner' ? 'wide' : ''}" src="${v.img}" alt="" width="${v.t === 'pbanner' ? s * 1.6 : s}" height="${s}">` : '<span class="cu-noimg">画像なし</span>'; };
+{ const _dp = UI.r_devPanel; UI.r_devPanel = function () { let h = _dp.call(this); if (!DEV.owner) return h; h = h.replace('</div><div class="note">', `<button class="tab ${this.tab === 'creator' ? 'on' : ''}" data-a="setTab" data-v="creator">CREATOR</button></div><div class="note">`); if (this.tab !== 'creator') return h;
+    const D = CU.data || {}, sub = this.cuSub || 'item', items = Object.entries(D.items || {}), packs = Object.entries(D.packs || {}), secs = Object.entries(D.sections || {}), F = this.cuF || (this.cuF = { t: 'stamp', r: 'C', cur: 'yen', price: 1000000, col: '#ff6a2a', items: [] });
+    const online = !!(window.DL_FB && DL_FB.user);
+    const tabs = `<div class="cu-tabs">${[['item', 'アイテムを作る'], ['pack', 'パック・BOXを作る'], ['shop', 'ショップの欄']].map(([k, l]) => `<button class="tab ${sub === k ? 'on' : ''}" data-a="cuSub" data-v="${k}">${l}</button>`).join('')}</div>`;
+    let b = `<div class="note">ここで作ったアイテム・パック・欄は保存すると<b>全プレイヤーのショップ</b>にすぐ反映されます（${online ? 'オンライン' : '<b>いまはオフラインなので保存できません</b>'}）。画像は自動で小さくしてから保存します。</div>` + tabs;
+    const rsel = (id, v) => `<select id="${id}">${['C', 'U', 'R', 'E', 'L'].map(r => `<option value="${r}" ${v === r ? 'selected' : ''}>${RARITY[r].name}</option>`).join('')}</select>`;
+    const secOpts = cur => [['', '（自動）'], ['lim', '期間限定パック'], ['reg', 'カードパック'], ['veh', '車両パック'], ['sp', 'パーツ・スタイル・プロフィール'], ['gear', 'ドライビングギア'], ['key', 'キー・キーチェーン']].concat(secs.map(([k, v]) => ['cs_' + k, (v.t || '新しい欄') + '（オリジナル）'])).map(([k, l]) => `<option value="${k}" ${cur === k ? 'selected' : ''}>${esc(l)}</option>`).join('');
+    if (sub === 'item') { const T = CU_TYPES[F.t] || CU_TYPES.stamp, needImg = !!T[1];
+      b += `<div class="cu-form"><div class="row"><label>種類</label><select id="cuT" data-in="cuType">${Object.entries(CU_TYPES).map(([k, v]) => `<option value="${k}" ${F.t === k ? 'selected' : ''}>${v[0]}</option>`).join('')}</select></div>
+        <div class="row"><label>名前</label><input id="cuNm" maxlength="30" value="${esc(F.nm || '')}" placeholder="例：にっこりドリフト"></div><div class="row"><label>英語名（任意）</label><input id="cuEn" maxlength="40" value="${esc(F.en || '')}" placeholder="English name"></div><div class="row"><label>レア度</label>${rsel('cuR', F.r)}</div>
+        ${needImg ? `<div class="row"><label>画像（${T[1]}px${T[2] === 'png' ? '・透明OK' : ''}）</label><label class="btn">画像を選ぶ<input type="file" accept="image/*" data-in="cuImg" style="display:none"></label>${F.img ? cuPrev(F, 64) : ''}</div>` : ''}
+        ${['fresh', 'paint', 'pbanner'].includes(F.t) ? `<div class="row"><label>${F.t === 'fresh' ? '香りの色' : F.t === 'paint' ? '色' : '背景の色（画像のまわり）'}</label><input type="color" id="cuCol" value="${F.col || '#2fbf71'}"></div>` : ''}
+        ${F.t === 'paint' ? `<div class="row"><label>仕上げ</label><select id="cuFin">${Object.keys(PAINT_MAT).map(k => `<option value="${k}" ${F.fin === k ? 'selected' : ''}>${k}</option>`).join('')}</select></div>` : ''}
+        ${F.t === 'stamp' ? `<div class="row"><label>動き</label><select id="cuAn">${['bounce', 'pulse', 'shake', 'wave', 'spin'].map(k => `<option ${F.an === k ? 'selected' : ''}>${k}</option>`).join('')}</select></div>` : ''}
+        <div class="btns"><button class="btn pri" data-a="cuItemSave" ${online ? '' : 'disabled'}>${F.edit ? '変更を保存' : 'アイテムを作る'}</button>${F.edit ? '<button class="btn" data-a="cuItemNew">新しく作る</button>' : ''}</div></div>
+        <div class="h3">作ったアイテム（${items.length}）</div><div class="cu-list">${items.map(([k, v]) => `<div class="cu-it"><span class="cu-pv">${cuPrev(v, 44)}</span><b>${esc(v.nm || '')}</b><small>${(CU_TYPES[v.t] || [''])[0]} ・ ${RARITY[v.r] ? RARITY[v.r].name : ''}</small><div><button class="btn" data-a="cuItemEdit" data-v="${k}">編集</button><button class="btn" data-a="cuItemDel" data-v="${k}" ${online ? '' : 'disabled'}>削除</button></div></div>`).join('') || '<div class="note">まだありません</div>'}</div>`; }
+    else if (sub === 'pack') { const all = items.map(([k, v]) => [CU.itemId(k, v), v]);
+      b += `<div class="cu-form"><div class="row"><label>種類</label><select id="cuBox"><option value="0" ${!F.box ? 'selected' : ''}>パック（ショップのカードパックに並ぶ）</option><option value="1" ${F.box ? 'selected' : ''}>BOX（10パック入り・オファーのBOX売り場に並ぶ）</option></select></div>
+        <div class="row"><label>名前</label><input id="cuPn" maxlength="30" value="${esc(F.pn || '')}" placeholder="例：にっこりスタンプパック"></div><div class="row"><label>表紙の文字（英字）</label><input id="cuTag" maxlength="14" value="${esc(F.tag || '')}" placeholder="SMILE"></div>
+        <div class="row"><label>お金／ダイヤ</label><select id="cuCur"><option value="yen" ${F.cur !== 'dia' ? 'selected' : ''}>お金</option><option value="dia" ${F.cur === 'dia' ? 'selected' : ''}>ダイヤ</option></select></div><div class="row"><label>値段</label><input id="cuPrice" type="number" min="0" value="${F.price || 0}"></div>
+        <div class="row"><label>色</label><input type="color" id="cuPc" value="${F.col || '#ff6a2a'}"><input type="color" id="cuPc2" value="${F.col2 || '#14151a'}"></div><div class="row"><label>表紙の画像（任意）</label><label class="btn">画像を選ぶ<input type="file" accept="image/*" data-in="cuCover" style="display:none"></label>${F.cover ? `<img class="cu-img" src="${F.cover}" width="60" height="54" alt="">` : ''}</div>
+        <div class="row"><label>置く欄</label><select id="cuSec">${secOpts(F.sec || '')}</select></div>
+        <div class="h3">中に入れるアイテム（作ったアイテムから選ぶ・レア度ごとの確率は自動）</div><div class="cu-pick">${all.map(([iid, v]) => `<label class="cu-pi"><input type="checkbox" data-cuitem="${iid}" ${F.items.includes(iid) ? 'checked' : ''}>${cuPrev(v, 30)}<span>${esc(v.nm || '')}</span></label>`).join('') || '<div class="note">先に「アイテムを作る」でアイテムを作ってください</div>'}</div>
+        <div class="btns"><button class="btn pri" data-a="cuPackSave" ${online ? '' : 'disabled'}>${F.pedit ? '変更を保存' : 'パックを作ってショップに並べる'}</button>${F.pedit ? '<button class="btn" data-a="cuPackNew">新しく作る</button>' : ''}</div></div>
+        <div class="h3">作ったパック・BOX（${packs.length}）</div><div class="cu-list">${packs.map(([k, v]) => { const c = CHESTS.find(x => x.id === 'cp_' + k); return `<div class="cu-it"><span class="cu-pv">${c ? packPouch(c, 0.28) : ''}</span><b>${esc(v.nm || '')}</b><small>${v.box ? 'BOX' : 'パック'} ・ ${v.cur === 'dia' ? 'ダイヤ ' + v.price : yen(v.price || 0)} ・ ${(v.items || []).length}種</small><div><button class="btn" data-a="cuPackEdit" data-v="${k}">編集</button><button class="btn" data-a="cuPackDel" data-v="${k}" ${online ? '' : 'disabled'}>削除</button></div></div>`; }).join('') || '<div class="note">まだありません</div>'}</div>`; }
+    else { const P = D.place || {}, list = CHESTS.filter(c => !c.reward && !c.daily && !c.boxOnly);
+      b += `<div class="cu-form"><div class="h3">新しい欄を追加</div><div class="row"><label>欄の名前</label><input id="cuSt" maxlength="20" placeholder="例：にっこりコーナー"></div><div class="row"><label>説明</label><input id="cuSs" maxlength="40" placeholder="例：スタッフおすすめのパック"></div><div class="row"><label>並び順（数字が小さいほど上）</label><input id="cuSo" type="number" value="35"><small class="set-note">期間限定 10 ・ カードパック 20 ・ 車両 30 ・ パーツ等 40 ・ ギア 50 ・ キー 60</small></div><div class="btns"><button class="btn pri" data-a="cuSecAdd" ${online ? '' : 'disabled'}>欄を追加</button></div></div>
+        <div class="h3">オリジナルの欄（${secs.length}）</div><div class="cu-list">${secs.map(([k, v]) => `<div class="cu-it"><b>${esc(v.t || '')}</b><small>${esc(v.sub || '')} ・ 並び順 ${v.o}</small><div><button class="btn" data-a="cuSecDel" data-v="${k}" ${online ? '' : 'disabled'}>削除</button></div></div>`).join('') || '<div class="note">まだありません</div>'}</div>
+        <div class="h3">パックを別の欄へ移動</div><div class="cu-list">${list.map(c => `<div class="cu-it"><span class="cu-pv">${packPouch(c, 0.24)}</span><b>${esc(c.name)}</b><select data-cuplace="${c.id}">${secOpts(P[c.id] || '')}</select></div>`).join('')}</div><div class="btns"><button class="btn pri" data-a="cuPlaceSave" ${online ? '' : 'disabled'}>移動を保存</button></div>`; }
+    return h + `<div class="cu">${b}</div>`; }; }
+Object.assign(UI, {
+  a_cuSub(k) { this.cuSub = k; this.render(); },
+  cuKeep() { const F = this.cuF, v = id => ($(id) || {}).value; if (!F) return; if ((this.cuSub || 'item') === 'item') { if ($('cuNm')) { F.nm = v('cuNm'); F.en = v('cuEn'); F.r = v('cuR'); } if ($('cuCol')) F.col = v('cuCol'); if ($('cuFin')) F.fin = v('cuFin'); if ($('cuAn')) F.an = v('cuAn'); }
+    if (this.cuSub === 'pack' && $('cuPn')) { F.box = v('cuBox') === '1'; F.pn = v('cuPn'); F.tag = v('cuTag'); F.cur = v('cuCur'); F.price = +v('cuPrice') || 0; F.col = v('cuPc'); F.col2 = v('cuPc2'); F.sec = v('cuSec'); F.items = [...document.querySelectorAll('[data-cuitem]')].filter(x => x.checked).map(x => x.dataset.cuitem); } },
+  in_cuType(v) { this.cuKeep(); this.cuF.t = v; this.cuF.img = ''; this.render(); },
+  async in_cuImg(v, el) { const f = el.files && el.files[0]; if (!f) return; this.cuKeep(); const T = CU_TYPES[this.cuF.t]; try { this.cuF.img = this.cuF.t === 'pbanner' ? await cuResize(f, 0, 'jpeg', 320, 200) : await cuResize(f, T[1], T[2]); } catch (e) { return this.toast('画像を読み込めませんでした'); } if (this.cuF.img.length > 200000) { this.cuF.img = ''; return this.toast('画像が大きすぎます（シンプルな画像にしてください）'); } this.render(); },
+  async in_cuCover(v, el) { const f = el.files && el.files[0]; if (!f) return; this.cuKeep(); try { this.cuF.cover = await cuResize(f, 0, 'jpeg', 200, 180); } catch (e) { return this.toast('画像を読み込めませんでした'); } this.render(); },
+  cuWrite(path, val, msg) { this._adm(async () => { await ADM.write('admin/custom/' + path, val); await ADM.log('creator', path + (val ? '' : ' delete')); }, msg); },
+  a_cuItemSave() { this.cuKeep(); const F = this.cuF, T = CU_TYPES[F.t]; if (!String(F.nm || '').trim()) return this.toast('名前を入れてください'); if (T[1] && !F.img) return this.toast('画像を選んでください');
+    const k = F.edit || cuNewId(), old = (CU.data.items || {})[k] || {}, n = old.n != null ? old.n : Object.keys(CU.data.items || {}).length; const v = { t: F.t, nm: F.nm.trim(), r: F.r, at: Date.now(), n };
+    if (F.en) v.en = F.en.trim(); if (F.img) v.img = F.img; if (F.col) v.col = F.col; if (F.t === 'paint') v.fin = F.fin || 'metallic'; if (F.t === 'stamp') v.an = F.an || 'bounce';
+    this.cuWrite('items/' + k, v, F.edit ? 'アイテムを更新しました（全員に反映）' : 'アイテムを作りました（全員に反映）'); this.cuF = { t: F.t, r: F.r, cur: 'yen', price: 1000000, col: '#ff6a2a', items: [] }; },
+  a_cuItemNew() { this.cuF = { t: 'stamp', r: 'C', cur: 'yen', price: 1000000, col: '#ff6a2a', items: [] }; this.render(); },
+  a_cuItemEdit(k) { const v = (CU.data.items || {})[k]; if (!v) return; this.cuF = Object.assign({ cur: 'yen', price: 1000000, items: [] }, v, { edit: k }); this.render(); },
+  a_cuItemDel(k) { if (!confirm('このアイテムを削除しますか？（持っているプレイヤーの表示からも消えます）')) return; this.cuWrite('items/' + k, null, 'アイテムを削除しました'); },
+  a_cuPackSave() { this.cuKeep(); const F = this.cuF; if (!String(F.pn || '').trim()) return this.toast('パックの名前を入れてください'); if (!F.items.length) return this.toast('中に入れるアイテムを1つ以上選んでください'); if (!(F.price >= 0)) return this.toast('値段を入れてください');
+    const k = F.pedit || cuNewId(), v = { nm: F.pn.trim(), box: !!F.box, cur: F.cur === 'dia' ? 'dia' : 'yen', price: Math.round(F.price), col: F.col, col2: F.col2, items: F.items, at: Date.now() }; if (F.tag) v.tag = F.tag; if (F.cover) v.cover = F.cover; if (F.sec) v.sec = F.sec;
+    this.cuWrite('packs/' + k, v, F.pedit ? 'パックを更新しました（全員に反映）' : 'パックを作ってショップに並べました（全員に反映）'); this.cuF = { t: 'stamp', r: 'C', cur: 'yen', price: 1000000, col: '#ff6a2a', items: [] }; },
+  a_cuPackNew() { this.cuF = { t: 'stamp', r: 'C', cur: 'yen', price: 1000000, col: '#ff6a2a', items: [] }; this.render(); },
+  a_cuPackEdit(k) { const v = (CU.data.packs || {})[k]; if (!v) return; this.cuF = { t: 'stamp', r: 'C', pn: v.nm, tag: v.tag, box: v.box, cur: v.cur, price: v.price, col: v.col, col2: v.col2, cover: v.cover, sec: v.sec, items: (v.items || []).slice(), pedit: k }; this.render(); },
+  a_cuPackDel(k) { if (!confirm('このパックを削除しますか？')) return; this.cuWrite('packs/' + k, null, 'パックを削除しました'); },
+  a_cuSecAdd() { const t = ($('cuSt') || {}).value || '', sub = ($('cuSs') || {}).value || '', o = +($('cuSo') || {}).value || 35; if (!t.trim()) return this.toast('欄の名前を入れてください'); this.cuWrite('sections/' + cuNewId(), { t: t.trim(), sub: sub.trim(), o }, '欄を追加しました（全員に反映）'); },
+  a_cuSecDel(k) { if (!confirm('この欄を削除しますか？（中のパックは元の欄に戻ります）')) return; this.cuWrite('sections/' + k, null, '欄を削除しました'); },
+  a_cuPlaceSave() { const P = {}; document.querySelectorAll('[data-cuplace]').forEach(s => { if (s.value) P[s.dataset.cuplace] = s.value; }); this.cuWrite('place', P, 'パックの欄を保存しました（全員に反映）'); }
+});
+window.__DLX = Object.assign(window.__DLX || {}, { CU, cuResize, ITEMS, icon: (i, s) => itemIconSvg(i, s) });

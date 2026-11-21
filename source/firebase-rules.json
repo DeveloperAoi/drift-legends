@@ -211,6 +211,10 @@
         "$k": {
           ".validate": "!newData.exists() || newData.hasChildren(['start','end'])"
         }
+      },
+      "custom": {
+        ".read": true,
+        ".write": "auth != null && (auth.uid == 'Zde9C8Lc8selsvCUmmFn1bwTG0m2' || root.child('admins/' + auth.uid).val() == true)"
       }
     },
     "replays": {
