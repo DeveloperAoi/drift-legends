@@ -24,7 +24,7 @@ with sync_playwright() as p:
     # garage: compare/fav/test drive
     E("window.__DL.UI.open('garage')"); pg.wait_for_timeout(300)
     clk(pg,'[data-a=compare]'); clk(pg,'[data-a=closeModal]'); clk(pg,'[data-a=favCar]')
-    clk(pg,'[data-a=testDrive]', 300); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
+    E("(async()=>{for(let i=0;i<40&&window.__DLX.CARFX.busy;i++){const o=document.getElementById('carFx');if(o&&o.className.includes('ready'))o.click();else if(o)o.click();await new Promise(r=>setTimeout(r,400))}const n=document.querySelector('#acqFx .aq-next');n&&n.click();})()"); pg.wait_for_timeout(9000); E("(()=>{const n=document.querySelector('#acqFx .aq-next');n&&n.click();})()"); pg.wait_for_timeout(1200); clk(pg,'[data-a=testDrive]', 300); pg.wait_for_function("window.__DL.game.active", timeout=60000); pg.wait_for_timeout(1500)
     E("window.__DL.UI.pause()"); clk(pg,'[data-a=quit]', 600)
     print('after test drive screen', E("window.__DL.UI.screen"))
     # settings

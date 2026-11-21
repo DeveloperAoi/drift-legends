@@ -2091,3 +2091,9 @@ body.wheelon #tLeft,body.wheelon #tRight,body.wheelon #tPad{display:none!importa
 /* ===== v4.8 オフライン ===== */
 .off-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:900;color:#ffcf3d;background:rgba(60,40,0,.75);border:1px solid rgba(255,207,61,.5);padding:3px 9px;border-radius:12px;margin-right:6px}.off-badge i{width:7px;height:7px;border-radius:50%;background:#ffcf3d;box-shadow:0 0 6px #ffcf3d}
 .sw-upd{position:fixed;left:50%;bottom:calc(76px + var(--safe-b,0px));transform:translateX(-50%);z-index:9600;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:#17181f;border:1px solid #ffcf3d;box-shadow:0 10px 30px rgba(0,0,0,.6);animation:aqIn .4s both;max-width:94vw;flex-wrap:wrap;justify-content:center}.sw-upd span{display:flex;align-items:center;gap:6px;font-size:13px}
+/* ===== v5.0 トラック配達 ===== */
+.tk-hero{display:flex;gap:14px;align-items:center;background:rgba(0,0,0,.3);padding:10px 12px;border-radius:10px;margin:10px 0}.tk-hero b{font-size:20px;font-weight:900;font-style:italic}.tk-hero small{display:block;font-size:11px;color:#ddd;line-height:1.5;margin:4px 0 8px}.tk-hero>span{flex:none}
+.tk-jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.tk-job{position:relative;display:flex;flex-direction:column;gap:4px;background:#3a3c4a;padding:12px}.tk-job b{font-size:17px;font-weight:900;font-style:italic}.tk-job small{font-size:11px;color:#ccd}
+.tk-lv{position:absolute;top:10px;right:10px;color:#ffcf3d}.tk-rw{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:900;color:#ffcf3d}.tk-rw em{font-style:normal;font-size:11px;color:#fff;background:#000;padding:2px 6px;margin-left:auto}
+.tk-bonus{float:right;font-size:12px;color:#a8ff1a}
+@media (max-width:600px){.tk-hero{flex-direction:column}}

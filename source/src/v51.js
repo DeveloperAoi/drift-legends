@@ -51,7 +51,7 @@ for (const it of ITEMS) { ITEM_BY_ID[it.id] = it; if (it.type === 'wheel' && !WH
 
 // ---------------- 開発者：イベント・期間限定の期間を変更 ----------------
 const PERIODS = { srv: {}, base: {} };
-const periodTargets = () => {
+let periodTargets = () => {
   const L = EVENTS.map(e => ({ key: 'ev:' + e.id, name: (e.jp || e.title) + '（イベント）', obj: e }));
   L.push({ key: 'pk:neon', name: 'ネオンナイトカードパック', obj: NEON_W }, { key: 'pk:winter', name: 'ウィンターカードパック', obj: WINTER_W }, { key: 'pk:xshop', name: 'クリスマス限定ショップ', obj: XSHOP_W });
   return L; };
