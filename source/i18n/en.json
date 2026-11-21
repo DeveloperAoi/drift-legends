@@ -5478,5 +5478,15 @@
 "テール": "Tail",
 "スターアップ演出＆オリジナル車": "Star-Up Scene & Original Cars",
 "車のカードが集まると「スターアップできます」の演出が出るように。今すぐスターアップするか、あとでするかを選べます": "When you collect enough car cards, a \"Star Up Ready\" scene now appears. Choose to star up now or later",
-"スタッフが作ったオリジナルのバンドル・デカール・タイヤスモーク・オリジナル車がショップやディーラーに並ぶことがあります": "Original bundles, decals, tire smoke and cars made by the staff may appear in the shop and dealer"
+"スタッフが作ったオリジナルのバンドル・デカール・タイヤスモーク・オリジナル車がショップやディーラーに並ぶことがあります": "Original bundles, decals, tire smoke and cars made by the staff may appear in the shop and dealer",
+"テクスチャを変更": "Change texture",
+"テクスチャを読み込む": "Import texture",
+"描く": "Draw",
+"画像の色そのまま": "Image colors as-is",
+"パーツの色を掛ける": "Multiply by part color",
+"貼り方：自動（箱型）": "Mapping: Auto (box)",
+"貼り方：": "Mapping: ",
+"なし）": "none)",
+"テクスチャ：": "Texture: ",
+"オリジナル車のパーツに画像（テクスチャ）が貼れるようになりました": "Original cars can now have image textures on their parts"
 }
