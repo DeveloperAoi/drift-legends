@@ -14,6 +14,7 @@
     ready() {
       if (readyP) return readyP;
       readyP = (async () => {
+        if (navigator.onLine === false) await new Promise(r => window.addEventListener('online', r, { once: true }));
         await loadJs(BASE + 'firebase-app-compat.js');
         await Promise.all([loadJs(BASE + 'firebase-auth-compat.js'), loadJs(BASE + 'firebase-database-compat.js')]);
         app = firebase.initializeApp(cfg); auth = firebase.auth(); db = firebase.database();

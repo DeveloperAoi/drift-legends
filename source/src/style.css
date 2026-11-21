@@ -2088,3 +2088,6 @@ body.wheelon #tLeft,body.wheelon #tRight,body.wheelon #tPad{display:none!importa
 .mk-packs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.mk-pk{flex-direction:row!important;align-items:center;min-width:0!important;gap:8px!important;text-align:left!important}.mk-pk div b{display:block;font-size:12px}
 .ev2-go:disabled{opacity:.5;filter:grayscale(1)}
 @media (max-width:600px){.mk-prog{flex-wrap:wrap}.mk-pi{order:3;flex-basis:100%}.mk-pa svg{width:90px;height:auto}}
+/* ===== v4.8 オフライン ===== */
+.off-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:900;color:#ffcf3d;background:rgba(60,40,0,.75);border:1px solid rgba(255,207,61,.5);padding:3px 9px;border-radius:12px;margin-right:6px}.off-badge i{width:7px;height:7px;border-radius:50%;background:#ffcf3d;box-shadow:0 0 6px #ffcf3d}
+.sw-upd{position:fixed;left:50%;bottom:calc(76px + var(--safe-b,0px));transform:translateX(-50%);z-index:9600;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:#17181f;border:1px solid #ffcf3d;box-shadow:0 10px 30px rgba(0,0,0,.6);animation:aqIn .4s both;max-width:94vw;flex-wrap:wrap;justify-content:center}.sw-upd span{display:flex;align-items:center;gap:6px;font-size:13px}

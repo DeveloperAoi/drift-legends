@@ -5001,5 +5001,19 @@
 "ミステリーキーの期間を保存しました（全員に反映）": "Mystery Key period saved (applies to everyone)",
 "：イベント期間が終わっていたため報酬はありません": ": the event had ended, so no rewards",
 "パックの条件を満たせませんでした": "No pack conditions met",
-"ミステリーキー：限定車を無料でお試しドライブできるデイリーイベント。完走・勝利・タイム・ニトロ5秒以上で「限定車パック」、ドリフトで「チューニングパック」、最高速度で「マネーパック」（1レースにつき条件ごとに1個・パックは何回でも）。限定車のカード（設計図）は回数制限つき。期間は開発者メニューで変更できます": "Mystery Key: a daily event where you test-drive a limited car for free. Finish, win, beat the time or use nitro 5+ sec for a Limited Car Pack, drift for a Tuning Pack, hit top speed for a Money Pack (one per condition per race; packs are unlimited). Limited car cards (blueprints) have a cap. The period can be changed in the developer menu"
+"ミステリーキー：限定車を無料でお試しドライブできるデイリーイベント。完走・勝利・タイム・ニトロ5秒以上で「限定車パック」、ドリフトで「チューニングパック」、最高速度で「マネーパック」（1レースにつき条件ごとに1個・パックは何回でも）。限定車のカード（設計図）は回数制限つき。期間は開発者メニューで変更できます": "Mystery Key: a daily event where you test-drive a limited car for free. Finish, win, beat the time or use nitro 5+ sec for a Limited Car Pack, drift for a Tuning Pack, hit top speed for a Money Pack (one per condition per race; packs are unlimited). Limited car cards (blueprints) have a cap. The period can be changed in the developer menu",
+"新しいバージョンがあります": "A new version is available",
+"更新する": "Update",
+"レースが終わってから更新してください": "Please update after the race",
+"オンラインに戻りました。セーブデータをクラウドに保存します": "Back online. Saving your data to the cloud",
+"オフラインになりました。このまま遊べます（セーブは端末に保存されます）": "You're offline. You can keep playing (saves are stored on this device)",
+"はオンラインのときに使えます（いまはオフラインです）": " is available when online (you're offline now)",
+"端末に保存済み": "Saved on device",
+"オフライン対応": "Offline Support",
+"ホーム画面に追加すると、アプリのようにアイコンから起動できます": "Add it to your home screen to launch it from an icon like an app",
+"セーブデータは端末に保存され、オンラインに戻ると自動でクラウドに保存（新しい方のデータを残します）": "Saves are stored on your device and automatically uploaded to the cloud when you're back online (the newer data is kept)",
+"一度聴いた音楽は端末に保存され、オフラインでも流れます": "Music you've played once is stored on your device and plays offline too",
+"オフライン中は画面上に「オフライン」と表示。オンライン対戦・ランキング・フレンド・マーケットなどはオンラインのときに使えます": "\"Offline\" is shown at the top while offline. Online battles, rankings, friends, the market and more work when online",
+"新しいバージョンが出ると「新しいバージョンがあります」と表示され、ボタンで更新できます": "When a new version is out, \"A new version is available\" appears and you can update with a button",
+"一度開けば、ネットがなくてもゲームを起動して遊べるように（ストーリー・レース・チューニング・パック開封など）": "Once opened, the game launches and plays without internet (story, races, tuning, pack opening and more)"
 }
