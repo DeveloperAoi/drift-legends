@@ -1,5 +1,5 @@
 // DRIFT LEGENDS — オフライン用サービスワーカー（ネットがなくても起動できるようにする）
-const VER = 'dl-20261125103244', CORE = 'dl-core-' + VER, RT = 'dl-runtime-v1', MUSIC = 'dl-music-v1';
+const VER = 'dl-20261125105345', CORE = 'dl-core-' + VER, RT = 'dl-runtime-v1', MUSIC = 'dl-music-v1';
 const PRE = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'music/playlist.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CORE).then(c => Promise.all(PRE.map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => { }))))); });
 self.addEventListener('activate', e => { e.waitUntil((async () => { for (const k of await caches.keys()) if (k.startsWith('dl-core-') && k !== CORE) await caches.delete(k); await self.clients.claim(); })()); });
