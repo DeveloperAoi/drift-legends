@@ -2,6 +2,7 @@ import asyncio
 from playwright.async_api import async_playwright
 SETUP=open('/home/claude/dl/test/v520.py').read().split('SETUP="""')[1].split('"""')[0]
 async def run(b, vw, tag):
+  async def sel(q,v): await pg.evaluate("([q,v])=>{const e=document.querySelector(q);e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}",[q,v])
   pg=await b.new_page(viewport={'width':vw[0],'height':vw[1]},has_touch=vw[0]<900);errs=[];pg.on('pageerror',lambda e:errs.append(str(e)));E=pg.evaluate
   pg.on('dialog',lambda d:asyncio.ensure_future(d.accept()))
   await pg.goto('file:///home/claude/dl/dist/index.html');await pg.wait_for_timeout(2500)
@@ -19,20 +20,20 @@ async def run(b, vw, tag):
   await E("()=>{const U=window.__DL.UI;U.open('devPanel')}");await pg.wait_for_timeout(500);await E("()=>document.querySelector('[data-a=setTab][data-v=creator]').click()");await pg.wait_for_timeout(400)
   # wing part
   await E("()=>document.querySelector('[data-a=cuSub][data-v=part]').click()");await pg.wait_for_timeout(400)
-  await pg.select_option('select[data-in=cpSlot]','wing');await pg.set_input_files('input[data-in=cpObj]','/tmp/cu/wing.obj');await pg.wait_for_timeout(1500)
-  await pg.fill('#cpNm','ストームウイング');await pg.fill('#cpPr','300000')
+  await sel('select[data-in=cpSlot]','wing');await pg.set_input_files('input[data-in=cpObj]','/tmp/cu/wing.obj');await pg.wait_for_timeout(1500)
+  await pg.fill('#cpNm','ストームウイング');await pg.evaluate("()=>{document.getElementById('cpPr').value='300000'}")
   await pg.screenshot(path=f'/tmp/t_{tag}_cped.png')
   pv=await E("()=>{const m=window.__DL.UI.show.model;return [window.__DL.UI.show.sig.includes('cu_prev'), m.meshes.length]}")
   await E("()=>document.querySelector('[data-a=cpSave]').click()");await pg.wait_for_timeout(600)
   # tire part (diamonds)
-  await pg.select_option('select[data-in=cpSlot]','tire');await pg.wait_for_timeout(300);await pg.set_input_files('input[data-in=cpObj]','/tmp/cu/tire.obj');await pg.wait_for_timeout(1500)
+  await sel('select[data-in=cpSlot]','tire');await pg.wait_for_timeout(300);await pg.set_input_files('input[data-in=cpObj]','/tmp/cu/tire.obj');await pg.wait_for_timeout(1500)
   roles=await E("()=>window.__DL.UI.cpF.geo.groups.map(g=>g.n+'='+g.role).join(',')")
-  await pg.fill('#cpNm','メッシュタイヤ');await pg.select_option('#cpCur','dia');await pg.fill('#cpPr','20');await pg.wait_for_timeout(800)
+  await pg.fill('#cpNm','メッシュタイヤ');await sel('#cpCur','dia');await pg.fill('#cpPr','20');await pg.wait_for_timeout(800)
   await pg.screenshot(path=f'/tmp/t_{tag}_cptire.png')
   await E("()=>document.querySelector('[data-a=cpSave]').click()");await pg.wait_for_timeout(600)
   # front bumper for all cars, pack only
-  await pg.select_option('select[data-in=cpSlot]','front');await pg.set_input_files('input[data-in=cpObj]','/tmp/cu/wing.obj');await pg.wait_for_timeout(1200)
-  await pg.select_option('select[data-in=cpFit]','all');await pg.wait_for_timeout(300);await pg.fill('#cpNm','全車バンパー');await E("()=>{document.getElementById('cpShop').checked=false}")
+  await sel('select[data-in=cpSlot]','front');await pg.set_input_files('input[data-in=cpObj]','/tmp/cu/wing.obj');await pg.wait_for_timeout(1200)
+  await sel('select[data-in=cpFit]','all');await pg.wait_for_timeout(300);await pg.fill('#cpNm','全車バンパー');await E("()=>{document.getElementById('cpShop').checked=false}")
   await E("()=>document.querySelector('[data-a=cpSave]').click()");await pg.wait_for_timeout(600)
   parts=await E("()=>Object.values(window.__DLX.CP_BY).map(p=>p.slot+':'+p.fit+':'+(p.shop.on?p.shop.cur+p.shop.price:'no')).join(',')")
   pick=await E("()=>{document.querySelector('[data-a=cuSub][data-v=pack]').click();return 0}");await pg.wait_for_timeout(400)
